@@ -18,16 +18,16 @@ def GetSettings(settings_file=DEFAULT_SETTINGS_FILE):
                     'port': 6667,
                     'channels': [{'name': '#platinumshrimp'}]
                     }]
-                }, ensure_ascii=True))
+                }))
             #TODO: Prettify output
-    def ascii_encode_dict(data):
+    def encode_dict(data):
         if type(data) == dict:
-            return dict(map(ascii_encode_dict, pair) for pair in data.items())
+            return dict(map(encode_dict, pair) for pair in data.items())
         elif type(data) == unicode:
-            return data.encode('ascii')
+            return data.encode('utf-8')
         else:
             return data
-    settings = json.load(open(settings_file, 'r'), object_hook=ascii_encode_dict)
+    settings = json.load(open(settings_file, 'r'), object_hook=encode_dict)
     #TODO: Verify settings, so all required fields are set
     return settings
 
