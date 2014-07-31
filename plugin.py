@@ -12,7 +12,6 @@ from  twisted.protocols import amp
 
 from  twisted.internet.interfaces import IProcessProtocol
 
-
 class Started(Command):
     pass
 
@@ -22,7 +21,7 @@ class Update(Command):
 class Privmsg(Command):
     arguments = [('user', String()),
                  ('channel', String()),
-                 ('msg', String()),]
+                 ('message', String()),]
 
 class Join(Command):
     arguments = [('channel', String()),]
@@ -32,47 +31,65 @@ class Joined(Command):
 
 class Say(Command):
     arguments = [('channel', String()),
-                 ('msg', String()),]
+                 ('message', String()),]
+
+
+class BidirectionalAMP(amp.AMP):
+    
+    def __init__(self):
+        self.responses = []
+        self.calls = []
+    
+    def locateResponder(self, class_name):
+        cls = globals()[class_name]
+        if cls not in self.responses:
+            return None
+        method = getattr(self, cls.__name__.lower())
+        def responder_inner(box):
+            params = cls.parseArguments(box, self)
+            result = method(**params)
+            return cls.makeResponse({}, self)
+        return responder_inner
+    
+    def __getattr__(self, name):
+        for cls in self.calls:
+            if cls.__name__.lower() == name:
+                def call(*args, **kwarg):
+                    arguments = {}
+                    for i, v in enumerate(cls.arguments):
+                        arguments[v[0]] = args[i]
+                    self.callRemote(cls, **arguments)
+                return call
+        else:
+            raise AttributeError()
+
 
 class PluginProtocol(protocol.ProcessProtocol):
     
-    class Test(amp.AMP):
+    class InternalBidirectionalAMP(BidirectionalAMP):
 
         def __init__(self, bot):
             self.bot = bot
+            self.responses = [Say, Join]
+            self.calls = [Started, Update, Joined, Privmsg]
 
-        @Say.responder
-        def say(self, channel, msg):
-            print "PluginProtocol.say", channel, msg
-            self.bot.say(channel, msg)
-            return {}
-
-        @Join.responder
-        def join(self, channel):
-            print "PluginProtocol.join", channel
-            self.bot.join(channel)
-            return {}
+        def __getattr__(self, name):
+            try:
+                return BidirectionalAMP.__getattr__(self, name)
+            except:
+                return getattr(self.bot, name)
 
 
     def __init__(self, bot):
         self.bot = bot
-        self.amp = PluginProtocol.Test(bot)
 
-    def privmsg(self, user, channel, msg):
-        print "PluginProtocol.privmsg", user, channel, msg
-        self.amp.callRemote(Privmsg, user=user, channel=channel, msg=msg)
+        self.responses = [Say, Join]
+        self.calls = [Started, Update, Joined]
 
-    def started(self):
-        print "PluginProtocol.started"
-        self.amp.callRemote(Started)
+        self.amp = PluginProtocol.InternalBidirectionalAMP(bot)
 
-    def joined(self, channel):
-        print "PluginProtocol.joined", channel
-        self.amp.callRemote(Joined, channel=channel)
-
-    def update(self):
-        print "PluginProtocol.update"
-        self.amp.callRemote(Update)
+    def __getattr__(self, name):
+        return getattr(self.amp, name)
 
     def makeConnection(self, process):
         print "PluginProtocol.makeConnection", process
@@ -80,7 +97,6 @@ class PluginProtocol(protocol.ProcessProtocol):
         self.amp.makeConnection(self)
 
     def write(self, data):
-        #print self.transport
         self.transport.writeToChild(0, data)
 
     def getPeer(self):
@@ -111,41 +127,11 @@ class PluginProtocol(protocol.ProcessProtocol):
         print "PluginProtocol.processEnded", reason
 
 
-class Plugin(amp.AMP):
+class Plugin(BidirectionalAMP):
     
     def __init__(self):
-        self.f = open("Plugin.__init__", "w")
-        self.f.write("ok\n")
-    
-    def say(self, channel, msg):
-        self.callRemote(Say, channel=channel, msg=msg)
-
-    def join(self, channel):
-        self.callRemote(Join, channel=channel)
-
-    def started(self):
-        pass
-        
-    @Started.responder
-    def started_resp(self):
-        self.started()
-        return {}
-
-    def update(self):
-        pass
-        
-    @Update.responder
-    def update_resp(self):
-        self.update()
-        return {}
-
-    def joined(self, channel):
-        pass
-        
-    @Joined.responder
-    def joined_resp(self, channel):
-        self.joined(channel)
-        return {}
+        self.responses = [Started, Update, Joined]
+        self.calls = [Say, Join]
 
     @classmethod
     def run(cls):
