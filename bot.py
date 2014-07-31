@@ -5,6 +5,14 @@ from twisted.words.protocols import irc
 
 from settings import GetSettings
 
+from twisted.internet.task import LoopingCall
+
+from  twisted.internet.interfaces import IProcessProtocol
+
+import plugin
+import sys
+import os
+
 class Bot(irc.IRCClient):
 
     def __init__(self, settings, channels):
@@ -13,6 +21,16 @@ class Bot(irc.IRCClient):
         self.realname = settings['realname']
         self.username = settings['username']
         self._channels = channels
+
+        self.plugins = []
+
+        self.loadPlugin("trakt")
+
+    def loadPlugin(self, name):
+        print "Bot.loadPlugin"
+        p = plugin.PluginProtocol(self)
+        reactor.spawnProcess(p, sys.executable, args=[sys.executable, name + ".py"], env=os.environ)
+        self.plugins.append(p)
 
     def connectionMade(self):
         print "Bot.connectionMade"
@@ -23,11 +41,18 @@ class Bot(irc.IRCClient):
 
     def signedOn(self):
         print "Bot.signedOn"
+
+        for plugin in self.plugins:
+            plugin.started()
+            LoopingCall(plugin.update).start(1, now=False)
+
         for channel in self._channels:
             self.join(channel['name'])
 
     def joined(self, channel):
         print "Bot.joined", channel
+        for plugin in self.plugins:
+            plugin.joined(channel)
 
 class BotFactory(protocol.ClientFactory):
 
