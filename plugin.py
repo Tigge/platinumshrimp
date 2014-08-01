@@ -138,3 +138,16 @@ class Plugin(BidirectionalAMP):
         stdio.StandardIO(cls())
         reactor.run()
 
+    # Methods to override:
+    def started(self):
+        print "Plugin.started"
+
+    def joined(self, channel):
+        print "Plugin.joined", channel
+
+    def update(self):
+        print "Plugin.update"
+
+    def privmsg(self, user, channel, message):
+        print "Plugin.privmsg", user, channel, message
+

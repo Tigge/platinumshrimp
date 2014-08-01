@@ -12,7 +12,7 @@ class Titlegiver(plugin.Plugin):
     def privmsg(self, user, channel, message):
         for url in url_parser.FindUrls(message):
             try:
-                print self._findTitle(urllib2.urlopen(url).read())
+                self.say(channel, self._findTitle(urllib2.urlopen(url).read()))
             except:
                 print "Unable to find title for: {}".format(url)
 
