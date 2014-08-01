@@ -24,8 +24,6 @@ class Bot(irc.IRCClient):
 
         self.plugins = []
 
-        self.loadPlugin("trakt")
-
     def loadPlugin(self, name):
         print "Bot.loadPlugin"
         p = plugin.PluginProtocol(self)
@@ -53,6 +51,11 @@ class Bot(irc.IRCClient):
         print "Bot.joined", channel
         for plugin in self.plugins:
             plugin.joined(channel)
+
+    def privmsg(self, user, channel, message):
+        print "Bot.privmsg", user, channel, message
+        for plugin in self.plugins:
+            plugin.privmsg(user, channel, message)
 
 class BotFactory(protocol.ClientFactory):
 

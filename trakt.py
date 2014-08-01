@@ -8,12 +8,12 @@ URL_ACTIVITY = "http://api.trakt.tv/activity/user.json/{0}/{1}/all/all/{2}"
 URL_TIME = "http://api.trakt.tv/server/time.json/{0}"
 
 class Trakt(plugin.Plugin):
-    
+
     INTERVAL = 60 * 5
     CHANNEL = "#platinumshrimp"
 
     def __init__(self):
-    
+
         self.ticks = 0
         self.users = {"XXX": {"last_sync": 0},}
 

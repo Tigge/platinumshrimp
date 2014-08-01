@@ -35,11 +35,11 @@ class Say(Command):
 
 
 class BidirectionalAMP(amp.AMP):
-    
+
     def __init__(self):
         self.responses = []
         self.calls = []
-    
+
     def locateResponder(self, class_name):
         cls = globals()[class_name]
         if cls not in self.responses:
@@ -50,7 +50,7 @@ class BidirectionalAMP(amp.AMP):
             result = method(**params)
             return cls.makeResponse({}, self)
         return responder_inner
-    
+
     def __getattr__(self, name):
         for cls in self.calls:
             if cls.__name__.lower() == name:
@@ -65,7 +65,7 @@ class BidirectionalAMP(amp.AMP):
 
 
 class PluginProtocol(protocol.ProcessProtocol):
-    
+
     class InternalBidirectionalAMP(BidirectionalAMP):
 
         def __init__(self, bot):
@@ -84,7 +84,7 @@ class PluginProtocol(protocol.ProcessProtocol):
         self.bot = bot
 
         self.responses = [Say, Join]
-        self.calls = [Started, Update, Joined]
+        self.calls = [Started, Update, Joined, Privmsg]
 
         self.amp = PluginProtocol.InternalBidirectionalAMP(bot)
 
@@ -128,9 +128,9 @@ class PluginProtocol(protocol.ProcessProtocol):
 
 
 class Plugin(BidirectionalAMP):
-    
+
     def __init__(self):
-        self.responses = [Started, Update, Joined]
+        self.responses = [Started, Update, Joined, Privmsg]
         self.calls = [Say, Join]
 
     @classmethod
