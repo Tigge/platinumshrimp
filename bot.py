@@ -7,11 +7,12 @@ from settings import GetSettings
 
 from twisted.internet.task import LoopingCall
 
-from  twisted.internet.interfaces import IProcessProtocol
+from twisted.internet.interfaces import IProcessProtocol
 
 import plugin
 import sys
 import os
+import json
 
 class Bot(irc.IRCClient):
 
@@ -21,18 +22,21 @@ class Bot(irc.IRCClient):
         self.realname = settings['realname']
         self.username = settings['username']
         self._channels = channels
+        self.settings = settings
 
         self.plugins = []
 
     def loadPlugin(self, name):
         print "Bot.loadPlugin"
-        p = plugin.PluginProtocol(self)
+        p = plugin.PluginProtocol(name, self)
         reactor.spawnProcess(p, sys.executable, args=[sys.executable, name + ".py"], env=os.environ)
         self.plugins.append(p)
 
     def connectionMade(self):
         print "Bot.connectionMade"
         irc.IRCClient.connectionMade(self)
+
+        self.loadPlugin("trakt")
 
     def connectionLost(self, reason):
         print "Bot.connectionLost"
@@ -41,7 +45,8 @@ class Bot(irc.IRCClient):
         print "Bot.signedOn"
 
         for plugin in self.plugins:
-            plugin.started()
+            settings = self.settings["plugins"].get(plugin.get_name(), {})
+            plugin.started(json.dumps(settings))
             LoopingCall(plugin.update).start(1, now=False)
 
         for channel in self._channels:
@@ -56,6 +61,7 @@ class Bot(irc.IRCClient):
         print "Bot.privmsg", user, channel, message
         for plugin in self.plugins:
             plugin.privmsg(user, channel, message)
+
 
 class BotFactory(protocol.ClientFactory):
 

@@ -1,19 +1,10 @@
-
-from twisted.internet import protocol, utils, reactor
-
-from twisted.protocols.amp import Integer, String, Unicode, Command
-
-from twisted.internet import stdio
-from twisted.protocols import basic
-
-from zope.interface import implements
-
-from  twisted.protocols import amp
-
-from  twisted.internet.interfaces import IProcessProtocol
+from twisted.internet import protocol, reactor, stdio
+from twisted.protocols import amp
+from twisted.protocols.amp import String, Command
+from twisted.python import log
 
 class Started(Command):
-    pass
+    arguments = [('settings', String()),]
 
 class Update(Command):
     pass
@@ -61,7 +52,7 @@ class BidirectionalAMP(amp.AMP):
                     self.callRemote(cls, **arguments)
                 return call
         else:
-            raise AttributeError()
+            raise AttributeError(self, name)
 
 
 class PluginProtocol(protocol.ProcessProtocol):
@@ -69,6 +60,7 @@ class PluginProtocol(protocol.ProcessProtocol):
     class InternalBidirectionalAMP(BidirectionalAMP):
 
         def __init__(self, bot):
+            BidirectionalAMP.__init__(self)
             self.bot = bot
             self.responses = [Say, Join]
             self.calls = [Started, Update, Joined, Privmsg]
@@ -80,7 +72,8 @@ class PluginProtocol(protocol.ProcessProtocol):
                 return getattr(self.bot, name)
 
 
-    def __init__(self, bot):
+    def __init__(self, name, bot):
+        self.name = name
         self.bot = bot
 
         self.responses = [Say, Join]
@@ -90,6 +83,9 @@ class PluginProtocol(protocol.ProcessProtocol):
 
     def __getattr__(self, name):
         return getattr(self.amp, name)
+
+    def get_name(self):
+        return self.name
 
     def makeConnection(self, process):
         print "PluginProtocol.makeConnection", process
@@ -129,14 +125,21 @@ class PluginProtocol(protocol.ProcessProtocol):
 
 class Plugin(BidirectionalAMP):
 
-    def __init__(self):
+    def __init__(self, name):
+        BidirectionalAMP.__init__(self)
         self.responses = [Started, Update, Joined, Privmsg]
         self.calls = [Say, Join]
+        self.name = name
 
     @classmethod
     def run(cls):
-        stdio.StandardIO(cls())
-        reactor.run()
+        try:
+            instance = cls()
+            log.startLogging(open(instance.name + '.log', 'w'))
+            stdio.StandardIO(instance)
+            reactor.run()
+        except:
+            log.err()
 
     # Methods to override:
     def started(self):
