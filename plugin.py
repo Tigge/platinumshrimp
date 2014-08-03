@@ -143,14 +143,14 @@ class Plugin(BidirectionalAMP):
 
     # Methods to override:
     def started(self):
-        print "Plugin.started"
+        log.msg("Plugin.started")
 
     def joined(self, channel):
-        print "Plugin.joined", channel
+        log.msg("Plugin.joined", channel)
 
     def update(self):
-        print "Plugin.update"
+        log.msg("Plugin.update")
 
     def privmsg(self, user, channel, message):
-        print "Plugin.privmsg", user, channel, message
+        log.msg("Plugin.privmsg", user, channel, message)
 
