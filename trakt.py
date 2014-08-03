@@ -51,13 +51,16 @@ class Trakt(plugin.Plugin):
         if self.ticks % self.settings["interval"] == 0:
             print "Trakt.update", self.ticks
             for user in self.users:
-                url = URL_ACTIVITY.format(self.settings["key"], user, self.users[user]["last_sync"])
-                response = urllib2.urlopen(url)
-                data = json.load(response)
-                print "Trakt.update", user, data
-                self.users[user]["last_sync"] = data["timestamps"]["current"]
-                for activity in data["activity"]:
-                    self.echo_activity(activity, user)
+                try:
+                    url = URL_ACTIVITY.format(self.settings["key"], user, self.users[user]["last_sync"])
+                    response = urllib2.urlopen(url)
+                    data = json.load(response)
+                    print "Trakt.update", user, data
+                    self.users[user]["last_sync"] = data["timestamps"]["current"]
+                    for activity in data["activity"]:
+                        self.echo_activity(activity, user)
+                except (urllib2.URLError, urllib2.HTTPError):
+                    log.err()
 
     def echo_activity(self, activity, user):
         if activity["type"] == "list":
@@ -66,7 +69,7 @@ class Trakt(plugin.Plugin):
             elif activity["action"] == "item_added":
                 self.echo("{0} added {1} to the list '{2}'".format(user, self.format_item(activity["list_item"]), activity["list"]["name"]))
         else:
-            message = user + " " + activity["action"] + " "
+            message = user
 
             if activity["action"] == "watching":
                 message += " is watching (" + activity["elapsed"]["short"] + ") "
