@@ -142,7 +142,7 @@ class Plugin(BidirectionalAMP):
             log.err()
 
     # Methods to override:
-    def started(self):
+    def started(self, settings):
         log.msg("Plugin.started")
 
     def joined(self, channel):

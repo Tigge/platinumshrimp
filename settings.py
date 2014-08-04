@@ -17,6 +17,10 @@ def GetSettings(settings_file=DEFAULT_SETTINGS_FILE):
                     'host': 'irc.chalmers.it',
                     'port': 6667,
                     'channels': [{'name': '#platinumshrimp'}]
+                    }],
+                'plugins': [{
+                    'name': 'titlegiver',
+                    'settings': ''
                     }]
                 }))
             #TODO: Prettify output

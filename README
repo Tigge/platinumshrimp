@@ -1,2 +1,11 @@
 Platinum Shrimp
 =================================================
+
+Get the code:
+  git clone https://github.com/Tigge/platinumshrimp.git
+
+Install dependencies:
+  sudo yum install python-twisted
+
+Run:
+  python bot.py
