@@ -18,9 +18,14 @@ def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
                     'port': 6667,
                     'channels': [{'name': '#platinumshrimp'}]
                     }],
-                'plugins': [{
-                    'name': 'titlegiver',
-                    'settings': ''
+                'plugins': [
+                    {
+                      'name': 'titlegiver',
+                      'settings': ''
+                    },
+                    {
+                      'name': 'invitejoiner',
+                      'settings': ''
                     }]
                 }))
             #TODO: Prettify output

@@ -28,6 +28,10 @@ class Say(Command):
                  ('channel', String()),
                  ('message', String()),]
 
+class Invited(Command):
+    arguments = [('server_id', Integer()),
+                 ('channel', String()),]
+
 
 class BidirectionalAMP(amp.AMP):
 
@@ -67,7 +71,7 @@ class PluginProtocol(protocol.ProcessProtocol):
             BidirectionalAMP.__init__(self)
             self.bot = bot
             self.responses = [Say, Join]
-            self.calls = [Started, Update, Joined, Privmsg]
+            self.calls = [Started, Update, Joined, Privmsg, Invited]
 
         def __getattr__(self, name):
             try:
@@ -81,7 +85,7 @@ class PluginProtocol(protocol.ProcessProtocol):
         self.bot = bot
 
         self.responses = [Say, Join]
-        self.calls = [Started, Update, Joined, Privmsg]
+        self.calls = [Started, Update, Joined, Privmsg, Invited]
 
         self.amp = PluginProtocol.InternalBidirectionalAMP(bot)
 
@@ -131,7 +135,7 @@ class Plugin(BidirectionalAMP):
 
     def __init__(self, name):
         BidirectionalAMP.__init__(self)
-        self.responses = [Started, Update, Joined, Privmsg]
+        self.responses = [Started, Update, Joined, Privmsg, Invited]
         self.calls = [Say, Join]
         self.name = name
 
@@ -158,3 +162,5 @@ class Plugin(BidirectionalAMP):
     def privmsg(self, server_id, user, channel, message):
         log.msg("Plugin.privmsg", user, channel, message)
 
+    def invited(self, server_id, channel):
+        log.msg("Plugin.invited", channel)

@@ -47,8 +47,12 @@ class Server(irc.IRCClient):
     def privmsg(self, user, channel, message):
         print "Server.privmsg", user, channel, message
         for plugin in self._plugins.iterkeys():
-            print "Sending to plugin: ", self._id, user, channel, message
             plugin.privmsg(self._id, user, channel, message)
+
+    def irc_unknown(self, prefix, command, params):
+        if command == "INVITE":
+          for plugin in self._plugins.iterkeys():
+            plugin.invited(self._id, params[1])
 
 class Bot(protocol.ClientFactory):
 
