@@ -6,6 +6,8 @@ Get the code:
 
 Install dependencies:
   sudo yum install python-twisted
+  or
+  sudo apt-get install python-twisted
 
 Run:
   python bot.py
