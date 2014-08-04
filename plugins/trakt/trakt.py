@@ -34,12 +34,12 @@ class Trakt(plugin.Plugin):
         self.users = dict(map(lambda user: (user, {"last_sync": 0}), self.settings["users"]))
         self.update_time(self.users)
 
-        self.join(str(self.settings["channel"]))
+        self.join(0, str(self.settings["channel"]))
 
-    def joined(self, channel):
+    def joined(self, server_id, channel):
         log.msg("Trakt.joined", channel)
 
-    def privmsg(self, user, channel, message):
+    def privmsg(self, server_id, user, channel, message):
         pass
 
     def echo(self, message):
