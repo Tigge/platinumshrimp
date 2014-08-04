@@ -3,7 +3,7 @@ from twisted.internet import endpoints, reactor, protocol
 from twisted.python import log
 from twisted.words.protocols import irc
 
-from settings import GetSettings
+import settings
 
 from twisted.internet.task import LoopingCall
 
@@ -86,7 +86,7 @@ class BotFactory(protocol.ClientFactory):
 
 if __name__ == '__main__':
     print "main"
-    settings = GetSettings()
+    settings = settings.get_settings()
     factory = BotFactory(settings)
     for server in settings['servers']:
         print "main: creating enpoint for host: {}, port: {}".format(

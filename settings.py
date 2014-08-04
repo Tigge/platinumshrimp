@@ -6,7 +6,7 @@ from os import path
 
 DEFAULT_SETTINGS_FILE = "settings.json"
 
-def GetSettings(settings_file=DEFAULT_SETTINGS_FILE):
+def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
     if not path.isfile(settings_file):
         with open(settings_file, 'w+') as file:
             file.write(json.dumps({

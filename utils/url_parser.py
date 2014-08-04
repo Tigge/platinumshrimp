@@ -9,7 +9,7 @@ simple_url_re = re.compile(r'^https?://\[?\w', re.IGNORECASE)
 simple_url_2_re = re.compile(r'^www\.|^(?!http)\w[^@]+\.(com|nu|se|co\.uk|net|org)($|/.*)$', re.IGNORECASE)
 
 
-def FindUrls(text):
+def find_urls(text):
     urls = []
     for i, word in enumerate(word_split_re.split(text)):
         if '.' in word or '@' in word or ':' in word:
