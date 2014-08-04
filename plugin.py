@@ -1,6 +1,6 @@
 from twisted.internet import protocol, reactor, stdio
 from twisted.protocols import amp
-from twisted.protocols.amp import String, Command
+from twisted.protocols.amp import String, Integer, Command
 from twisted.python import log
 
 class Started(Command):
@@ -10,18 +10,22 @@ class Update(Command):
     pass
 
 class Privmsg(Command):
-    arguments = [('user', String()),
+    arguments = [('server_id', Integer()),
+                 ('user', String()),
                  ('channel', String()),
                  ('message', String()),]
 
 class Join(Command):
-    arguments = [('channel', String()),]
+    arguments = [('server_id', Integer()),
+                 ('channel', String()),]
 
 class Joined(Command):
-    arguments = [('channel', String()),]
+    arguments = [('server_id', Integer()),
+                 ('channel', String()),]
 
 class Say(Command):
-    arguments = [('channel', String()),
+    arguments = [('server_id', Integer()),
+                 ('channel', String()),
                  ('message', String()),]
 
 
@@ -145,12 +149,12 @@ class Plugin(BidirectionalAMP):
     def started(self, settings):
         log.msg("Plugin.started")
 
-    def joined(self, channel):
+    def joined(self, server_id, channel):
         log.msg("Plugin.joined", channel)
 
     def update(self):
         log.msg("Plugin.update")
 
-    def privmsg(self, user, channel, message):
+    def privmsg(self, server_id, user, channel, message):
         log.msg("Plugin.privmsg", user, channel, message)
 

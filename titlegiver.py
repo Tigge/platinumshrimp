@@ -15,10 +15,10 @@ class Titlegiver(plugin.Plugin):
     def _findTitle(self, text):
         return title_re.search(text).group(1)
 
-    def privmsg(self, user, channel, message):
+    def privmsg(self, server_id, user, channel, message):
         for url in url_parser.find_urls(message):
             try:
-                self.say(channel, self._findTitle(urllib2.urlopen(url).read()))
+                self.say(server_id, channel, self._findTitle(urllib2.urlopen(url).read()))
             except:
                 log.msg("Unable to find title for:", url)
 
