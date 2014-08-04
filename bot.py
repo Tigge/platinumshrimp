@@ -63,7 +63,7 @@ class Bot(protocol.ClientFactory):
     def _loadPlugin(self, name, settings):
         print "Bot.loadPlugin", name
         plugin = PluginProtocol(name, self)
-        reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, name + ".py"], env=os.environ)
+        reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, "plugins/" + name + "/" + name + ".py"], env={"PYTHONPATH": os.getcwd()})
         self._plugins[plugin] = settings
         plugin.started(json.dumps(settings))
         LoopingCall(plugin.update).start(1, now=False)

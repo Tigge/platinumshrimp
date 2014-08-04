@@ -58,16 +58,17 @@ class Trakt(plugin.Plugin):
                     print "Trakt.update", user, data
                     self.users[user]["last_sync"] = data["timestamps"]["current"]
                     for activity in data["activity"]:
-                        self.echo_activity(activity, user)
+                        self.echo(Trakt.format_activity(activity, user))
                 except (urllib2.URLError, urllib2.HTTPError):
                     log.err()
 
-    def echo_activity(self, activity, user):
+    @staticmethod
+    def format_activity(activity, user):
         if activity["type"] == "list":
             if activity["action"] == "created":
-                self.echo("{0} create a list '{1}'".format(user, activity["list"]["name"]))
+                return "{0} create a list '{1}'".format(user, activity["list"]["name"])
             elif activity["action"] == "item_added":
-                self.echo("{0} added {1} to the list '{2}'".format(user, self.format_item(activity["list_item"]), activity["list"]["name"]))
+                return "{0} added {1} to the list '{2}'".format(user, Trakt.format_item(activity["list_item"]), activity["list"]["name"])
         else:
             message = user
 
@@ -78,37 +79,40 @@ class Trakt(plugin.Plugin):
             elif activity["action"] == "checkin":
                 message += " checked in "
             elif activity["action"] == "rating":
-                message += " rated (as " + self.format_rating(activity) + ") "
+                message += " rated (as " + Trakt.format_rating(activity) + ") "
             elif activity["action"] == "watchlist":
                 message += " added to watchlist, "
             else:
                 # TODO: seen, collection, shout, review
                 return
 
-            message += self.format_item(activity)
+            return message + Trakt.format_item(activity)
 
-            self.echo(message)
-
-    def format_item(self, item):
+    @staticmethod
+    def format_item(item):
         if item["type"] == "movie":
-            return self.format_movie(item["movie"])
+            return Trakt.format_movie(item["movie"])
         elif item["type"] == "episode":
-            return self.format_episode(item["show"], item["episode"])
+            return Trakt.format_episode(item["show"], item["episode"])
         elif item["type"] == "show":
-            return self.format_show(item["show"])
+            return Trakt.format_show(item["show"])
 
-    def format_movie(self, movie):
+    @staticmethod
+    def format_movie(movie):
         return "'{0[title]} ({0[year]})' {0[url]}".format(movie)
 
-    def format_show(self, show):
+    @staticmethod
+    def format_show(show):
         return "'{0[title]}' {0[url]}".format(show)
 
-    def format_episode(self, show, episode):
+    @staticmethod
+    def format_episode(show, episode):
         return "'{0[title]}' 'S{1[season]:02d}E{1[episode]:02d} {1[title]}' {1[url]}".format(show, episode)
 
-    def format_rating(self, activity):
+    @staticmethod
+    def format_rating(activity):
         if activity["use_rating_advanced"]:
-            return activity["rating_advanced"]
+            return str(activity["rating_advanced"])
         else:
             return activity["rating"]
 
