@@ -6,7 +6,7 @@ from utils import url_parser
 
 from twisted.python import log
 
-title_re = re.compile(r'<title>([^(?!<)]*)</title>', re.IGNORECASE)
+title_re = re.compile(r'<title>(.*?)</title>', re.IGNORECASE)
 
 class Titlegiver(plugin.Plugin):
 
