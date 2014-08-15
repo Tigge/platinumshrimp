@@ -6,7 +6,7 @@ from utils import url_parser
 
 from twisted.python import log
 
-title_re = re.compile(r'<title>(.*?)</title>', re.IGNORECASE)
+title_re = re.compile(r'<title>(.*?)</title>', re.IGNORECASE|re.DOTALL)
 
 class Titlegiver(plugin.Plugin):
 
@@ -15,7 +15,7 @@ class Titlegiver(plugin.Plugin):
 
     @staticmethod
     def find_title_url(url):
-        return Titlegiver.find_title(urllib2.urlopen(url).read())
+        return Titlegiver.find_title(urllib2.urlopen(url).read()).strip()
 
     @staticmethod
     def find_title(text):
