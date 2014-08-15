@@ -10,6 +10,7 @@ from twisted.python import log
 class Titlegiver(plugin.Plugin):
 
     TITLE_REGEX = re.compile(r'<title>(.*?)</title>', re.IGNORECASE | re.DOTALL)
+    WHITESPACE_REGEX = re.compile(r'\s+')
 
     def __init__(self):
         plugin.Plugin.__init__(self, "Titlegiver")
@@ -20,7 +21,7 @@ class Titlegiver(plugin.Plugin):
 
     @staticmethod
     def find_title(text):
-        return Titlegiver.TITLE_REGEX.search(text).group(1)
+        return Titlegiver.WHITESPACE_REGEX.sub(" ", Titlegiver.TITLE_REGEX.search(text).group(1))
 
     def privmsg(self, server_id, user, channel, message):
         for url in url_parser.find_urls(message):
@@ -32,4 +33,3 @@ class Titlegiver(plugin.Plugin):
 
 if __name__ == "__main__":
     sys.exit(Titlegiver.run())
-

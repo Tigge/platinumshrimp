@@ -1,3 +1,4 @@
+# coding=utf-8
 __author__ = 'tigge'
 
 import os
@@ -76,4 +77,9 @@ class TitlegiverTestCase(unittest.TestCase):
     def test_specialchars(self):
         result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/specialchar"))
         result.addCallback(self.assertEqual, "Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_")
+        return result
+
+    def test_linebreaks(self):
+        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/linebreaks"))
+        result.addCallback(self.assertEqual, "Title with line breaks and carriage returns")
         return result
