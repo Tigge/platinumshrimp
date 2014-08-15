@@ -151,16 +151,16 @@ class Plugin(BidirectionalAMP):
 
     # Methods to override:
     def started(self, settings):
-        log.msg("Plugin.started")
+        pass
 
     def joined(self, server_id, channel):
-        log.msg("Plugin.joined", channel)
+        pass
 
     def update(self):
-        log.msg("Plugin.update")
+        pass
 
     def privmsg(self, server_id, user, channel, message):
-        log.msg("Plugin.privmsg", user, channel, message)
+        pass
 
     def invited(self, server_id, channel):
-        log.msg("Plugin.invited", channel)
+        pass
