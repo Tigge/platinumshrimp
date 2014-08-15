@@ -73,7 +73,7 @@ class TitlegiverTestCase(unittest.TestCase):
         result.addCallback(self.assertEqual, "Simple")
         return result
 
-    def test_imdb(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/imdb_movie"))
-        result.addCallback(self.assertEqual, "The Civil War (TV Mini-Series 1990) - IMDb")
+    def test_specialchars(self):
+        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/specialchar"))
+        result.addCallback(self.assertEqual, "Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_")
         return result

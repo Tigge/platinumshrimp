@@ -6,9 +6,10 @@ from utils import url_parser
 
 from twisted.python import log
 
-title_re = re.compile(r'<title>(.*?)</title>', re.IGNORECASE|re.DOTALL)
 
 class Titlegiver(plugin.Plugin):
+
+    TITLE_REGEX = re.compile(r'<title>(.*?)</title>', re.IGNORECASE | re.DOTALL)
 
     def __init__(self):
         plugin.Plugin.__init__(self, "Titlegiver")
@@ -19,7 +20,7 @@ class Titlegiver(plugin.Plugin):
 
     @staticmethod
     def find_title(text):
-        return title_re.search(text).group(1)
+        return Titlegiver.TITLE_REGEX.search(text).group(1)
 
     def privmsg(self, server_id, user, channel, message):
         for url in url_parser.find_urls(message):
@@ -27,6 +28,7 @@ class Titlegiver(plugin.Plugin):
                 self.say(server_id, channel, Titlegiver.find_title_url(url))
             except:
                 log.msg("Unable to find title for:", url)
+
 
 if __name__ == "__main__":
     sys.exit(Titlegiver.run())
