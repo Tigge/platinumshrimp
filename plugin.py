@@ -79,8 +79,8 @@ class PluginProtocol(protocol.ProcessProtocol):
             except:
                 return getattr(self.bot, name)
 
-
     def __init__(self, name, bot):
+        log.msg("PluginProtocol.__init__", name, bot)
         self.name = name
         self.bot = bot
 
@@ -96,9 +96,9 @@ class PluginProtocol(protocol.ProcessProtocol):
         return self.name
 
     def makeConnection(self, process):
-        print "PluginProtocol.makeConnection", process
-        protocol.ProcessProtocol.makeConnection(self, process)
+        log.msg("PluginProtocol.makeConnection", process)
         self.amp.makeConnection(self)
+        protocol.ProcessProtocol.makeConnection(self, process)
 
     def write(self, data):
         self.transport.writeToChild(0, data)
@@ -110,25 +110,29 @@ class PluginProtocol(protocol.ProcessProtocol):
         return ('no host',)
 
     def connectionLost(self, reason):
-        print "PluginProtocol.connectionLost", reason
+        log.msg("PluginProtocol.connectionLost", reason)
+
+    def connectionMade(self):
+        log.msg("PluginProtocol.connectionMade")
+        self.amp.connectionMade()
+        protocol.ProcessProtocol.connectionMade(self)
+        self.bot.plugin_started(self)
 
     def childDataReceived(self, childFD, data):
-        print "PluginProtocol.childDataReceived", childFD, data
         return self.amp.dataReceived(data)
 
     def loseConnection(self):
+        log.msg("PluginProtocol.loseConnection")
         self.transport.closeChildFD(0)
         self.transport.closeChildFD(1)
         self.transport.loseConnection()
-
-    def childConnectionLost(self, childFD):
-        print "PluginProtocol.childConnectionLost", childFD
+        self.bot.plugin_ended(self)
 
     def processExited(self, reason):
-        print "PluginProtocol.processExited", reason
+        log.msg("PluginProtocol.processExited", reason)
 
     def processEnded(self, reason):
-        print "PluginProtocol.processEnded", reason
+        log.msg("PluginProtocol.processEnded", reason)
 
 
 class Plugin(BidirectionalAMP):

@@ -1,24 +1,20 @@
-
-from twisted.internet import endpoints, reactor, protocol
-from twisted.python import log
-from twisted.words.protocols import irc
-
-import settings
-
-from twisted.internet.task import LoopingCall
-
-from twisted.internet.interfaces import IProcessProtocol
-
-from plugin import PluginProtocol
 import sys
 import os
 import json
+
+from twisted.internet import endpoints, reactor, protocol
+from twisted.words.protocols import irc
+from twisted.internet.task import LoopingCall
+from twisted.python import log
+
+import settings
+from plugin import PluginProtocol
 
 
 class Server(irc.IRCClient):
 
     def __init__(self, server_id, settings, channels, plugins):
-        print "Server.__init__"
+        log.msg("Server.__init__")
         self.nickname = settings['nickname']
         self.realname = settings['realname']
         self.username = settings['username']
@@ -28,24 +24,24 @@ class Server(irc.IRCClient):
         self._plugins = plugins
 
     def connectionMade(self):
-        print "Server.connectionMade"
+        log.msg("Server.connectionMade")
         irc.IRCClient.connectionMade(self)
 
     def connectionLost(self, reason):
-        print "Server.connectionLost"
+        log.msg("Server.connectionLost")
 
     def signedOn(self):
-        print "Server.signedOn"
+        log.msg("Server.signedOn")
         for channel in self._channels:
             self.join(channel['name'])
 
     def joined(self, channel):
-        print "Server.joined", channel
+        log.msg("Server.joined", channel)
         for plugin in self._plugins.iterkeys():
             plugin.joined(self._id, channel)
 
     def privmsg(self, user, channel, message):
-        print "Server.privmsg", user, channel, message
+        log.msg("Server.privmsg", user, channel, message)
         for plugin in self._plugins.iterkeys():
             plugin.privmsg(self._id, user, channel, message)
 
@@ -54,23 +50,47 @@ class Server(irc.IRCClient):
           for plugin in self._plugins.iterkeys():
             plugin.invited(self._id, params[1])
 
+
 class Bot(protocol.ClientFactory):
 
     def __init__(self, settings):
-        print "Bot.__init__"
+        log.msg("Bot.__init__", settings)
         self._settings = settings
         self._servers = []
         self._plugins = dict()
         for plugin in self._settings['plugins']:
-            self._loadPlugin(plugin['name'], plugin['settings'])
+            self.plugin_load(plugin['name'], plugin['settings'])
 
-    def _loadPlugin(self, name, settings):
-        print "Bot.loadPlugin", name
+    def plugin_load(self, name, settings):
+        log.msg("Bot.plugin_load", name, settings)
         plugin = PluginProtocol(name, self)
+        log.msg("Bot.plugin_load plugin", plugin, name, self, sys.executable, [sys.executable, "plugins/" + name + "/" + name + ".py"])
         reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, "plugins/" + name + "/" + name + ".py"], env={"PYTHONPATH": os.getcwd()})
-        self._plugins[plugin] = settings
-        plugin.started(json.dumps(settings))
-        LoopingCall(plugin.update).start(1, now=False)
+
+    def plugin_started(self, plugin):
+        log.msg("Bot.plugin_started", plugin, self._settings)
+
+        for p in self._settings['plugins']:
+            if p["name"] == plugin.name:
+                self._plugins[plugin] = p["settings"]
+
+        log.msg("Bot.plugin_started settings", self._plugins[plugin])
+
+        plugin.started(json.dumps(self._plugins[plugin]))
+        plugin.update_loop_call = LoopingCall(plugin.update)
+        plugin.update_loop_call.start(1, now=False)
+
+    def plugin_ended(self, plugin):
+        log.msg("Bot.plugin_ended", plugin)
+        name = plugin.name
+        settings = self._plugins[plugin]
+
+        # Delete plugin
+        plugin.update_loop_call.stop()
+        del self._plugins[plugin]
+
+        #Reload plugin
+        self.plugin_load(name, settings)
 
     def _setChannels(self, channels):
         self._channels = channels
@@ -84,32 +104,30 @@ class Bot(protocol.ClientFactory):
             self._servers[server_id].join(channel)
 
     def buildProtocol(self, addr):
-        print "Bot.buildProtocol"
+        log.msg("Bot.buildProtocol")
         server = Server(len(self._servers), self._settings, self._channels, self._plugins)
         self._servers.append(server)
         return server
 
     def clientConnectionLost(self, connector, reason):
-        print "Bot.clientConnectionLost"
+        log.msg("Bot.clientConnectionLost")
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        print "Bot.clientConnectionFailed"
+        log.msg("Bot.clientConnectionFailed")
         reactor.stop()
 
 
 if __name__ == '__main__':
-    print "main"
+    log.startLogging(open('Bot.log', 'w'))
+    log.msg("main")
     settings = settings.get_settings()
     factory = Bot(settings)
     for server in settings['servers']:
-        print "main: creating enpoint for host: {}, port: {}".format(
-            server['host'],
-            server['port'])
+        log.msg("main: creating enpoint for host:", server['host'], "port:", server['port'])
         #TODO: Find better way of sending default channels to bot:
         factory._setChannels(server['channels'])
         endpoint = endpoints.clientFromString(reactor,
             "tcp:host={}:port={}".format(server['host'], server['port']))
         conn = endpoint.connect(factory)
     reactor.run()
-
