@@ -147,7 +147,7 @@ class Plugin(BidirectionalAMP):
     def run(cls):
         try:
             instance = cls()
-            log.startLogging(open(instance.name + '.log', 'w'))
+            log.startLogging(open(instance.name + '.log', 'a'))
             stdio.StandardIO(instance)
             reactor.run()
         except:

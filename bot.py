@@ -119,7 +119,7 @@ class Bot(protocol.ClientFactory):
 
 
 if __name__ == '__main__':
-    log.startLogging(open('Bot.log', 'w'))
+    log.startLogging(open('Bot.log', 'a'))
     log.msg("main")
     settings = settings.get_settings()
     factory = Bot(settings)
