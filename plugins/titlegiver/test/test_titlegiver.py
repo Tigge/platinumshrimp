@@ -83,3 +83,9 @@ class TitlegiverTestCase(unittest.TestCase):
         result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/linebreaks"))
         result.addCallback(self.assertEqual, "Title with line breaks and carriage returns")
         return result
+
+    def test_attributes(self):
+        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/attributes"))
+        result.addCallback(self.assertEqual, "Title with attribute id=\"pageTitle\"")
+        return result
+

@@ -9,7 +9,7 @@ from twisted.python import log
 
 class Titlegiver(plugin.Plugin):
 
-    TITLE_REGEX = re.compile(r'<title>(.*?)</title>', re.IGNORECASE | re.DOTALL)
+    TITLE_REGEX = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
     WHITESPACE_REGEX = re.compile(r'\s+')
 
     def __init__(self):

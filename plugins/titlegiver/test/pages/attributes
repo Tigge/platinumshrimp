@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<head>
+    <title id="pageTitle">Title with attribute id="pageTitle"</title>
+</head>
+<body>
+    [...]
+</body>
+</html>
