@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<head>
+    <title>
+        Title with entities.
+        XML: &quot;&amp;
+        HTML: &lt;&Aring;&copy;&dagger;&hearts;
+        Int/hex: &#72;&#101;&#108;&#x6C;&#X6f;
+        Invalid: &#x23k;&#123456789;&fail;
+   </title>
+</head>
+<body>
+    [...]
+</body>
+</html>

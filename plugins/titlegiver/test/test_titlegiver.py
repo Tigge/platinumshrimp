@@ -71,21 +71,29 @@ class TitlegiverTestCase(unittest.TestCase):
     def test_redirect(self):
         url = self.URL + "/page"
         result = deferToThread(Titlegiver.find_title_url, (self.URL + "/redirect?count=10&url={0}".format(url)))
-        result.addCallback(self.assertEqual, "Simple")
+        result.addCallback(self.assertEqual, u"Simple")
         return result
 
     def test_specialchars(self):
         result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/specialchar"))
-        result.addCallback(self.assertEqual, "Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_")
+        result.addCallback(self.assertEqual, u"Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_")
         return result
 
     def test_linebreaks(self):
         result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/linebreaks"))
-        result.addCallback(self.assertEqual, "Title with line breaks and carriage returns")
+        result.addCallback(self.assertEqual, u"Title with line breaks and carriage returns")
         return result
 
     def test_attributes(self):
         result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/attributes"))
-        result.addCallback(self.assertEqual, "Title with attribute id=\"pageTitle\"")
+        result.addCallback(self.assertEqual, u"Title with attribute id=\"pageTitle\"")
         return result
 
+    def test_entities(self):
+        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/entities"))
+        result.addCallback(self.assertEqual, u"Title with entities. "
+                                             u"XML: \"& "
+                                             u"HTML: <Å©†♥ "
+                                             u"Int/hex: Hello "
+                                             u"Invalid: &#x23k;&#123456789;&fail;")
+        return result
