@@ -1,7 +1,6 @@
 import sys
 import re
-import urllib2
-import urlparse
+import requests
 import htmlentitydefs
 
 from twisted.python import log
@@ -19,16 +18,10 @@ class Titlegiver(plugin.Plugin):
         plugin.Plugin.__init__(self, "Titlegiver")
 
     @staticmethod
-    def idnaify(url):
-        parts = urlparse.urlsplit(url)
-        netloc = parts.netloc.encode('idna')
-        return urlparse.urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
-
-    @staticmethod
     def find_title_url(url):
         url = url.decode('utf-8') if isinstance(url, str) else url # TODO: move to bot
-        data = urllib2.urlopen(Titlegiver.idnaify(url)).read().decode('utf-8')
-        return Titlegiver.find_title(data).strip()
+        request = requests.get(url)
+        return Titlegiver.find_title(request.text).strip()
 
     @staticmethod
     def find_title(text):

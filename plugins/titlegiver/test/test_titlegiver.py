@@ -1,6 +1,7 @@
 # coding=utf-8
 __author__ = 'tigge'
 
+import urllib
 import os
 
 from twisted.internet import reactor
@@ -43,10 +44,14 @@ class Pages(Resource):
     def __init__(self):
         self.dir = os.path.join("..", os.path.dirname(__file__))
 
-    def render_GET(self, request):
+    def render(self, request):
         assert isinstance(request, Request)
-        # TODO, raw
-        data = open(self.dir + "/" + request.path).read()
+
+        data = open(self.dir + "/" + urllib.unquote(request.path)).read()
+
+        # Default headers
+        request.setHeader("Content-Type", "text/html; charset=utf-8")
+
         return data
 
 
@@ -96,4 +101,9 @@ class TitlegiverTestCase(unittest.TestCase):
                                              u"HTML: <Å©†♥ "
                                              u"Int/hex: Hello "
                                              u"Invalid: &#x23k;&#123456789;&fail;")
+        return result
+
+    def test_nonascii(self):
+        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/nönàscii"))
+        result.addCallback(self.assertEqual, u"Page with nön-àscii path")
         return result
