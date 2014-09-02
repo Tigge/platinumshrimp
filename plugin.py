@@ -1,5 +1,6 @@
 from twisted.internet import protocol, reactor, stdio
 from twisted.protocols import amp
+from twisted.protocols.policies import TimeoutMixin
 from twisted.protocols.amp import String, Integer, Command
 from twisted.python import log
 
@@ -63,7 +64,7 @@ class BidirectionalAMP(amp.AMP):
             raise AttributeError(self, name)
 
 
-class PluginProtocol(protocol.ProcessProtocol):
+class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
 
     class InternalBidirectionalAMP(BidirectionalAMP):
 
@@ -77,6 +78,7 @@ class PluginProtocol(protocol.ProcessProtocol):
             try:
                 return BidirectionalAMP.__getattr__(self, name)
             except:
+                log.msg("Calling outer function", name)
                 return getattr(self.bot, name)
 
     def __init__(self, name, bot):
@@ -86,6 +88,8 @@ class PluginProtocol(protocol.ProcessProtocol):
 
         self.responses = [Say, Join]
         self.calls = [Started, Update, Joined, Privmsg, Invited]
+
+        self.setTimeout(60)
 
         self.amp = PluginProtocol.InternalBidirectionalAMP(bot)
 
@@ -119,20 +123,24 @@ class PluginProtocol(protocol.ProcessProtocol):
         self.bot.plugin_started(self)
 
     def childDataReceived(self, childFD, data):
+        self.resetTimeout()
         return self.amp.dataReceived(data)
+
+    def childConnectionLost(self, childFD):
+        log.msg("PluginProtocol.childConnectionLost")
+        self.loseConnection()
 
     def loseConnection(self):
         log.msg("PluginProtocol.loseConnection")
-        self.transport.closeChildFD(0)
-        self.transport.closeChildFD(1)
         self.transport.loseConnection()
-        self.bot.plugin_ended(self)
+        self.transport.signalProcess('KILL')
 
     def processExited(self, reason):
         log.msg("PluginProtocol.processExited", reason)
 
     def processEnded(self, reason):
         log.msg("PluginProtocol.processEnded", reason)
+        self.bot.plugin_ended(self)
 
 
 class Plugin(BidirectionalAMP):
