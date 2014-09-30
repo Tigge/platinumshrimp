@@ -37,29 +37,32 @@ class Trakt(plugin.Plugin):
         self.join(0, str(self.settings["channel"]))
 
     def joined(self, server_id, channel):
-        log.msg("Trakt.joined", channel)
-
-    def privmsg(self, server_id, user, channel, message):
-        pass
+        log.msg("Trakt.joined", server_id, channel)
 
     def echo(self, message):
         log.msg("Trakt.echo", message)
-        self.say(str(self.settings["channel"]), "Trakt: " + message.encode("utf-8"))
+        self.say(0, str(self.settings["channel"]), "Trakt: " + message.encode("utf-8"))
 
     def update(self):
         self.ticks += 1
         if self.ticks % self.settings["interval"] == 0:
-            print "Trakt.update", self.ticks
             for user in self.users:
                 try:
                     url = URL_ACTIVITY.format(self.settings["key"], user, self.users[user]["last_sync"])
                     response = urllib2.urlopen(url)
                     data = json.load(response)
-                    print "Trakt.update", user, data
                     self.users[user]["last_sync"] = data["timestamps"]["current"]
                     for activity in data["activity"]:
-                        self.echo(Trakt.format_activity(activity, user))
-                except (urllib2.URLError, urllib2.HTTPError):
+                        message = Trakt.format_activity(activity, user)
+                        if message is not None:
+                            self.echo(message)
+                except urllib2.HTTPError as e:
+                    log.info("HTTP error when fetching", url, e.code)
+                except (urllib2.URLError, ) as e:
+                    log.info("URL error when fetching", url, e.args)
+                except Exception as e:
+                    log.error("Unhandled exception when fetching", url)
+                    log.error("Data:", data, "User:", user)
                     log.err()
 
     @staticmethod
@@ -72,9 +75,9 @@ class Trakt(plugin.Plugin):
         else:
             message = user
 
-            if activity["action"] == "watching":
-                message += " is watching (" + activity["elapsed"]["short"] + ") "
-            elif activity["action"] == "scrobble":
+            #if activity["action"] == "watching":
+            #    message += " is watching (" + activity["elapsed"]["short"] + ") "
+            if activity["action"] == "scrobble":
                 message += " scrobbled "
             elif activity["action"] == "checkin":
                 message += " checked in "

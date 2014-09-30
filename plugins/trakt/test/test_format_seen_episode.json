@@ -1,0 +1,72 @@
+{
+   "timestamp":1320291979,
+   "when": {
+      "day": "Thu",
+      "time": "11:40 pm"
+   },
+   "elapsed": {
+      "full": "3 hours, 4 minutes, 19 seconds",
+      "short": "3h 4m 19s"
+   },
+   "type":"episode",
+   "action":"seen",
+   "user":{
+      "username":"justin",
+      "protected":false,
+      "full_name":"Justin",
+      "gender":"male",
+      "age":30,
+      "location":"San Diego, CA",
+      "about":"Co-founder of trakt. Please use the feedback tab on the right side to leave us suggestions or bugs you come across. Hope you're enjoying the site!",
+      "avatar":"http://trakt.us/images/avatars/1.4.jpg",
+      "url":"http://trakt.tv/user/justin"
+   },
+   "episodes":[
+      {
+         "season":1,
+         "episode":5,
+         "tvdb_id":1234,
+         "title":"Brian Wong of Kiip.me",
+         "overview":"",
+         "first_aired":1304924400,
+         "url":"http://trakt.tv/show/foundation/season/1/episode/5",
+         "images":{
+            "screen":"http://trakt.us/images/fanart/10143-940.jpg"
+         },
+         "ratings":{
+            "percentage":0,
+            "votes":0,
+            "loved":0,
+            "hated":0
+         }
+      }
+   ],
+   "show":{
+      "title":"Foundation",
+      "year":2011,
+      "url":"http://trakt.tv/show/foundation",
+      "imdb_id":"",
+      "tvdb_id":248041,
+      "tvrage_id":0,
+      "first_aired":1294041600,
+      "country":null,
+      "overview":"Foundation is a show hosted by Kevin Rose featuring interviews, products and knowledge.",
+      "runtime":40,
+      "network":"Revision3",
+      "air_day":"",
+      "air_time":"12:00am",
+      "certification":"",
+      "images":{
+         "poster":"http://trakt.us/images/posters/10143.jpg",
+         "fanart":"http://trakt.us/images/fanart/10143.jpg",
+         "banner":"http://trakt.us/images/banners/10143.jpg"
+      },
+      "ratings":{
+         "percentage":0,
+         "votes":0,
+         "loved":0,
+         "hated":0
+      },
+      "genres": ["Action","Comedy"]
+   }
+}
