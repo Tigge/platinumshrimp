@@ -105,7 +105,10 @@ class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
         protocol.ProcessProtocol.makeConnection(self, process)
 
     def write(self, data):
-        self.transport.writeToChild(0, data)
+        try:
+            self.transport.writeToChild(0, data)
+        except:
+            log.err()
 
     def getPeer(self):
         return ('subprocess',)
