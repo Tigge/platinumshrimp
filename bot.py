@@ -76,8 +76,8 @@ class Bot(protocol.ClientFactory):
 
         log.msg("Bot.plugin_started settings", self._plugins[plugin])
 
-        plugin.started(json.dumps(self._plugins[plugin]))
         plugin.update_loop_call = LoopingCall(plugin.update)
+        plugin.started(json.dumps(self._plugins[plugin]))
         plugin.update_loop_call.start(1, now=False)
 
     def plugin_ended(self, plugin):
