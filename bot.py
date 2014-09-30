@@ -82,6 +82,11 @@ class Bot(protocol.ClientFactory):
 
     def plugin_ended(self, plugin):
         log.msg("Bot.plugin_ended", plugin)
+
+        if plugin not in self._plugins:
+            log.msg("Bot.plugin_ended already deleted")
+            return
+
         name = plugin.name
         settings = self._plugins[plugin]
 
