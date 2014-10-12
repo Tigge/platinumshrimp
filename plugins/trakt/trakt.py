@@ -57,12 +57,12 @@ class Trakt(plugin.Plugin):
                         if message is not None:
                             self.echo(message)
                 except urllib2.HTTPError as e:
-                    log.info("HTTP error when fetching", url, e.code)
+                    log.msg("HTTP error when fetching", url, e.code)
                 except (urllib2.URLError, ) as e:
-                    log.info("URL error when fetching", url, e.args)
+                    log.msg("URL error when fetching", url, e.args)
                 except Exception as e:
-                    log.error("Unhandled exception when fetching", url)
-                    log.error("Data:", data, "User:", user)
+                    log.msg("Unhandled exception when fetching", url)
+                    log.msg("Data:", data, "User:", user)
                     log.err()
 
     @staticmethod
