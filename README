@@ -9,5 +9,8 @@ Install dependencies:
   or
   sudo apt-get install python-twisted
 
+Run plugins unit tests:
+  trial plugins
+
 Run:
   python bot.py
