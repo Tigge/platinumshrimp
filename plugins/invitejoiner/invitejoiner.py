@@ -12,5 +12,6 @@ class Invitejoiner(plugin.Plugin):
         log.msg("Invited to: ", channel)
         self.join(server_id, channel)
 
-Invitejoiner.run()
+if __name__ == "__main__":
+    sys.exit(Invitejoiner.run())
 
