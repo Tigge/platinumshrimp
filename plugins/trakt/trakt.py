@@ -14,7 +14,7 @@ class Trakt(plugin.Plugin):
     def __init__(self):
         log.msg("Trakt.__init__")
         plugin.Plugin.__init__(self, "Trakt")
-        
+
         self.settings = {}
         self.users = []
         self.ticks = 0
