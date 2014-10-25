@@ -85,6 +85,10 @@ class Titlegiver(plugin.Plugin):
         request.encoding = Titlegiver.find_encoding(request)
 
         content = request.text[:Titlegiver.MAX_CONTENT_LENGTH]
+
+        # Avoid leaving dangling redirect requests when we've got the content
+        request.connection.close()
+
         return Titlegiver.find_title(content).strip()
 
     @staticmethod
