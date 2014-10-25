@@ -87,27 +87,27 @@ class TitlegiverTestCase(unittest.TestCase):
 
     def test_redirect(self):
         url = self.URL + "/page"
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/redirect?count=10&url={0}".format(url)))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/redirect?count=10&url={0}".format(url)))
         result.addCallback(self.assertEqual, u"Simple")
         return result
 
     def test_specialchars(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/specialchar"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/specialchar"))
         result.addCallback(self.assertEqual, u"Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_")
         return result
 
     def test_linebreaks(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/linebreaks"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/linebreaks"))
         result.addCallback(self.assertEqual, u"Title with line breaks and carriage returns")
         return result
 
     def test_attributes(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/attributes"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/attributes"))
         result.addCallback(self.assertEqual, u"Title with attribute id=\"pageTitle\"")
         return result
 
     def test_entities(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/entities"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/entities"))
         result.addCallback(self.assertEqual, u"Title with entities. "
                                              u"XML: \"& "
                                              u"HTML: <Å©†♥ "
@@ -116,26 +116,26 @@ class TitlegiverTestCase(unittest.TestCase):
         return result
 
     def test_nonascii(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/nönàscii"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/nönàscii"))
         result.addCallback(self.assertEqual, u"Page with nön-àscii path")
         return result
 
     def test_encoding_bom(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/encoding_bom"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/encoding_bom"))
         result.addCallback(self.assertEqual, u"Gådzölla - ゴジラ")
         return result
 
     def test_encoding_xmldecl(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/encoding_xmldecl"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/encoding_xmldecl"))
         result.addCallback(self.assertEqual, u"Samoraj - 武家")
         return result
 
     def test_encoding_meta_charset(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/encoding_meta_charset"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/encoding_meta_charset"))
         result.addCallback(self.assertEqual, u"Россия-Матушка")
         return result
 
     def test_encoding_meta_httpequiv(self):
-        result = deferToThread(Titlegiver.find_title_url, (self.URL + "/pages/encoding_meta_httpequiv"))
+        result = deferToThread(Titlegiver.get_title_from_url, (self.URL + "/pages/encoding_meta_httpequiv"))
         result.addCallback(self.assertEqual, u"올드보이")
         return result
