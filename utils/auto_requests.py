@@ -44,14 +44,13 @@ def find_encoding(response):
             self.charset = None
 
         def handle_starttag(self, tag, attrs):
-            if tag == "meta":
-                if "charset" in attrs:
-                    self.charset = attrs["charset"]
-                    self.close()
-                elif "http-equiv" in attrs and attrs["http-equiv"].lower() == "content-type":
-                    match = re.search(r'^.*?charset=([a-zA-Z0-9-_]+)$', attrs["content"])
+            if tag == "meta" and self.charset is None:
+                attributes = dict(attrs)
+                if "charset" in attributes:
+                    self.charset = attributes["charset"]
+                elif "http-equiv" in attributes and attributes["http-equiv"].lower() == "content-type":
+                    match = re.search(r'^.*?charset=([a-zA-Z0-9-_]+)$', attributes["content"])
                     self.charset = match.group(1) if match is not None else None
-                    self.close()
 
     parser = MyHTMLParser()
     parser.feed(response.content[:1024])  # As per HTML5 standard
