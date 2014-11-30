@@ -15,7 +15,9 @@ class Feed():
     def update(self, data, say):
         log.msg("Updating feed: " + data.feed.title.encode("utf-8"))
         for entry in data.entries:
-            # TODO: Check id, etc
+            # TODO: Check id, title and link, etc
+            # Maybe save the entire data.entries and remove all duplicate when
+            # a new upate happens?
             if entry.published_parsed <= self.last_entry:
                 break
             say(str(entry.title.encode("utf-8")) + ": " + entry.link.encode("utf-8"))
@@ -43,6 +45,7 @@ class Feedpoller():
       self.update_count += 1
       if self.update_count >= self.update_freq:
           self.update_count = 0
+          #TODO: Use last-modified https://pythonhosted.org/feedparser/http-etag.html
           parsed = feedparser.parse(self.url)
           if parsed.bozo == 1:
               self.consecutive_fails += 1
@@ -66,6 +69,7 @@ class Feedretriever(plugin.Plugin):
     def privmsg(self, server_id, user, channel, message):
         if message.startswith("!feed "):
             #TODO: Parse update frequency
+            #TODO: Add custom title to msg
             self.feeds.append(Feedpoller(
                 lambda msg: self.say(server_id, channel, msg),
                 message[6:].encode("utf-8")))
