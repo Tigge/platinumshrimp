@@ -10,9 +10,13 @@ import plugin
 # The Feed class handles printing out new entries
 class Feed():
     def __init__(self, data) :
+        if isinstance(data, basestring):
+            data = feedparser.parse(data)
         self.set_last(data.entries)
 
     def update(self, data, say):
+        if isinstance(data, basestring):
+            data = feedparser.parse(data)
         log.msg("Updating feed: " + data.feed.title.encode("utf-8"))
         for entry in data.entries:
             # TODO: Check id, title and link, etc
