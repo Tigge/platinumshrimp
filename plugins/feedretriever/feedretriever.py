@@ -13,6 +13,7 @@ class Feed():
         if isinstance(data, basestring):
             data = feedparser.parse(data)
         self.set_last(data.entries)
+        self.title = data.feed.title.encode("utf-8")
 
     def update(self, data, say):
         if isinstance(data, basestring):
@@ -34,29 +35,29 @@ class Feed():
 # Simple polling class, fetches the feed in a regular intervall and passes
 # the information on to the Feed object
 class Feedpoller():
-  def __init__(self, say, url, update_freq=5*60):
-      parsed = feedparser.parse(url)
-      self.feed = Feed(parsed)
-      if parsed.bozo == 0:
-          say("Feed added: " + parsed.feed.title.encode("utf-8"))
-      self.say = say
-      self.url = url
-      self.consecutive_fails = 0
-      self.update_freq = update_freq
-      self.update_count = 0
+    def __init__(self, say, url, update_freq=5*60):
+        parsed = feedparser.parse(url)
+        self.feed = Feed(parsed)
+        if parsed.bozo == 0:
+            say("Feed added: " + parsed.feed.title.encode("utf-8"))
+        self.say = say
+        self.url = url
+        self.consecutive_fails = 0
+        self.update_freq = update_freq
+        self.update_count = 0
 
-  def update(self):
-      self.update_count += 1
-      if self.update_count >= self.update_freq:
-          self.update_count = 0
-          #TODO: Use last-modified https://pythonhosted.org/feedparser/http-etag.html
-          parsed = feedparser.parse(self.url)
-          if parsed.bozo == 1:
-              self.consecutive_fails += 1
-          else:
-              self.feed.update(parsed, self.say)
-              self.consecutive_fails = 0
-          #TODO: remove if too many consecutive fails?
+    def update(self):
+        self.update_count += 1
+        if self.update_count >= self.update_freq:
+            self.update_count = 0
+            #TODO: Use last-modified https://pythonhosted.org/feedparser/http-etag.html
+            parsed = feedparser.parse(self.url)
+            if parsed.bozo == 1:
+                self.consecutive_fails += 1
+            else:
+                self.feed.update(parsed, self.say)
+                self.consecutive_fails = 0
+            #TODO: remove or warn if too many consecutive fails?
 
 
 # Aggregator class for adding and handling feeds
@@ -77,7 +78,15 @@ class Feedretriever(plugin.Plugin):
             self.feeds.append(Feedpoller(
                 lambda msg: self.say(server_id, channel, msg),
                 message[6:].encode("utf-8")))
-        #TODO: List feeds and remove feeds
+        elif message.startswith("!removefeed"):
+            i = message[12:]
+            i = int(i) if unicode(i).isdecimal() else -1
+            if i >= 0 and i < len(self.feeds):
+                self.say(server_id, channel, "Removing: #{} - {}".format(i, self.feeds[i].get_title()))
+                self.feeds.remove(i)
+        elif message.startswith("!listfeed"):
+            for i, feed in enumerate(self.feeds):
+                self.say(server_id, channel, "#{}: {}".format(i, feed.feed.title))
 
     def update(self):
         for feed in self.feeds:
