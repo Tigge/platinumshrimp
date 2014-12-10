@@ -53,7 +53,7 @@ def find_encoding(response):
                     self.charset = match.group(1) if match is not None else None
 
     parser = MyHTMLParser()
-    parser.feed(response.content[:1024])  # As per HTML5 standard
+    parser.feed(response.content[:1024].decode('ascii', 'ignore'))  # As per HTML5 standard
     return parser.charset
 
 def get(*args, **kwargs):
