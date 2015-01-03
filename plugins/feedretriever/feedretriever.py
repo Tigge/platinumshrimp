@@ -5,41 +5,72 @@ import feedparser
 from twisted.python import log
 
 import plugin
+from utils import str_utils
 
+FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "
+                "the !listfeed and !removefeed commands.")
+
+HELP_MESSAGE = ("!addfeed url [fetch time [custom title]] where:\n"
+                "url - is the url of the atom or rss feed\n"
+                "fetch time - is the number of minutes between each request\n"
+                "custom title - is the title used for this feed.\n"
+                "If no title is given, the default title parsed from the "
+                "feed will be used instead.")
+
+DEFAULT_FETCH_TIME = 10*60
 
 # The Feed class handles printing out new entries
 class Feed():
-    def __init__(self, data) :
+    # Note that data could both be a url, or an already parsed feed
+    def __init__(self, data, title):
         if isinstance(data, basestring):
             data = feedparser.parse(data)
+        self.last_entry = 0
         self.set_last(data.entries)
-        self.title = data.feed.title.encode("utf-8")
+        self.title = title
+        self.update_title(data)
 
     def update(self, data, say):
         if isinstance(data, basestring):
             data = feedparser.parse(data)
-        log.msg("Updating feed: " + data.feed.title.encode("utf-8"))
+        if data.bozo != 0:
+            log.msg("Error updating feed " + self.title)
+            return
+        self.update_title(data)
+        log.msg("Updating feed: " + self.title)
         for entry in data.entries:
             # TODO: Check id, title and link, etc
             # Maybe save the entire data.entries and remove all duplicate when
             # a new upate happens?
             if entry.published_parsed <= self.last_entry:
                 break
-            say(str(entry.title.encode("utf-8")) + ": " + entry.link.encode("utf-8"))
+            say("{}: {} <{}>".format(
+                self.title,
+                str(entry.title.encode("utf-8")),
+                entry.link.encode("utf-8")))
         self.set_last(data.entries)
 
+    def update_title(self, parsed):
+        if parsed.bozo == 0 and self.title == "":
+            self.title = parsed.feed.title.encode("utf-8")
+
     def set_last(self, entries):
-        self.last_entry = entries[0].published_parsed if len(entries) > 0 else 0
+        if len(entries) > 0:
+            self.last_entry = entries[0].published_parsed
 
 
 # Simple polling class, fetches the feed in a regular intervall and passes
 # the information on to the Feed object
 class Feedpoller():
-    def __init__(self, say, url, update_freq=5*60):
+    def __init__(self, say, url, update_freq=DEFAULT_FETCH_TIME, title=""):
         parsed = feedparser.parse(url)
-        self.feed = Feed(parsed)
+        self.feed = Feed(parsed, title)
         if parsed.bozo == 0:
-            say("Feed added: " + parsed.feed.title.encode("utf-8"))
+            self.modified = parsed.modified
+            say("Added feed: " + self.feed.title)
+        else:
+            self.modified = ""
+            say(FAIL_MESSAGE)
         self.say = say
         self.url = url
         self.consecutive_fails = 0
@@ -50,15 +81,15 @@ class Feedpoller():
         self.update_count += 1
         if self.update_count >= self.update_freq:
             self.update_count = 0
-            #TODO: Use last-modified https://pythonhosted.org/feedparser/http-etag.html
-            parsed = feedparser.parse(self.url)
+            parsed = feedparser.parse(self.url, modified=self.modified)
             if parsed.bozo == 1:
                 self.consecutive_fails += 1
+                if self.consecutive_fails % 10 == 0:
+                    self.say(FAIL_MESSAGE)
             else:
+                self.modified = parsed.modified
                 self.feed.update(parsed, self.say)
                 self.consecutive_fails = 0
-            #TODO: remove or warn if too many consecutive fails?
-
 
 # Aggregator class for adding and handling feeds
 class Feedretriever(plugin.Plugin):
@@ -72,21 +103,29 @@ class Feedretriever(plugin.Plugin):
         #TODO: Save feeds to file and recreate when the bot is restarted
 
     def privmsg(self, server_id, user, channel, message):
-        if message.startswith("!feed "):
-            #TODO: Parse update frequency
-            #TODO: Add custom title to msg
-            self.feeds.append(Feedpoller(
-                lambda msg: self.say(server_id, channel, msg),
-                message[6:].encode("utf-8")))
+        say = lambda msg: self.say(server_id, channel, msg)
+        message = message.encode("utf-8")
+        if message.startswith("!feed") or message.startswith("!addfeed"):
+            _, url, time, title = str_utils.split(message, " ", 4)
+            try:
+                time = int(time) * 60
+            except:
+                time = DEFAULT_FETCH_TIME
+            if url == "":
+                say(HELP_MESSAGE)
+                return
+            self.feeds.append(Feedpoller(say, url, time, title))
         elif message.startswith("!removefeed"):
             i = message[12:]
             i = int(i) if unicode(i).isdecimal() else -1
             if i >= 0 and i < len(self.feeds):
-                self.say(server_id, channel, "Removing: #{} - {}".format(i, self.feeds[i].get_title()))
+                say("Removing: #{} - {}".format(i, self.feeds[i].feed.title))
                 self.feeds.remove(i)
         elif message.startswith("!listfeed"):
+            if len(self.feeds) == 0:
+                say("No feeds")
             for i, feed in enumerate(self.feeds):
-                self.say(server_id, channel, "#{}: {}".format(i, feed.feed.title))
+                say("#{}: {}".format(i, feed.feed.title))
 
     def update(self):
         for feed in self.feeds:
