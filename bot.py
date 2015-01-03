@@ -102,7 +102,18 @@ class Bot(protocol.ClientFactory):
 
     def say(self, server_id, channel, message):
         if (len(self._servers) > server_id):
-            self._servers[server_id].say(channel, message)
+            # From https://tools.ietf.org/html/rfc1459 :
+            # IRC messages are always lines of characters terminated with a CR-LF
+            # (Carriage Return - Line Feed) pair, and these messages shall not
+            # exceed 512 characters in length, counting all characters including
+            # the trailing CR-LF. Thus, there are 510 characters maximum allowed
+            # for the command and its parameters.
+            max_length = 510 - 8 - len(channel) - 1 # 8 here is the length of
+                                                    # "PRIVMSG " and 1 is for
+                                                    # the space between the
+                                                    # target (channel) and the
+                                                    # actual message
+            self._servers[server_id].say(channel, message, max_length)
 
     def join(self, server_id, channel):
         if (len(self._servers) > server_id):
