@@ -41,7 +41,7 @@ class Yogscaster(plugin.Plugin):
 
     def echo(self, message):
         log.msg("Echo: ", message.encode("utf-8"))
-        self.say(0, str(self.settings["channel"]), message.encode("utf-8"))
+        self.say(0, str(self.settings["channel"]), message)
 
     def started(self, settings):
         log.msg("Yogscaster.started", settings)

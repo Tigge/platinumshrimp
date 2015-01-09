@@ -23,6 +23,8 @@ class Server(irc.IRCClient):
         self._channels = channels
         self._plugins = plugins
 
+        self._encoding = "utf-8"
+
     def connectionMade(self):
         log.msg("Server.connectionMade")
         irc.IRCClient.connectionMade(self)
@@ -35,6 +37,27 @@ class Server(irc.IRCClient):
         for channel in self._channels:
             self.join(channel['name'])
 
+    # region Encoding overrides
+
+    def msg(self, user, message, length=None):
+        log.msg("Server.msg", user, type(message), length)
+        irc.IRCClient.msg(self, user, message.encode(self._encoding), length)
+
+    def topic(self, channel, topic=None):
+        log.msg("Server.topic", channel, type(topic))
+        irc.IRCClient.topic(self, channel, topic.encode(self._encoding))
+
+    def notice(self, user, message):
+        irc.IRCClient.notice(self, user, message.encode(self._encoding))
+
+    def away(self, message=''):
+        irc.IRCClient.away(self, message.encode(self._encoding))
+
+    def quit(self, message=''):
+        irc.IRCClient.quit(self, message.encode(self._encoding))
+
+    # endregion
+
     def joined(self, channel):
         log.msg("Server.joined", channel)
         for plugin in self._plugins.iterkeys():
@@ -43,12 +66,12 @@ class Server(irc.IRCClient):
     def privmsg(self, user, channel, message):
         log.msg("Server.privmsg", user, channel, message)
         for plugin in self._plugins.iterkeys():
-            plugin.privmsg(self._id, user, channel, message)
+            plugin.privmsg(self._id, user, channel, message.decode(self._encoding))
 
     def irc_unknown(self, prefix, command, params):
         if command == "INVITE":
-          for plugin in self._plugins.iterkeys():
-            plugin.invited(self._id, params[1])
+            for plugin in self._plugins.iterkeys():
+                plugin.invited(self._id, params[1])
 
 
 class Bot(protocol.ClientFactory):

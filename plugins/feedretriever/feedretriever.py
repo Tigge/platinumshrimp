@@ -41,18 +41,15 @@ class Feed():
         for entry in data.entries:
             # TODO: Check id, title and link, etc
             # Maybe save the entire data.entries and remove all duplicate when
-            # a new upate happens?
+            # a new update happens?
             if entry.published_parsed <= self.last_entry:
                 break
-            say("{}: {} <{}>".format(
-                self.title,
-                str(entry.title.encode("utf-8")),
-                entry.link.encode("utf-8")))
+            say(u"{}: {} <{}>".format(self.title, entry.title, entry.link))
         self.set_last(data.entries)
 
     def update_title(self, parsed):
         if parsed.bozo == 0 and self.title == "":
-            self.title = parsed.feed.title.encode("utf-8")
+            self.title = parsed.feed.title
 
     def set_last(self, entries):
         if len(entries) > 0:
@@ -104,7 +101,6 @@ class Feedretriever(plugin.Plugin):
 
     def privmsg(self, server_id, user, channel, message):
         say = lambda msg: self.say(server_id, channel, msg)
-        message = message.encode("utf-8")
         if message.startswith("!feed") or message.startswith("!addfeed"):
             _, url, time, title = str_utils.split(message, " ", 4)
             try:

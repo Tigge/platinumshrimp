@@ -19,11 +19,8 @@ class Titlegiver(plugin.Plugin):
 
     @staticmethod
     def get_title_from_url(url):
-        url = url.decode('utf-8') if isinstance(url, str) else url  # TODO: move to bot
-
         # Fetch page (no need to verfiy SSL certs for titles)
         response = auto_requests.get(url, verify=False)
-
         content = response.text[:Titlegiver.MAX_CONTENT_LENGTH]
 
         # Avoid leaving dangling redirects when we've got the content
@@ -59,7 +56,7 @@ class Titlegiver(plugin.Plugin):
     def privmsg(self, server_id, user, channel, message):
         for url in url_parser.find_urls(message):
             try:
-                self.say(server_id, channel, Titlegiver.get_title_from_url(url).encode("utf-8"))
+                self.say(server_id, channel, Titlegiver.get_title_from_url(url))
             except:
                 log.msg("Unable to find title for:", url)
                 log.err()

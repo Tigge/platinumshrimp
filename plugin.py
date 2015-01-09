@@ -1,37 +1,44 @@
 from twisted.internet import protocol, reactor, stdio
 from twisted.protocols import amp
 from twisted.protocols.policies import TimeoutMixin
-from twisted.protocols.amp import String, Integer, Command
+from twisted.protocols.amp import String, Integer, Command, Unicode
 from twisted.python import log
 
+
 class Started(Command):
-    arguments = [('settings', String()),]
+    arguments = [('settings', String())]
+
 
 class Update(Command):
     pass
+
 
 class Privmsg(Command):
     arguments = [('server_id', Integer()),
                  ('user', String()),
                  ('channel', String()),
-                 ('message', String()),]
+                 ('message', Unicode())]
+
 
 class Join(Command):
     arguments = [('server_id', Integer()),
-                 ('channel', String()),]
+                 ('channel', String())]
+
 
 class Joined(Command):
     arguments = [('server_id', Integer()),
-                 ('channel', String()),]
+                 ('channel', String())]
+
 
 class Say(Command):
     arguments = [('server_id', Integer()),
                  ('channel', String()),
-                 ('message', String()),]
+                 ('message', Unicode())]
+
 
 class Invited(Command):
     arguments = [('server_id', Integer()),
-                 ('channel', String()),]
+                 ('channel', String())]
 
 
 class BidirectionalAMP(amp.AMP):
