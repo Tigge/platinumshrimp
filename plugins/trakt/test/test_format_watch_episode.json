@@ -1,0 +1,28 @@
+{
+   "watched_at": "2015-01-07T01:13:10.000-08:00",
+   "action": "watch",
+   "episode": {
+      "season": 1,
+      "number": 11,
+      "title": "The Magical Place",
+      "ids": {
+         "trakt": 74015,
+         "tvdb": 4729205,
+         "imdb": "tt3307564",
+         "tmdb": 63421,
+         "tvrage": null
+      }
+   },
+   "show": {
+      "title": "Marvel's Agents of S.H.I.E.L.D.",
+      "year": 2013,
+      "ids": {
+         "trakt": 1394,
+         "slug": "marvel-s-agents-of-s-h-i-e-l-d",
+         "tvdb": 263365,
+         "imdb": "tt2364582",
+         "tmdb": 1403,
+         "tvrage": 32656
+      }
+   }
+}

@@ -99,7 +99,7 @@ class Trakt(plugin.Plugin):
                 for activity in res:
                     if Trakt.get_date(activity["watched_at"]) > self.users[user]["last_sync_" + typ]:
 
-                        message = Trakt.format_activity(activity, user, typ)
+                        message = Trakt.format_activity(activity, user)
                         if message is not None:
                             self.echo(message)
 
@@ -111,7 +111,7 @@ class Trakt(plugin.Plugin):
                 log.err()
 
     @staticmethod
-    def format_activity(activity, user, typ):
+    def format_activity(activity, user):
         return "{0} {1} {2} http://www.trakt.tv{3}".format(user, Trakt.format_action(activity["action"]),
                                                            Trakt.format_item(activity), Trakt.format_url(activity))
 
@@ -135,7 +135,7 @@ class Trakt(plugin.Plugin):
 
     @staticmethod
     def format_movie(movie):
-        return "'{0[title]} ({0[year]})'".format(movie)
+        return "'{0[title]}' ({0[year]})".format(movie)
 
     @staticmethod
     def format_show(show):
@@ -143,7 +143,7 @@ class Trakt(plugin.Plugin):
 
     @staticmethod
     def format_episode(show, episode):
-        return "'{0[title]}' 'S{1[season]:02d}E{1[number]:02d} {1[title]}'".format(show, episode)
+        return "'{0[title]}', S{1[season]:02d}E{1[number]:02d} '{1[title]}'".format(show, episode)
 
     @staticmethod
     def format_rating(activity):

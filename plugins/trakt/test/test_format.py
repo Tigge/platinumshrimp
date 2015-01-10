@@ -11,32 +11,18 @@ class FormatTestCase(unittest.TestCase):
     def setUp(self):
         self.dir = os.path.join("..", os.path.dirname(__file__))
 
-#    def test_watching_episode(self):
-#        activity = json.load(open(os.path.join(self.dir, "test_format_watching_episode.json")))
-#        message = Trakt.format_activity(activity, "User")
-#        self.assertEqual(message, "User is watching (3h 4m 19s) 'Modern Family' 'S03E07 Treehouse' http://trakt.tv/show/modern-family/season/3/episode/7")
+    def test_watch_episode(self):
+        activity = json.load(open(os.path.join(self.dir, "test_format_watch_episode.json")))
+        message = Trakt.format_activity(activity, "User")
+        self.assertEqual(message, "User watched 'Marvel's Agents of S.H.I.E.L.D.', S01E11 'The Magical Place' http://www.trakt.tv/episodes/74015")
 
     def test_scrobble_episode(self):
         activity = json.load(open(os.path.join(self.dir, "test_format_scrobble_episode.json")))
         message = Trakt.format_activity(activity, "User")
-        self.assertEqual(message, "User scrobbled 'Covert Affairs' 'S02E11 The Wake-Up Bomb' http://trakt.tv/show/covert-affairs/season/2/episode/11")
+        self.assertEqual(message, "User scrobbled 'The Simpsons', S26E10 'The Man Who Came to Be Dinner' http://www.trakt.tv/episodes/1390653")
 
-    def test_checkin_episode(self):
-        activity = json.load(open(os.path.join(self.dir, "test_format_checkin_episode.json")))
+    def test_watch_movie(self):
+        activity = json.load(open(os.path.join(self.dir, "test_format_watch_movie.json")))
         message = Trakt.format_activity(activity, "User")
-        self.assertEqual(message, "User checked in 'The Walking Dead' 'S02E01 What Lies Ahead' http://trakt.tv/show/the-walking-dead/season/2/episode/1")
+        self.assertEqual(message, "User watched 'Soul Kitchen' (2009) http://www.trakt.tv/movies/19911")
 
-    def test_seen_episode(self):
-        activity = json.load(open(os.path.join(self.dir, "test_format_seen_episode.json")))
-        message = Trakt.format_activity(activity, "User")
-        self.assertEqual(message, None)
-
-    def test_collection_episode(self):
-        activity = json.load(open(os.path.join(self.dir, "test_format_collection_episode.json")))
-        message = Trakt.format_activity(activity, "User")
-        self.assertEqual(message, None)
-
-    def test_rating_episode(self):
-        activity = json.load(open(os.path.join(self.dir, "test_format_rating_episode.json")))
-        message = Trakt.format_activity(activity, "User")
-        self.assertEqual(message, "User rated (as 9) 'Dexter' 'S06E05 The Angel of Death' http://trakt.tv/show/dexter/season/6/episode/5")
