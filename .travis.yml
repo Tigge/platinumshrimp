@@ -9,3 +9,6 @@ install:
   - "pip install feedparser"
 
 script: trial plugins
+
+notifications:
+  irc: "irc.chalmers.it#platinumshrimp"
