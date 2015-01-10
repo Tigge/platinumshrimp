@@ -1,0 +1,14 @@
+{
+   "watched_at": "2015-01-09T13:58:22.000-08:00",
+   "action": "watch",
+   "movie": {
+      "title": "Soul Kitchen",
+      "year": 2009,
+      "ids": {
+         "trakt": 19911,
+         "slug": "soul-kitchen-2009",
+         "imdb": "tt1244668",
+         "tmdb": 31175
+      }
+   }
+}

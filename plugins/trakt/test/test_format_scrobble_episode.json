@@ -1,70 +1,28 @@
 {
-   "timestamp":1320291452,
-   "when": {
-      "day": "Thu",
-      "time": "11:40 pm"
-   },
-   "elapsed": {
-      "full": "3 hours, 4 minutes, 19 seconds",
-      "short": "3h 4m 19s"
-   },
-   "type":"episode",
-   "action":"scrobble",
-   "user":{
-      "username":"tecnobrat",
-      "protected":false,
-      "full_name":"",
-      "gender":"male",
-      "age":29,
-      "location":"Parksville, BC, Canada",
-      "about":"",
-      "avatar":"http://trakt.us/images/avatars/791.jpg",
-      "url":"http://trakt.tv/user/tecnobrat"
-   },
-   "episode":{
-      "season":2,
-      "episode":11,
-      "tvdb_id":1234,
-      "title":"The Wake-Up Bomb",
-      "overview":"Annie feels lonely during some downtime following a failed mission in Venice. Another assignment soon comes up, however, involving a chef tied to a Basque separatist movement.",
-      "first_aired":1320130800,
-      "url":"http://trakt.tv/show/covert-affairs/season/2/episode/11",
-      "images":{
-         "screen":"http://trakt.us/images/episodes/26-2-11.jpg"
-      },
-      "ratings":{
-         "percentage":100,
-         "votes":10,
-         "loved":10,
-         "hated":0
+   "watched_at": "2015-01-07T09:23:51.000-08:00",
+   "action": "scrobble",
+   "episode": {
+      "season": 26,
+      "number": 10,
+      "title": "The Man Who Came to Be Dinner",
+      "ids": {
+         "trakt": 1390653,
+         "tvdb": 4970658,
+         "imdb": "tt2107523",
+         "tmdb": 1013213,
+         "tvrage": 1065713594
       }
    },
-   "show":{
-      "title":"Covert Affairs",
-      "year":2010,
-      "url":"http://trakt.tv/show/covert-affairs",
-      "imdb_id":"tt1495708",
-      "tvdb_id":104281,
-      "tvrage_id":23686,
-      "first_aired":1279004400,
-      "country":"United States",
-      "overview":"\"Covert Affairs\" centers on a young CIA trainee, Annie Walker, mysteriously summoned to headquarters for duty as field operative. While Annie believes she's been promoted for her exceptional linguistic skills, there may be something or someone from her past that her CIA bosses are really after. Auggie Anderson is a CIA military intelligence agent who was blinded while on assignment and is Annie's guide in this world of bureaucracy, excitement and intrigue.",
-      "runtime":60,
-      "network":"USA Network",
-      "air_day":"Tuesday",
-      "air_time":"10:00pm",
-      "certification":"TV-14",
-      "images":{
-         "poster":"http://trakt.us/images/posters/26.jpg",
-         "fanart":"http://trakt.us/images/fanart/26.jpg",
-         "banner":"http://trakt.us/images/banners/26.jpg"
-      },
-      "ratings":{
-         "percentage":88,
-         "votes":146,
-         "loved":128,
-         "hated":18
-      },
-      "genres": ["Action","Comedy"]
+   "show": {
+      "title": "The Simpsons",
+      "year": 1989,
+      "ids": {
+         "trakt": 455,
+         "slug": "the-simpsons",
+         "tvdb": 71663,
+         "imdb": "tt0096697",
+         "tmdb": 456,
+         "tvrage": 6190
+      }
    }
 }
