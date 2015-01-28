@@ -63,7 +63,8 @@ class Feedpoller():
         parsed = feedparser.parse(url)
         self.feed = Feed(parsed, title)
         if parsed.bozo == 0:
-            self.modified = parsed.modified
+            self.modified = parsed.get("modified", None)
+            self.etag = parsed.get("etag", None)
             say("Added feed: " + self.feed.title)
         else:
             self.modified = ""
@@ -78,13 +79,14 @@ class Feedpoller():
         self.update_count += 1
         if self.update_count >= self.update_freq:
             self.update_count = 0
-            parsed = feedparser.parse(self.url, modified=self.modified)
+            parsed = feedparser.parse(self.url, modified=self.modified, etag=self.etag)
             if parsed.bozo == 1:
                 self.consecutive_fails += 1
                 if self.consecutive_fails % 10 == 0:
                     self.say(FAIL_MESSAGE)
             else:
-                self.modified = parsed.modified
+                self.modified = parsed.get("modified", None)
+                self.etag = parsed.get("etag", None)
                 self.feed.update(parsed, self.say)
                 self.consecutive_fails = 0
 
