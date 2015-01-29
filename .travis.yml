@@ -11,4 +11,8 @@ install:
 script: trial plugins
 
 notifications:
-  irc: "irc.chalmers.it#platinumshrimp"
+  irc:
+    channels:
+      - "irc.chalmers.it#platinumshrimp"
+    use_notice: true
+    skip_join: true
