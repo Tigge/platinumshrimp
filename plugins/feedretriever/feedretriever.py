@@ -19,6 +19,9 @@ HELP_MESSAGE = ("!addfeed url [fetch time [custom title]] where:\n"
 
 DEFAULT_FETCH_TIME = 10*60
 
+def FeedItemToString(title, link, feed_title = ""):
+    return u"{}: {} <{}>".format(feed_title, title, link)
+
 # The Feed class handles printing out new entries
 class Feed():
     # Note that data could both be a url, or an already parsed feed
@@ -44,7 +47,7 @@ class Feed():
             # a new update happens?
             if entry.published_parsed <= self.last_entry:
                 break
-            say(u"{}: {} <{}>".format(self.title, entry.title, entry.link))
+            say(FeedItemToString(entry.title, entry.link, self.title))
         self.set_last(data.entries)
 
     def update_title(self, parsed):
