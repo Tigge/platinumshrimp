@@ -17,6 +17,10 @@ HELP_MESSAGE = ("!addfeed url [fetch time [custom title]] where:\n"
                 "If no title is given, the default title parsed from the "
                 "feed will be used instead.")
 
+REMOVING_FEED_MESSAGE = "Removing: #{} - {}"
+LIST_FEED_ITEM_MESSAGE = "#{}: {}"
+NO_FEED_MESSAGE = "No feeds"
+
 DEFAULT_FETCH_TIME = 10*60
 
 def FeedItemToString(title, link, feed_title = ""):
@@ -120,13 +124,13 @@ class Feedretriever(plugin.Plugin):
             i = message[12:]
             i = int(i) if unicode(i).isdecimal() else -1
             if i >= 0 and i < len(self.feeds):
-                say("Removing: #{} - {}".format(i, self.feeds[i].feed.title))
+                say(REMOVING_FEED_MESSAGE.format(i, self.feeds[i].feed.title))
                 self.feeds.remove(i)
         elif message.startswith("!listfeed"):
             if len(self.feeds) == 0:
-                say("No feeds")
+                say(NO_FEED_MESSAGE)
             for i, feed in enumerate(self.feeds):
-                say("#{}: {}".format(i, feed.feed.title))
+                say(LIST_FEED_ITEM_MESSAGE.format(i, feed.feed.title))
 
     def update(self):
         for feed in self.feeds:
