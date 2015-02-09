@@ -112,7 +112,7 @@ class Trakt(plugin.Plugin):
 
     @staticmethod
     def format_activity(activity, user):
-        return "{0} {1} {2} http://www.trakt.tv{3}".format(user, Trakt.format_action(activity["action"]),
+        return u"{0} {1} {2} http://www.trakt.tv{3}".format(user, Trakt.format_action(activity["action"]),
                                                            Trakt.format_item(activity), Trakt.format_url(activity))
 
     @staticmethod
@@ -127,39 +127,39 @@ class Trakt(plugin.Plugin):
     @staticmethod
     def format_url(item):
         if "movie" in item:
-            return "/movies/{0}".format(item["movie"]["ids"]["trakt"])
+            return u"/movies/{0}".format(item["movie"]["ids"]["trakt"])
         elif "episode" in item:
-            return "/episodes/{0}".format(item["episode"]["ids"]["trakt"])
+            return u"/episodes/{0}".format(item["episode"]["ids"]["trakt"])
         elif "show" in item:
-            return "/shows/{0}".format(item["episode"]["ids"]["trakt"])
+            return u"/shows/{0}".format(item["episode"]["ids"]["trakt"])
 
     @staticmethod
     def format_movie(movie):
-        return "'{0[title]}' ({0[year]})".format(movie)
+        return u"'{0[title]}' ({0[year]})".format(movie)
 
     @staticmethod
     def format_show(show):
-        return "'{0[title]}'".format(show)
+        return u"'{0[title]}'".format(show)
 
     @staticmethod
     def format_episode(show, episode):
-        return "'{0[title]}', S{1[season]:02d}E{1[number]:02d} '{1[title]}'".format(show, episode)
+        return u"'{0[title]}', S{1[season]:02d}E{1[number]:02d} '{1[title]}'".format(show, episode)
 
     @staticmethod
     def format_rating(activity):
         if activity["use_rating_advanced"]:
-            return str(activity["rating_advanced"])
+            return unicode(activity["rating_advanced"])
         else:
             return activity["rating"]
 
     @staticmethod
     def format_action(action):
-        if action == "scrobble":
-            return "scrobbled"
-        elif action == "checkin":
-            return "checked in"
-        elif action == "watch":
-            return "watched"
+        if action == u"scrobble":
+            return u"scrobbled"
+        elif action == u"checkin":
+            return u"checked in"
+        elif action == u"watch":
+            return u"watched"
 
 if __name__ == "__main__":
     sys.exit(Trakt.run())

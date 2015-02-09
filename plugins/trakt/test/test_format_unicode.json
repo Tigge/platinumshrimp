@@ -1,0 +1,28 @@
+{
+  "watched_at": "2015-02-09T18:10:30.000Z",
+  "action": "watch",
+  "episode": {
+    "season": 5,
+    "number": 9,
+    "title": "What Happened and What’s Going On ☻",
+    "ids": {
+      "trakt": 998958,
+      "tvdb": 5038187,
+      "imdb": "tt3853912",
+      "tmdb": 1016882,
+      "tvrage": 1065730734
+    }
+  },
+  "show": {
+    "title": "The Walking Dead ☻",
+    "year": 2010,
+    "ids": {
+      "trakt": 1393,
+      "slug": "the-walking-dead",
+      "tvdb": 153021,
+      "imdb": "tt1520211",
+      "tmdb": 1402,
+      "tvrage": 25056
+    }
+  }
+}
