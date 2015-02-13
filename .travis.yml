@@ -8,7 +8,9 @@ install:
   - "pip install python-dateutil"
   - "pip install feedparser"
 
-script: trial plugins
+script:
+  - "trial plugins"
+  - "trial utils"
 
 notifications:
   irc:

@@ -11,6 +11,7 @@ Install dependencies:
 
 Run plugins unit tests:
   trial plugins
+  trial utils
 
 Run:
   python bot.py
