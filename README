@@ -5,9 +5,14 @@ Get the code:
   git clone https://github.com/Tigge/platinumshrimp.git
 
 Install dependencies:
-  sudo yum install python-twisted
+  sudo yum install python-pip
   or
-  sudo apt-get install python-twisted
+  sudo apt-get install python-pip
+
+  sudo pip install twisted
+  sudo pip install requests
+  sudo pip install feedparser
+  sudo pip install python-dateutil
 
 Run plugins unit tests:
   trial plugins
