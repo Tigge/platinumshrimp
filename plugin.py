@@ -1,7 +1,7 @@
 from twisted.internet import protocol, reactor, stdio
 from twisted.protocols import amp
 from twisted.protocols.policies import TimeoutMixin
-from twisted.protocols.amp import String, Integer, Command, Unicode
+from twisted.protocols.amp import String, Command, Unicode
 from twisted.python import log
 
 
@@ -14,30 +14,30 @@ class Update(Command):
 
 
 class Privmsg(Command):
-    arguments = [('server_id', Integer()),
+    arguments = [('server_id', String()),
                  ('user', String()),
                  ('channel', String()),
                  ('message', Unicode())]
 
 
 class Join(Command):
-    arguments = [('server_id', Integer()),
+    arguments = [('server_id', String()),
                  ('channel', String())]
 
 
 class Joined(Command):
-    arguments = [('server_id', Integer()),
+    arguments = [('server_id', String()),
                  ('channel', String())]
 
 
 class Say(Command):
-    arguments = [('server_id', Integer()),
+    arguments = [('server_id', String()),
                  ('channel', String()),
                  ('message', Unicode())]
 
 
 class Invited(Command):
-    arguments = [('server_id', Integer()),
+    arguments = [('server_id', String()),
                  ('channel', String())]
 
 

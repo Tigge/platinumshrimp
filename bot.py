@@ -59,12 +59,12 @@ class Server(irc.IRCClient):
     # endregion
 
     def joined(self, channel):
-        log.msg("Server.joined", channel)
+        log.msg("Server.joined", self._id, channel)
         for plugin in self._plugins.iterkeys():
             plugin.joined(self._id, channel)
 
     def privmsg(self, user, channel, message):
-        log.msg("Server.privmsg", user, channel, message)
+        log.msg("Server.privmsg", self._id, user, channel, message)
         for plugin in self._plugins.iterkeys():
             plugin.privmsg(self._id, user, channel, message.decode(self._encoding))
 
@@ -79,7 +79,7 @@ class Bot(protocol.ClientFactory):
     def __init__(self, settings):
         log.msg("Bot.__init__", settings)
         self._settings = settings
-        self._servers = []
+        self._servers = dict()
         self._plugins = dict()
         for plugin in self._settings['plugins']:
             self.plugin_load(plugin['name'], plugin['settings'])
@@ -124,7 +124,8 @@ class Bot(protocol.ClientFactory):
         self._channels = channels
 
     def say(self, server_id, channel, message):
-        if (len(self._servers) > server_id):
+        log.msg("Bot.say", server_id, channel, message)
+        if (server_id in self._servers):
             # From https://tools.ietf.org/html/rfc1459 :
             # IRC messages are always lines of characters terminated with a CR-LF
             # (Carriage Return - Line Feed) pair, and these messages shall not
@@ -139,13 +140,20 @@ class Bot(protocol.ClientFactory):
             self._servers[server_id].say(channel, message, max_length)
 
     def join(self, server_id, channel):
-        if (len(self._servers) > server_id):
+        if (server_id in self._servers):
             self._servers[server_id].join(channel)
+
+    def AddressToString(self, addr):
+        return str(addr)
 
     def buildProtocol(self, addr):
         log.msg("Bot.buildProtocol")
-        server = Server(len(self._servers), self._settings, self._channels, self._plugins)
-        self._servers.append(server)
+        address = self.AddressToString(addr)
+        if (addr in self._servers):
+            #TODO(reggna): What do we do when trying to join the same serverdo we do when trying to join the same server twice??
+            log.msg("Trying to join already existing server?  : " + address)
+        server = Server(address, self._settings, self._channels, self._plugins)
+        self._servers[address] = server
         return server
 
     def clientConnectionLost(self, connector, reason):
