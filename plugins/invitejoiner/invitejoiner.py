@@ -1,7 +1,11 @@
+from __future__ import division, absolute_import, print_function, unicode_literals
+
+import sys
 
 import plugin
 
 from twisted.python import log
+
 
 class Invitejoiner(plugin.Plugin):
 
