@@ -13,14 +13,13 @@ from plugin import PluginProtocol
 
 class Server(irc.IRCClient):
 
-    def __init__(self, server_id, settings, channels, plugins):
+    def __init__(self, settings, plugins):
         log.msg("Server.__init__")
         self.nickname = settings['nickname']
         self.realname = settings['realname']
         self.username = settings['username']
-        self._id = server_id
+        self._name = None
         self._settings = settings
-        self._channels = channels
         self._plugins = plugins
 
         self._encoding = "utf-8"
@@ -30,12 +29,16 @@ class Server(irc.IRCClient):
         irc.IRCClient.connectionMade(self)
 
     def connectionLost(self, reason):
+        for plugin in self._plugins.iterkeys():
+            plugin.ondisconnected(self._name)
         log.msg("Server.connectionLost")
 
     def signedOn(self):
-        log.msg("Server.signedOn")
-        for channel in self._channels:
-            self.join(channel['name'])
+        log.msg("Server.signedOn " + self._name)
+
+        for plugin in self._plugins.iterkeys():
+            log.msg("ser " + str(plugin.onconnected))
+            plugin.onconnected(self._name)
 
     # region Encoding overrides
 
@@ -59,19 +62,19 @@ class Server(irc.IRCClient):
     # endregion
 
     def joined(self, channel):
-        log.msg("Server.joined", self._id, channel)
+        log.msg("Server.joined", self._name, channel)
         for plugin in self._plugins.iterkeys():
-            plugin.joined(self._id, channel)
+            plugin.joined(self._name, channel)
 
     def privmsg(self, user, channel, message):
-        log.msg("Server.privmsg", self._id, user, channel, message)
+        log.msg("Server.privmsg", self._name, user, channel, message)
         for plugin in self._plugins.iterkeys():
-            plugin.privmsg(self._id, user, channel, message.decode(self._encoding))
+            plugin.privmsg(self._name, user, channel, message.decode(self._encoding))
 
     def irc_unknown(self, prefix, command, params):
         if command == "INVITE":
             for plugin in self._plugins.iterkeys():
-                plugin.invited(self._id, params[1])
+                plugin.invited(self._name, params[1])
 
 
 class Bot(protocol.ClientFactory):
@@ -117,15 +120,12 @@ class Bot(protocol.ClientFactory):
         plugin.update_loop_call.stop()
         del self._plugins[plugin]
 
-        #Reload plugin
+        # Reload plugin
         self.plugin_load(name, settings)
 
-    def _setChannels(self, channels):
-        self._channels = channels
-
-    def say(self, server_id, channel, message):
-        log.msg("Bot.say", server_id, channel, message)
-        if server_id in self._servers:
+    def say(self, server, channel, message):
+        log.msg("Bot.say", server, channel, message)
+        if server in self._servers:
             # From https://tools.ietf.org/html/rfc1459 :
             # IRC messages are always lines of characters terminated with a CR-LF
             # (Carriage Return - Line Feed) pair, and these messages shall not
@@ -137,21 +137,21 @@ class Bot(protocol.ClientFactory):
                                                     # the space between the
                                                     # target (channel) and the
                                                     # actual message
-            self._servers[server_id].say(channel, message, max_length)
+            self._servers[server].say(channel, message, max_length)
 
-    def join(self, server_id, channel):
-        if server_id in self._servers:
-            self._servers[server_id].join(channel)
+    def join(self, server, channel):
+        log.msg("Bot.join " + server + ", " + channel)
+        if server in self._servers:
+            self._servers[server].join(channel)
 
     def buildProtocol(self, addr):
         log.msg("Bot.buildProtocol")
-        address = str(addr)
-        if addr in self._servers:
-            #TODO(reggna): What do we do when trying to join the same serverdo we do when trying to join the same server twice??
-            log.msg("Trying to join already existing server?  : " + address)
-        server = Server(address, self._settings, self._channels, self._plugins)
-        self._servers[address] = server
-        return server
+        return Server(self._settings, self._plugins)
+
+    def connected(self, name, server):
+        log.msg("Bot.connected")
+        server._name = name
+        self._servers[name] = server
 
     def clientConnectionLost(self, connector, reason):
         log.msg("Bot.clientConnectionLost")
@@ -161,17 +161,13 @@ class Bot(protocol.ClientFactory):
         log.msg("Bot.clientConnectionFailed")
         reactor.stop()
 
-
 if __name__ == '__main__':
     log.startLogging(open('Bot.log', 'a'))
     log.msg("main")
     settings = settings.get_settings()
     factory = Bot(settings)
     for server in settings['servers']:
-        log.msg("main: creating enpoint for host:", server['host'], "port:", server['port'])
-        #TODO: Find better way of sending default channels to bot:
-        factory._setChannels(server['channels'])
-        endpoint = endpoints.clientFromString(reactor,
-            "tcp:host={}:port={}".format(server['host'], server['port']))
-        conn = endpoint.connect(factory)
+        log.msg("main: creating endpoint for host:", server['host'], "port:", server['port'])
+        endpoint = endpoints.clientFromString(reactor, "tcp:host={}:port={}".format(server['host'], server['port']))
+        conn = endpoint.connect(factory).addCallback(lambda s: factory.connected(server['name'], s))
     reactor.run()

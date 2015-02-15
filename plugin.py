@@ -9,35 +9,43 @@ class Started(Command):
     arguments = [('settings', String())]
 
 
+class OnConnected(Command):
+    arguments = [('server', String())]
+
+
+class OnDisconnected(Command):
+    arguments = [('server', String())]
+
+
 class Update(Command):
     pass
 
 
 class Privmsg(Command):
-    arguments = [('server_id', String()),
+    arguments = [('server', String()),
                  ('user', String()),
                  ('channel', String()),
                  ('message', Unicode())]
 
 
 class Join(Command):
-    arguments = [('server_id', String()),
+    arguments = [('server', String()),
                  ('channel', String())]
 
 
 class Joined(Command):
-    arguments = [('server_id', String()),
+    arguments = [('server', String()),
                  ('channel', String())]
 
 
 class Say(Command):
-    arguments = [('server_id', String()),
+    arguments = [('server', String()),
                  ('channel', String()),
                  ('message', Unicode())]
 
 
 class Invited(Command):
-    arguments = [('server_id', String()),
+    arguments = [('server', String()),
                  ('channel', String())]
 
 
@@ -52,6 +60,7 @@ class BidirectionalAMP(amp.AMP):
         if cls not in self.responses:
             return None
         method = getattr(self, cls.__name__.lower())
+
         def responder_inner(box):
             params = cls.parseArguments(box, self)
             result = method(**params)
@@ -79,7 +88,7 @@ class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
             BidirectionalAMP.__init__(self)
             self.bot = bot
             self.responses = [Say, Join]
-            self.calls = [Started, Update, Joined, Privmsg, Invited]
+            self.calls = [Started, OnConnected, OnDisconnected, Update, Joined, Privmsg, Invited]
 
         def __getattr__(self, name):
             try:
@@ -94,7 +103,7 @@ class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
         self.bot = bot
 
         self.responses = [Say, Join]
-        self.calls = [Started, Update, Joined, Privmsg, Invited]
+        self.calls = [Started, OnConnected, OnDisconnected, Update, Joined, Privmsg, Invited]
 
         self.setTimeout(60)
 
@@ -157,7 +166,7 @@ class Plugin(BidirectionalAMP):
 
     def __init__(self, name):
         BidirectionalAMP.__init__(self)
-        self.responses = [Started, Update, Joined, Privmsg, Invited]
+        self.responses = [Started, OnConnected, OnDisconnected, Update, Joined, Privmsg, Invited]
         self.calls = [Say, Join]
         self.name = name
 
@@ -175,14 +184,20 @@ class Plugin(BidirectionalAMP):
     def started(self, settings):
         pass
 
-    def joined(self, server_id, channel):
+    def onconnected(self, server):
+        pass
+
+    def ondisconnected(self, server):
+        pass
+
+    def joined(self, server, channel):
         pass
 
     def update(self):
         pass
 
-    def privmsg(self, server_id, user, channel, message):
+    def privmsg(self, server, user, channel, message):
         pass
 
-    def invited(self, server_id, channel):
+    def invited(self, server, channel):
         pass
