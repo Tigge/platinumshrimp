@@ -62,14 +62,16 @@ class Trakt(plugin.Plugin):
 
         self.users = dict(map(lambda user: (user, {}), self.settings["users"]))
 
-        self.join(0, str(self.settings["channel"]))
+    def onconnected(self, server):
+        log.msg("Trakt.onconnected", server)
+        self.join(str(self.settings["server"]), str(self.settings["channel"]))
 
-    def joined(self, server_id, channel):
-        log.msg("Trakt.joined", server_id, channel)
+    def joined(self, server, channel):
+        log.msg("Trakt.joined", server, channel)
 
     def echo(self, message):
         log.msg("Trakt.echo", message)
-        self.say(0, str(self.settings["channel"]), "Trakt: " + message.encode("utf-8"))
+        self.say(str(self.settings["server"]), str(self.settings["channel"]), "Trakt: " + message.encode("utf-8"))
 
     @staticmethod
     def get_date(date):
