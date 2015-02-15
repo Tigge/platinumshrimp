@@ -125,7 +125,7 @@ class Bot(protocol.ClientFactory):
 
     def say(self, server_id, channel, message):
         log.msg("Bot.say", server_id, channel, message)
-        if (server_id in self._servers):
+        if server_id in self._servers:
             # From https://tools.ietf.org/html/rfc1459 :
             # IRC messages are always lines of characters terminated with a CR-LF
             # (Carriage Return - Line Feed) pair, and these messages shall not
@@ -140,16 +140,13 @@ class Bot(protocol.ClientFactory):
             self._servers[server_id].say(channel, message, max_length)
 
     def join(self, server_id, channel):
-        if (server_id in self._servers):
+        if server_id in self._servers:
             self._servers[server_id].join(channel)
-
-    def AddressToString(self, addr):
-        return str(addr)
 
     def buildProtocol(self, addr):
         log.msg("Bot.buildProtocol")
-        address = self.AddressToString(addr)
-        if (addr in self._servers):
+        address = str(addr)
+        if addr in self._servers:
             #TODO(reggna): What do we do when trying to join the same serverdo we do when trying to join the same server twice??
             log.msg("Trying to join already existing server?  : " + address)
         server = Server(address, self._settings, self._channels, self._plugins)

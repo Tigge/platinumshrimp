@@ -12,5 +12,5 @@
 # split("a b c" , " ", 3)  = ["a", "b", "c"]
 # split("a b", " ", 3)     = ["a", "b", ""]
 def split(s, sep, count):
-    return (s + (((count - 1) - s.count(sep)) * sep)).split(sep, count - 1)
+    return (s + ((count - 1 - s.count(sep)) * sep)).split(sep, count - 1)
 
