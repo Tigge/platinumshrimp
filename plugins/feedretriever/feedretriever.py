@@ -108,8 +108,8 @@ class Feedretriever(plugin.Plugin):
         #self.settings = json.loads(settings)
         #TODO: Save feeds to file and recreate when the bot is restarted
 
-    def privmsg(self, server_id, user, channel, message):
-        say = lambda msg: self.say(server_id, channel, msg)
+    def privmsg(self, server, user, channel, message):
+        say = lambda msg: self.say(server, channel, msg)
         if message.startswith("!feed") or message.startswith("!addfeed"):
             _, url, time, title = str_utils.split(message, " ", 4)
             try:

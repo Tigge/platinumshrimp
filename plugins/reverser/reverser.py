@@ -11,9 +11,9 @@ class Reverser(plugin.Plugin):
     def _reverseString(text):
         return text[::-1]
 
-    def privmsg(self, server_id, user, channel, message):
+    def privmsg(self, server, user, channel, message):
         if message.startswith(".reverse"):
-            self.say(server_id, channel, _reverseString(message[8:]))
+            self.say(server, channel, _reverseString(message[8:]))
 
 if __name__ == "__main__":
     sys.exit(Reverser.run())

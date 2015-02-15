@@ -53,10 +53,10 @@ class Titlegiver(plugin.Plugin):
 
         return re.sub(r'&([#a-zA-Z0-9]+);', replace_entity, text)
 
-    def privmsg(self, server_id, user, channel, message):
+    def privmsg(self, server, user, channel, message):
         for url in url_parser.find_urls(message):
             try:
-                self.say(server_id, channel, Titlegiver.get_title_from_url(url))
+                self.say(server, channel, Titlegiver.get_title_from_url(url))
             except:
                 log.msg("Unable to find title for:", url)
                 log.err()
