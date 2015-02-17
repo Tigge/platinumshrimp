@@ -18,7 +18,6 @@ def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
                     'name': 'chalmersit',
                     'host': 'irc.chalmers.it',
                     'port': 6667,
-                    'channels': [{'name': '#platinumshrimp'}]
                     }],
                 'plugins': [
                     {
@@ -28,6 +27,12 @@ def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
                     {
                       'name': 'invitejoiner',
                       'settings': ''
+                    },
+                    {
+                      'name': 'autojoin',
+                      'settings': {
+                        'chalmersit': ['#platinumshrimp']
+                      }
                     }]
                 }))
             # TODO: Prettify output
