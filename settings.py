@@ -34,9 +34,7 @@ def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
                         'chalmersit': ['#platinumshrimp']
                       }
                     }]
-                }))
-            # TODO: Prettify output
-
+                }, indent=2))
     def encode_dict(data):
         if type(data) == dict:
             return dict(map(encode_dict, pair) for pair in data.items())
