@@ -33,9 +33,9 @@ class Feed():
         if isinstance(data, basestring):
             data = feedparser.parse(data)
         self.last_entry = 0
-        self.set_last(data.entries)
+        self._set_last(data.entries)
         self.title = title
-        self.update_title(data)
+        self._update_title(data)
 
     def update(self, data, say):
         if isinstance(data, basestring):
@@ -43,7 +43,7 @@ class Feed():
         if data.bozo != 0:
             log.msg("Error updating feed " + self.title)
             return
-        self.update_title(data)
+        self._update_title(data)
         log.msg("Updating feed: " + self.title)
         for entry in data.entries:
             # TODO: Check id, title and link, etc
@@ -52,13 +52,13 @@ class Feed():
             if entry.published_parsed <= self.last_entry:
                 break
             say(FeedItemToString(entry.title, entry.link, self.title))
-        self.set_last(data.entries)
+        self._set_last(data.entries)
 
-    def update_title(self, parsed):
+    def _update_title(self, parsed):
         if parsed.bozo == 0 and self.title == "":
             self.title = parsed.feed.title
 
-    def set_last(self, entries):
+    def _set_last(self, entries):
         if len(entries) > 0:
             self.last_entry = entries[0].published_parsed
 
