@@ -17,8 +17,8 @@ HELP_MESSAGE = ("!addfeed url [fetch time [custom title]] where:\n"
                 "If no title is given, the default title parsed from the "
                 "feed will be used instead.")
 
-REMOVING_FEED_MESSAGE = "Removing: #{} - {}"
-LIST_FEED_ITEM_MESSAGE = "#{}: {}"
+REMOVING_FEED_MESSAGE = u"Removing: #{} - {}"
+LIST_FEED_ITEM_MESSAGE = u"#{}: {}"
 NO_FEED_MESSAGE = "No feeds"
 
 DEFAULT_FETCH_TIME = 10*60
