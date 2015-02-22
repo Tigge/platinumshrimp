@@ -1,12 +1,14 @@
-import json
-import sys
 import feedparser
+import os.path
+import shutil
+import sys
 
 from twisted.python import log
 
 import plugin
-from utils import str_utils
+from utils import str_utils, file_utils
 
+SAVE_FILE    = "feedretriver_settings.save"
 FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "
                 "the !listfeed and !removefeed commands.")
 
@@ -105,8 +107,17 @@ class Feedretriever(plugin.Plugin):
 
     def started(self, settings):
         log.msg("Feedretriever.started", settings)
-        #self.settings = json.loads(settings)
-        #TODO: Save feeds to file and recreate when the bot is restarted
+        if os.path.isfile(SAVE_FILE):
+            BACKUP = SAVE_FILE + ".backup"
+            shutil.move(SAVE_FILE, BACKUP)
+            with open(BACKUP, "r") as f:
+                for line in f:
+                    try:
+                        server, channel, message = str_utils.split(line, " ", 3)
+                        log.msg("Reading: " + message)
+                        self.privmsg(server, None, channel, message)
+                    except:
+                        pass
 
     def privmsg(self, server, user, channel, message):
         say = lambda msg: self.say(server, channel, msg)
@@ -120,12 +131,17 @@ class Feedretriever(plugin.Plugin):
                 say(HELP_MESSAGE)
                 return
             self.feeds.append(Feedpoller(say, url, time, title))
+            with open(SAVE_FILE, 'ab') as f:
+                log.msg("Saving: " + message)
+                f.write(server + " " + channel + " " + message + "\n")
         elif message.startswith("!removefeed"):
             i = message[12:]
             i = int(i) if unicode(i).isdecimal() else -1
             if i >= 0 and i < len(self.feeds):
                 say(REMOVING_FEED_MESSAGE.format(i, self.feeds[i].feed.title))
-                self.feeds.remove(i)
+                del self.feeds[i]
+                file_utils.remove_line_in_file(SAVE_FILE, i)
+                log.msg("Removed feed: " + str(i))
         elif message.startswith("!listfeed"):
             if len(self.feeds) == 0:
                 say(NO_FEED_MESSAGE)
