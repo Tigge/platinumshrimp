@@ -12,7 +12,7 @@ from twisted.python import log
 import plugin
 
 
-API_URL = "https://api.trakt.tv"
+API_URL = "https://api-v2launch.trakt.tv"
 API_ACTIVITY = "/users/{0}/history/{1}"
 
 
