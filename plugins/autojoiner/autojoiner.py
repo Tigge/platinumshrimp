@@ -8,10 +8,10 @@ import plugin
 from twisted.python import log
 
 
-class Autojoin(plugin.Plugin):
+class Autojoiner(plugin.Plugin):
 
     def __init__(self):
-        plugin.Plugin.__init__(self, "Autojoin")
+        plugin.Plugin.__init__(self, "Autojoiner")
         self.settings = {}
 
     def started(self, settings):
@@ -23,4 +23,4 @@ class Autojoin(plugin.Plugin):
                 self.join(server, str(channel))
 
 if __name__ == "__main__":
-    sys.exit(Autojoin.run())
+    sys.exit(Autojoiner.run())
