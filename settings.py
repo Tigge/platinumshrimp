@@ -29,7 +29,7 @@ def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
                       'settings': ''
                     },
                     {
-                      'name': 'autojoin',
+                      'name': 'autojoiner',
                       'settings': {
                         'chalmersit': ['#platinumshrimp']
                       }
