@@ -84,14 +84,19 @@ class Bot(protocol.ClientFactory):
         self._settings = settings
         self._servers = dict()
         self._plugins = dict()
-        for plugin in self._settings['plugins']:
-            self.plugin_load(plugin['name'], plugin['settings'])
+        if 'plugins' in settings:
+            for plugin in self._settings['plugins']:
+                self.plugin_load(plugin['name'], plugin['settings'])
 
     def plugin_load(self, name, settings):
         log.msg("Bot.plugin_load", name, settings)
         plugin = PluginProtocol(name, self)
-        log.msg("Bot.plugin_load plugin", plugin, name, self, sys.executable, [sys.executable, "plugins/" + name + "/" + name + ".py"])
-        reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, "plugins/" + name + "/" + name + ".py"], env={"PYTHONPATH": os.getcwd()})
+        file_name = "plugins/" + name + "/" + name + ".py"
+        if not os.path.isfile(file_name):
+            log.err("Unable to load plugin", name)
+        else:
+            log.msg("Bot.plugin_load plugin", plugin, name, self, sys.executable, [sys.executable, file_name])
+            reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, file_name], env={"PYTHONPATH": os.getcwd()})
 
     def plugin_started(self, plugin):
         log.msg("Bot.plugin_started", plugin, self._settings)

@@ -146,16 +146,16 @@ class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
         return self.amp.dataReceived(data)
 
     def childConnectionLost(self, childFD):
-        log.msg("PluginProtocol.childConnectionLost")
+        log.msg("PluginProtocol.childConnectionLost: " + self.name)
         self.loseConnection()
 
     def loseConnection(self):
-        log.msg("PluginProtocol.loseConnection")
+        log.msg("PluginProtocol.loseConnection: " + self.name)
         self.transport.loseConnection()
         self.transport.signalProcess('KILL')
 
     def processExited(self, reason):
-        log.msg("PluginProtocol.processExited", reason)
+        log.msg("PluginProtocol.processExited", self.name, reason)
 
     def processEnded(self, reason):
         log.msg("PluginProtocol.processEnded", reason)
