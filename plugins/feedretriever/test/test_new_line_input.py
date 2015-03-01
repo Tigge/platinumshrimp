@@ -1,0 +1,44 @@
+from __future__ import unicode_literals
+from twisted.trial import unittest
+
+from plugins.feedretriever.feedretriever import Feed, FeedItemToString
+class FeedRetriverTest(unittest.TestCase):
+    def test_title_starting_with_new_line(self):
+        with open("../plugins/feedretriever/test/basic_rss_0-entries.xml") as f:
+            feed_name = """
+            Test feed"""
+            feed = Feed(f.read(), feed_name)
+            self.assertEqual(feed.title, "Test feed")
+
+    def test_title_ending_with_new_line(self):
+        with open("../plugins/feedretriever/test/basic_rss_0-entries.xml") as f:
+            feed_name = """Test feed
+            """
+            feed = Feed(f.read(), feed_name)
+            self.assertEqual(feed.title, "Test feed")
+
+    def test_title_has_new_line_in_middle(self):
+        with open("../plugins/feedretriever/test/basic_rss_0-entries.xml") as f:
+            feed_name = """Test
+            feed"""
+            feed = Feed(f.read(), feed_name)
+            self.assertEqual(feed.title, "Test feed")
+
+    def test_feed_item_has_new_lines(self):
+        with open("../plugins/feedretriever/test/basic_rss_0-entries.xml") as f1:
+            data = f1.read()
+            feed_name = """
+            Test
+            feed
+            """
+            feed = Feed(data, feed_name)
+            self.assertEqual(feed.title, "Test feed")
+            self.updated = False
+            def say(output):
+                self.assertEqual(output, "Test feed: Test Title <http://www.example.com>")
+                self.updated = True
+            with open("../plugins/feedretriever/test/basic_rss_1-entries_new_line.xml") as f2:
+                data = f2.read()
+                feed.update(data, say)
+                self.assertTrue(self.updated)
+

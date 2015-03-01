@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import feedparser
 import os.path
 import shutil
@@ -19,14 +21,17 @@ HELP_MESSAGE = ("!addfeed url [fetch time [custom title]] where:\n"
                 "If no title is given, the default title parsed from the "
                 "feed will be used instead.")
 
-REMOVING_FEED_MESSAGE = u"Removing: #{} - {}"
-LIST_FEED_ITEM_MESSAGE = u"#{}: {}"
+REMOVING_FEED_MESSAGE = "Removing: #{} - {}"
+LIST_FEED_ITEM_MESSAGE = "#{}: {}"
 NO_FEED_MESSAGE = "No feeds"
 
 DEFAULT_FETCH_TIME = 10*60
 
+def SanitizeString(s):
+    return " ".join(s.split()).strip()
+
 def FeedItemToString(title, link, feed_title = ""):
-    return u"{}: {} <{}>".format(feed_title, title, link)
+    return SanitizeString("{}: {} <{}>".format(feed_title, title, link))
 
 # The Feed class handles printing out new entries
 class Feed():
@@ -59,6 +64,7 @@ class Feed():
     def _update_title(self, parsed):
         if parsed.bozo == 0 and self.title == "":
             self.title = parsed.feed.title
+        self.title = SanitizeString(self.title)
 
     def _set_last(self, entries):
         if len(entries) > 0:
