@@ -70,8 +70,8 @@ class Trakt(plugin.Plugin):
         log.msg("Trakt.joined", server, channel)
 
     def echo(self, message):
-        log.msg("Trakt.echo", message)
-        self.say(str(self.settings["server"]), str(self.settings["channel"]), "Trakt: " + message.encode("utf-8"))
+        log.msg("Trakt.echo", message.encode('ascii', 'replace'))
+        self.say(str(self.settings["server"]), str(self.settings["channel"]), "Trakt: " + message)
 
     @staticmethod
     def get_date(date):
@@ -148,13 +148,6 @@ class Trakt(plugin.Plugin):
     @staticmethod
     def format_episode(show, episode):
         return "'{0[title]}', S{1[season]:02d}E{1[number]:02d} '{1[title]}'".format(show, episode)
-
-    @staticmethod
-    def format_rating(activity):
-        if activity["use_rating_advanced"]:
-            return unicode(activity["rating_advanced"])
-        else:
-            return activity["rating"]
 
     @staticmethod
     def format_action(action):
