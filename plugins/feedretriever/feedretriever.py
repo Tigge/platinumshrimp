@@ -139,9 +139,12 @@ class Feedretriever(plugin.Plugin):
                 log.msg("Saving: " + message)
                 f.write(server + " " + channel + " " + SanitizeString(message) + "\n")
         elif message.startswith("!removefeed"):
-            i = message[12:]
-            i = int(i) if unicode(i).isdecimal() else -1
-            if i >= 0 and i < len(self.feeds):
+            feeds = []
+            for i in message.split(" "):
+                i = int(i) if unicode(i).isdecimal() else -1
+                if i >= 0 and i < len(self.feeds):
+                    feeds.append(i);
+            for i in sorted(feeds, reverse=True):
                 say(REMOVING_FEED_MESSAGE.format(i, self.feeds[i].feed.title))
                 del self.feeds[i]
                 file_utils.remove_line_in_file(SAVE_FILE, i)
