@@ -137,7 +137,7 @@ class Feedretriever(plugin.Plugin):
             self.feeds.append(Feedpoller(say, url, time, title))
             with open(SAVE_FILE, 'ab') as f:
                 log.msg("Saving: " + message)
-                f.write(server + " " + channel + " " + message + "\n")
+                f.write(server + " " + channel + " " + SanitizeString(message) + "\n")
         elif message.startswith("!removefeed"):
             i = message[12:]
             i = int(i) if unicode(i).isdecimal() else -1
