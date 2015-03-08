@@ -9,6 +9,8 @@ from utils import str_utils
 # The CommandSaver can be used for saving string parameter lists persistent
 # between bot runs.
 #
+# Note that the CommandSaver is NOT thread safe!
+#
 # Here's an example of using the CommandSaver for saving commands sent
 # to a plugin using privmsg.  These commands will be saved to a SAVE_FILE
 # and the plugin will receive the same commands the next time the bot
@@ -31,8 +33,8 @@ from utils import str_utils
 class CommandSaver():
     def __init__(self, filename, param_separator = " ", command_separator = "\n"):
         self.filename = filename
-        self.param_separator = param_separator
-        self.command_separator = command_separator
+        self.ps = param_separator
+        self.cs = command_separator
 
     # Call read for emptying the saved file and feed the stored information
     # to a function callback.
@@ -41,13 +43,13 @@ class CommandSaver():
             BACKUP = self.filename + ".backup"
             shutil.move(self.filename, BACKUP)
             with open(BACKUP, "r") as f:
-                for line in f.read().split(self.command_separator):
+                for line in f.read().split(self.cs):
                     try:
                         # Skip empty lines
                         if len(line) == 0:
                             continue
                         log.msg("Reading: " + line)
-                        callback(*(str_utils.split(line, self.param_separator, numargs)))
+                        callback(*(str_utils.split(line, self.ps, numargs)))
                     except:
                         pass
         else:
@@ -58,14 +60,14 @@ class CommandSaver():
     # reading and spliting parameters in read() fail.
     def save(self, *args):
         with open(self.filename, 'ab') as f:
-            message = self.param_separator.join(args)
+            message = self.ps.join(args)
             log.msg("Saving: " + message)
-            f.write(str_utils.sanitize_string(message) + self.command_separator)
+            f.write(str_utils.sanitize_string(message) + self.cs)
 
     def remove(self, index):
-        content_array = open(self.filename, 'r').read().split(self.command_separator)
+        content_array = open(self.filename, 'r').read().split(self.cs)
         content_array.pop(index)
         content_array = filter(None, content_array)
         with open(self.filename, 'w') as f:
-            f.write(self.command_separator.join(content_array) + self.command_separator)
+            f.write(self.cs.join(content_array) + self.cs)
 
