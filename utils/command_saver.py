@@ -33,9 +33,10 @@ from utils import str_utils, file_utils
 #
 
 class CommandSaver():
-    def __init__(self, filename, param_separator = " "):
+    def __init__(self, filename, param_separator = " ", command_separator = "\n"):
         self.filename = filename
         self.param_separator = param_separator
+        self.command_separator = command_separator
 
     # Call read for emptying the saved file and feed the stored information
     # to a function callback.
@@ -44,10 +45,8 @@ class CommandSaver():
             BACKUP = self.filename + ".backup"
             shutil.move(self.filename, BACKUP)
             with open(BACKUP, "r") as f:
-                for line in f:
+                for line in f.read().split(self.command_separator):
                     try:
-                        # Remove the \n we added when writing
-                        line = line[:-1]
                         # Skip empty lines
                         if len(line) == 0:
                             continue
@@ -65,8 +64,13 @@ class CommandSaver():
         with open(self.filename, 'ab') as f:
             message = self.param_separator.join(args)
             log.msg("Saving: " + message)
-            f.write(str_utils.sanitize_string(message) + "\n")
+            f.write(str_utils.sanitize_string(message) + self.command_separator)
 
     def remove(self, index):
-        file_utils.remove_line_in_file(self.filename, index)
+        content_array = open(self.filename, 'r').read().split(self.command_separator)
+        content_array.pop(index)
+        content_array = filter(None, content_array)
+        with open(self.filename, 'w') as f:
+            f.write(self.command_separator.join(content_array) + self.command_separator)
+#        file_utils.remove_line_in_file(self.filename, index)
 
