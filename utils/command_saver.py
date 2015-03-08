@@ -3,7 +3,7 @@ import shutil
 
 from twisted.python import log
 
-from utils import str_utils, file_utils
+from utils import str_utils
 
 
 # The CommandSaver can be used for saving string parameter lists persistent
@@ -25,11 +25,7 @@ from utils import str_utils, file_utils
 #       # Do cool stuff with message
 #       self.saver.save(server, user, channel, message)
 #
-# TODO: Enable customizable separator for commands as well.  Right now,
-#       <new line> is always used, meaning that a saved string can't contain
-#       a line separator itself.
 # TODO: More extensive testing.
-# TODO: Test different param_separators
 #
 
 class CommandSaver():
@@ -72,5 +68,4 @@ class CommandSaver():
         content_array = filter(None, content_array)
         with open(self.filename, 'w') as f:
             f.write(self.command_separator.join(content_array) + self.command_separator)
-#        file_utils.remove_line_in_file(self.filename, index)
 
