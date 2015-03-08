@@ -1,12 +1,10 @@
 import feedparser
-import os.path
-import shutil
 import sys
 
 from twisted.python import log
 
 import plugin
-from utils import str_utils, file_utils
+from utils import str_utils, command_saver
 
 SAVE_FILE    = "feedretriver_settings.save"
 FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "
@@ -25,11 +23,8 @@ NO_FEED_MESSAGE = u"No feeds"
 
 DEFAULT_FETCH_TIME = 10*60
 
-def SanitizeString(s):
-    return " ".join(s.split()).strip()
-
 def FeedItemToString(title, link, feed_title = ""):
-    return SanitizeString(u"{}: {} <{}>".format(feed_title, title, link))
+    return str_utils.sanitize_string(u"{}: {} <{}>".format(feed_title, title, link))
 
 # The Feed class handles printing out new entries
 class Feed():
@@ -62,7 +57,7 @@ class Feed():
     def _update_title(self, parsed):
         if parsed.bozo == 0 and self.title == "":
             self.title = parsed.feed.title
-        self.title = SanitizeString(self.title)
+        self.title = str_utils.sanitize_string(self.title)
 
     def _set_last(self, entries):
         if len(entries) > 0:
@@ -108,20 +103,11 @@ class Feedretriever(plugin.Plugin):
     def __init__(self):
         plugin.Plugin.__init__(self, "Feedretriever")
         self.feeds = []
+        self.saver = command_saver.CommandSaver(SAVE_FILE)
 
     def started(self, settings):
         log.msg("Feedretriever.started", settings)
-        if os.path.isfile(SAVE_FILE):
-            BACKUP = SAVE_FILE + ".backup"
-            shutil.move(SAVE_FILE, BACKUP)
-            with open(BACKUP, "r") as f:
-                for line in f:
-                    try:
-                        server, channel, message = str_utils.split(line, " ", 3)
-                        log.msg("Reading: " + message)
-                        self.privmsg(server, None, channel, message)
-                    except:
-                        pass
+        self.saver.read(lambda server, channel, message: self.privmsg(server, None, channel, message), 3)
 
     def privmsg(self, server, user, channel, message):
         say = lambda msg: self.say(server, channel, msg)
@@ -135,9 +121,7 @@ class Feedretriever(plugin.Plugin):
                 say(HELP_MESSAGE)
                 return
             self.feeds.append(Feedpoller(say, url, time, title))
-            with open(SAVE_FILE, 'ab') as f:
-                log.msg("Saving: " + message)
-                f.write(server + " " + channel + " " + SanitizeString(message) + "\n")
+            self.saver.save(server, channel, message)
         elif message.startswith("!removefeed"):
             feeds = []
             for i in message.split(" "):
@@ -147,7 +131,7 @@ class Feedretriever(plugin.Plugin):
             for i in sorted(feeds, reverse=True):
                 say(REMOVING_FEED_MESSAGE.format(i, self.feeds[i].feed.title))
                 del self.feeds[i]
-                file_utils.remove_line_in_file(SAVE_FILE, i)
+                self.saver.remove(i)
                 log.msg("Removed feed: " + str(i))
         elif message.startswith("!listfeed"):
             if len(self.feeds) == 0:

@@ -13,3 +13,8 @@
 def split(s, sep, count):
     return (s + ((count - 1 - s.count(sep)) * sep)).split(sep, count - 1)
 
+
+# Sanitize a string by removing all new lines and extra spaces
+def sanitize_string(s):
+    return " ".join(s.split()).strip()
+
