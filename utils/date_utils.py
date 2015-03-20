@@ -49,7 +49,7 @@ def format(date_old, date_new):
 
     for item in MAP:
         if diff < item["limit"]:
-            count = round(diff.total_seconds() / item["factor"])
+            count = int(round(diff.total_seconds() / item["factor"]))
             unit = item["type"] if count <= 1 else item["type"] + "s"
 
             return "{} {} ago".format(count, unit)
