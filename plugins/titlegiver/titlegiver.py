@@ -12,7 +12,7 @@ class Titlegiver(plugin.Plugin):
     TITLE_REGEX = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
     WHITESPACE_REGEX = re.compile(r'\s+')
 
-    MAX_CONTENT_LENGTH = 32768
+    MAX_CONTENT_LENGTH = 64 * 1024
 
     def __init__(self):
         plugin.Plugin.__init__(self, "Titlegiver")
