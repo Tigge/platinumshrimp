@@ -112,9 +112,6 @@ class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
     def __getattr__(self, name):
         return getattr(self.amp, name)
 
-    def get_name(self):
-        return self.name
-
     def makeConnection(self, process):
         log.msg("PluginProtocol.makeConnection", process)
         self.amp.makeConnection(self)
