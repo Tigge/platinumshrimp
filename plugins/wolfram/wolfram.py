@@ -9,6 +9,7 @@ import plugin
 from utils import str_utils
 
 RESULT_POD_START = "<pod title='Result"
+DECIMAL_APPROXIMATION_POD_START = "<pod title='Decimal approximation'"
 RESULT_SUB_POD = "<plaintext>"
 API_URL = "http://api.wolframalpha.com/v2/query?appid={key}&input={query}&format=plaintext"
 
@@ -16,8 +17,12 @@ def get_answer(query, key):
     query = urllib.quote(query)
     result = requests.get(API_URL.format(key=key, query=query)).text
     if not RESULT_POD_START in result:
-        return
-    result = result[result.index(RESULT_POD_START):]
+        if not DECIMAL_APPROXIMATION_POD_START in result:
+            return
+        else:
+            result = result[result.index(DECIMAL_APPROXIMATION_POD_START):]
+    else:
+        result = result[result.index(RESULT_POD_START):]
     if not RESULT_SUB_POD in result:
         return
     result = result[result.index(RESULT_SUB_POD) + len(RESULT_SUB_POD):]
