@@ -13,6 +13,7 @@ class Titlegiver(plugin.Plugin):
     WHITESPACE_REGEX = re.compile(r'\s+')
 
     MAX_CONTENT_LENGTH = 64 * 1024
+    USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.37 Safari/537.36"
 
     def __init__(self):
         plugin.Plugin.__init__(self, "Titlegiver")
@@ -20,7 +21,7 @@ class Titlegiver(plugin.Plugin):
     @staticmethod
     def get_title_from_url(url):
         # Fetch page (no need to verfiy SSL certs for titles)
-        response = auto_requests.get(url, verify=False)
+        response = auto_requests.get(url, verify=False, headers={"User-Agent": Titlegiver.USER_AGENT})
         content = response.text[:Titlegiver.MAX_CONTENT_LENGTH]
 
         # Avoid leaving dangling redirects when we've got the content
