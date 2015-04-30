@@ -1,8 +1,9 @@
 
 import json
 import codecs
-
 from os import path
+
+from utils.json_utils import read_json
 
 DEFAULT_SETTINGS_FILE = "settings.json"
 
@@ -35,14 +36,7 @@ def get_settings(settings_file=DEFAULT_SETTINGS_FILE):
                       }
                     }]
                 }, indent=2))
-    def encode_dict(data):
-        if type(data) == dict:
-            return dict(map(encode_dict, pair) for pair in data.items())
-        elif type(data) == unicode:
-            return data.encode('utf-8')
-        else:
-            return data
-    settings = json.load(open(settings_file, 'r'), object_hook=encode_dict)
+    settings = read_json(settings_file)
     # TODO: Verify settings, so all required fields are set
     return settings
 

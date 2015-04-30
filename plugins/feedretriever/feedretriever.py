@@ -107,7 +107,7 @@ class Feedretriever(plugin.Plugin):
 
     def started(self, settings):
         log.msg("Feedretriever.started", settings)
-        self.saver.read(lambda server, channel, message: self.privmsg(server, None, channel, message), 3)
+        self.saver.read(lambda server, channel, message: self.privmsg(str(server), None, str(channel), message))
 
     def privmsg(self, server, user, channel, message):
         say = lambda msg: self.say(server, channel, msg)

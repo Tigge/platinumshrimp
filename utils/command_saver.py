@@ -1,9 +1,10 @@
+import json
 import os.path
 import shutil
 
 from twisted.python import log
 
-from utils import str_utils
+from utils.json_utils import read_json
 
 
 # The CommandSaver can be used for saving string parameter lists persistent
@@ -21,7 +22,7 @@ from utils import str_utils
 #       self.saver = command_saver.CommandSaver(SAVE_FILE)
 #
 #    def started(self, settings):
-#        self.saver.read(lambda *args: self.privmsg(*args), 4)
+#        self.saver.read(lambda *args: self.privmsg(*args))
 #
 #    def privmsg(self, server, user, channel, message):
 #       # Do cool stuff with message
@@ -30,28 +31,23 @@ from utils import str_utils
 # TODO: More extensive testing.
 #
 
+
 class CommandSaver():
-    def __init__(self, filename, param_separator = " ", command_separator = "\n"):
+    def __init__(self, filename):
         self.filename = filename
-        self.ps = param_separator
-        self.cs = command_separator
 
     # Call read for emptying the saved file and feed the stored information
     # to a function callback.
-    def read(self, callback, numargs):
+    def read(self, callback):
         if os.path.isfile(self.filename):
             BACKUP = self.filename + ".backup"
             shutil.move(self.filename, BACKUP)
-            with open(BACKUP, "r") as f:
-                for line in f.read().split(self.cs):
-                    try:
-                        # Skip empty lines
-                        if len(line) == 0:
-                            continue
-                        log.msg("Reading: " + line)
-                        callback(*(str_utils.split(line, self.ps, numargs)))
-                    except:
-                        pass
+            data = read_json(BACKUP) or []
+            for line in data:
+                try:
+                    callback(*line)
+                except Exception,e:
+                    log.msg("Error while reading: " + str(e))
         else:
             log.msg("Unable to open file {}, file does not exist".format(self.filename))
 
@@ -59,15 +55,16 @@ class CommandSaver():
     # combination of characters as is used as param_separator, it will make
     # reading and spliting parameters in read() fail.
     def save(self, *args):
-        with open(self.filename, 'ab') as f:
-            message = self.ps.join(args)
-            log.msg("Saving: " + message)
-            f.write(str_utils.sanitize_string(message) + self.cs)
+        data = read_json(self.filename) or []
+        data.append(args)
+        with open(self.filename, 'w+') as file:
+            file.write(json.dumps(data))
 
     def remove(self, index):
-        content_array = open(self.filename, 'r').read().split(self.cs)
-        content_array.pop(index)
-        content_array = filter(None, content_array)
-        with open(self.filename, 'w') as f:
-            f.write(self.cs.join(content_array) + self.cs)
+        data = read_json(self.filename) or []
+        if index > len(data):
+            log.error("Trying to remove something out of index? size: {}, index: {}".format(len(data), index))
+        del data[index]
+        with open(self.filename, 'w+') as file:
+            file.write(json.dumps(data))
 
