@@ -1,8 +1,9 @@
 import sys
+from HTMLParser import HTMLParser
 
+import json
 import requests
 import urllib
-import json
 from twisted.python import log
 
 import plugin
@@ -44,7 +45,7 @@ class Wolfram(plugin.Plugin):
         if message.startswith(self.trigger):
             try:
                 query = message[len(self.trigger) + 1:]
-                result = get_answer(query, self.key)
+                result = HTMLParser().unescape(get_answer(query, self.key))
                 self.say(server, channel, result)
             except:
                 log.err()
