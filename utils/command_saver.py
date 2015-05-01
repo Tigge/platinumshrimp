@@ -28,8 +28,6 @@ from utils.json_utils import read_json
 #       # Do cool stuff with message
 #       self.saver.save(server, user, channel, message)
 #
-# TODO: More extensive testing.
-#
 
 
 class CommandSaver():
@@ -47,9 +45,9 @@ class CommandSaver():
                 try:
                     callback(*line)
                 except Exception,e:
-                    log.msg("Error while reading: " + str(e))
+                    log.err("Error while reading: " + str(e))
         else:
-            log.msg("Unable to open file {}, file does not exist".format(self.filename))
+            log.err("Unable to open file {}, file does not exist".format(self.filename))
 
     # Note that if any argument (except for the last one) includes the same
     # combination of characters as is used as param_separator, it will make
@@ -60,10 +58,22 @@ class CommandSaver():
         with open(self.filename, 'w+') as file:
             file.write(json.dumps(data))
 
+    # This will remove a single item matching the arguments given.
+    # Note that this has to be an exact match for the item to be removed
+    def remove_item(self, *args):
+        data = read_json(self.filename) or []
+        try:
+          data.remove(list(args))
+        except:
+          log.err("Can't remove " + str(list(args)) + " from " + str(data))
+        with open(self.filename, 'w+') as file:
+            file.write(json.dumps(data))
+
     def remove(self, index):
         data = read_json(self.filename) or []
-        if index > len(data):
-            log.error("Trying to remove something out of index? size: {}, index: {}".format(len(data), index))
+        if index >= len(data):
+            log.err("Trying to remove something out of index? size: {}, index: {}".format(len(data), index))
+            return
         del data[index]
         with open(self.filename, 'w+') as file:
             file.write(json.dumps(data))
