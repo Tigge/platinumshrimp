@@ -13,6 +13,7 @@ Install dependencies:
   sudo pip install requests
   sudo pip install feedparser
   sudo pip install python-dateutil
+  sudo pip install mock
 
 Run plugins unit tests:
   trial plugins
