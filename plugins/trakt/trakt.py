@@ -1,6 +1,8 @@
 import json
 import logging
 import sys
+import datetime
+import threading
 
 import dateutil.parser
 import requests
@@ -20,12 +22,12 @@ class Trakt(plugin.Plugin):
         self.users = {}
         self.ticks = 0
 
-    def get(self, url):
+    def get(self, url, params=None):
         logging.info("Trakt.get %s", url)
         headers = {"Content-Type": "application/json",
                    "trakt-api-version": 2,
                    "trakt-api-key": self.settings["key"]}
-        r = requests.get(API_URL + url, headers=headers, verify=False)
+        r = requests.get(API_URL + url, headers=headers, verify=False, params=params)
 
         if r.status_code in [200, 201, 204]:
             try:
@@ -50,6 +52,31 @@ class Trakt(plugin.Plugin):
             raise Exception("Resource already created")
         else:
             raise Exception(str(r.status_code) + ": " + r.reason)
+
+    def fetch_new_activities(self, url, last_sync):
+        if last_sync == None:
+            latest_activity = self.get(url, {"limit":1})
+            return ([], Trakt.get_date(latest_activity[0]["watched_at"]) if len(latest_activity) > 0 else None)
+        else:
+            result = []
+            """ This could be a while loop but the limited range adds a safety
+            to the operation and we need an index anyways so... """
+            for index in range(1, 11):
+                activities = self.get(url, {"page":index})
+                if len(activities) == 0:
+                    break
+                else:
+                    has_more = True
+                    for activity in activities:
+                        if Trakt.get_date(activity["watched_at"]) > last_sync:
+                            result.append(activity)
+                        else:
+                            has_more = False
+                            break
+                    if not has_more:
+                        break
+
+            return (result, Trakt.get_date(result[0]["watched_at"]) if len(result) > 0 else last_sync)
 
     def started(self, settings):
         logging.info("Trakt.started %s", settings)
@@ -79,36 +106,38 @@ class Trakt(plugin.Plugin):
             for user in self.users:
                 self._thread(self.update_user, user)
 
-    def update_user(self, user):
+    def update_user(self, userName):
+        user = self.users[userName]
         for typ in ["episodes", "movies"]:
 
             try:
-                res = self.get(API_ACTIVITY.format(user, typ))
+                activities, new_last_sync = self.fetch_new_activities(API_ACTIVITY.format(userName, typ), user["last_sync_" + typ] if "last_sync_" + typ in user else None)
+
+                # Save latest watched datetime
+                if new_last_sync != None:
+                    user["last_sync_" + typ] = new_last_sync
 
                 # Continue if we have no entries
-                if len(res) == 0:
+                if len(activities) == 0:
                     continue
 
-                # Save latest watched datetime if we haven't fetched this feed before
-                if "last_sync_" + typ not in self.users[user]:
-                    self.users[user]["last_sync_" + typ] = Trakt.get_date(res[0]["watched_at"])
-                    continue
+                activity_summary = self.create_activity_summary(activities)
 
-                for activity in res:
-                    if Trakt.get_date(activity["watched_at"]) > self.users[user]["last_sync_" + typ]:
-
-                        message = Trakt.format_activity(activity, user)
+                for entry in activity_summary:
+                    for series in entry["series"]:
+                        message = Trakt.format_activity(series, userName, entry["action"])
                         if message is not None:
                             self.echo(message)
-
-                self.users[user]["last_sync_" + typ] = Trakt.get_date(res[0]["watched_at"])
 
             except Exception as e:
                 logging.exception("Unhandled exception when fetching (for %s) on %s", user, API_ACTIVITY.format(user, typ))
 
+    def create_activity_summary(self, activities):
+        return []
+
     @staticmethod
-    def format_activity(activity, user):
-        return "{0} {1} {2} http://www.trakt.tv{3}".format(user, Trakt.format_action(activity["action"]),
+    def format_activity(activity={}, userName="", action=""):
+        return "{0} {1} {2} http://www.trakt.tv{3}".format(userName, Trakt.format_action(action),
                                                            Trakt.format_item(activity), Trakt.format_url(activity))
 
     @staticmethod
