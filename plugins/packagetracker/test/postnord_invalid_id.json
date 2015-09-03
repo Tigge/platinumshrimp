@@ -1,0 +1,19 @@
+{
+  "TrackingInformationResponse": {
+    "compositeFault": {
+      "faults": [
+        {
+          "faultCode": "invalidIdentifier",
+          "explanationText": "Identifier must be a valid ItemId or ShipmentId",
+          "paramValues": [
+            {
+              "param": "identifier",
+              "value": "FAIL"
+            }
+          ]
+        }
+      ]
+    },
+    "shipments": []
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "TrackingInformationResponse": {
+    "shipments": [
+      {
+        "shipmentId": "85021697593SE",
+        "uri": "/ntt-service-rest/api/shipment/85021697593SE/0",
+        "assessedNumberOfItems": 1,
+        "deliveryDate": "2015-03-05T18:35:00",
+        "estimatedTimeOfArrival": "2015-03-05T18:00:00",
+        "service": {
+          "code": "32",
+          "name": "Hempaket"
+        },
+        "consignor": {
+          "name": "Dustin Sverige",
+          "address": {
+            "street1": "Metallvägen 36",
+            "city": "Rosersberg",
+            "countryCode": "SWE",
+            "country": "Sweden",
+            "postCode": "19572"
+          }
+        },
+        "consignee": {
+          "address": {
+            "city": "LUND",
+            "countryCode": "SWE",
+            "country": "Sweden",
+            "postCode": "22738"
+          }
+        },
+        "statusText": {
+          "header": "The shipment has been delivered to the recipient",
+          "body": "The shipment was delivered on 3/5/2015 at 18:35 PM"
+        },
+        "status": "DELIVERED",
+        "totalWeight": {
+          "value": "9.1",
+          "unit": "kg"
+        },
+        "totalVolume": {
+          "value": "0.052",
+          "unit": "m3"
+        },
+        "items": [
+          {
+            "itemId": "85021697593SE",
+            "dropOffDate": "2015-03-03T15:47:00",
+            "deliveryDate": "2015-03-05T18:35:00",
+            "typeOfItemActual": "UNDEF",
+            "typeOfItemActualName": "-",
+            "status": "DELIVERED",
+            "statusText": {
+              "header": "The shipment item has been delivered to the recipient",
+              "body": "The shipment item was delivered on 3/5/2015 at 18:35 PM"
+            },
+            "acceptor": {
+              "signatureReference": "85021697593SE",
+              "name": "G TIGER"
+            },
+            "statedMeasurement": {
+              "weight": {
+                "value": "9.1",
+                "unit": "kg"
+              },
+              "length": {
+                "value": "0.44",
+                "unit": "m"
+              },
+              "height": {
+                "value": "0.34",
+                "unit": "m"
+              },
+              "width": {
+                "value": "0.35",
+                "unit": "m"
+              },
+              "volume": {
+                "value": "0.052",
+                "unit": "m3"
+              }
+            },
+            "events": [
+              {
+                "eventTime": "2015-03-03T11:32:00",
+                "eventCode": "68",
+                "status": "INFORMED",
+                "eventDescription": "The electronic shipping instructions have been received",
+                "location": {
+                  "displayName": "Dustin Sverige",
+                  "name": "Dustin Sverige",
+                  "countryCode": "SWE",
+                  "country": "Sweden"
+                }
+              },
+              {
+                "eventTime": "2015-03-03T15:47:00",
+                "eventCode": "31",
+                "status": "EN_ROUTE",
+                "eventDescription": "The shipment item is under transportation",
+                "location": {
+                  "locationId": "175",
+                  "displayName": "Veddesta",
+                  "name": "Veddesta",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "postcode": "17543",
+                  "city": "Järfälla",
+                  "locationType": "HUB"
+                }
+              },
+              {
+                "eventTime": "2015-03-04T06:51:00",
+                "eventCode": "31",
+                "status": "EN_ROUTE",
+                "eventDescription": "The shipment item is under transportation",
+                "location": {
+                  "locationId": "201",
+                  "displayName": "Toftanäs",
+                  "name": "Toftanäs",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "postcode": "21241",
+                  "city": "Malmö",
+                  "locationType": "HUB"
+                }
+              },
+              {
+                "eventTime": "2015-03-04T09:03:00",
+                "eventCode": "112",
+                "status": "EN_ROUTE",
+                "eventDescription": "The shipment item is being held at a distribution terminal awaiting an agreement of delivery with the recipient",
+                "location": {
+                  "locationId": "1020101",
+                  "displayName": "Terminal Toftanäs",
+                  "name": "Terminal Toftanäs",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "locationType": "SLINGA"
+                }
+              },
+              {
+                "eventTime": "2015-03-04T10:32:00",
+                "eventCode": "z04",
+                "status": "OTHER",
+                "eventDescription": "A text message notification has been delivered to the recipient",
+                "location": {
+                  "locationId": "9",
+                  "displayName": "Internt Posten, Smsmotorn",
+                  "name": "Internt Posten, Smsmotorn",
+                  "countryCode": "???",
+                  "locationType": "HUB"
+                }
+              },
+              {
+                "eventTime": "2015-03-04T10:53:00",
+                "eventCode": "209",
+                "status": "AVAILABLE_FOR_DELIVERY",
+                "eventDescription": "The shipment item will be delivered according to arrangement with the recipient",
+                "location": {
+                  "locationId": "10",
+                  "displayName": "Transportbokning",
+                  "name": "Transportbokning",
+                  "countryCode": "???",
+                  "locationType": "HUB"
+                }
+              },
+              {
+                "eventTime": "2015-03-04T10:53:00",
+                "eventCode": "z02",
+                "status": "OTHER",
+                "eventDescription": "Notified by phone, the shipment item will be delivered according to arrangement",
+                "location": {
+                  "locationId": "10",
+                  "displayName": "Transportbokning",
+                  "name": "Transportbokning",
+                  "countryCode": "???",
+                  "locationType": "HUB"
+                }
+              },
+              {
+                "eventTime": "2015-03-05T16:48:00",
+                "eventCode": "z65",
+                "status": "EN_ROUTE",
+                "eventDescription": "The shipment item has arrived at the distribution terminal",
+                "location": {
+                  "locationId": "1124101",
+                  "displayName": "Eslöv",
+                  "name": "Eslöv",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "locationType": "SLINGA"
+                }
+              },
+              {
+                "eventTime": "2015-03-05T16:56:00",
+                "eventCode": "113",
+                "status": "EN_ROUTE",
+                "eventDescription": "The delivery of the shipment item is in progress",
+                "location": {
+                  "locationId": "1124101",
+                  "displayName": "Eslöv",
+                  "name": "Eslöv",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "locationType": "SLINGA"
+                }
+              },
+              {
+                "eventTime": "2015-03-05T18:35:00",
+                "eventCode": "21",
+                "status": "DELIVERED",
+                "eventDescription": "The shipment item has been delivered",
+                "location": {
+                  "locationId": "1124101",
+                  "displayName": "Eslöv",
+                  "name": "Eslöv",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "locationType": "SLINGA"
+                }
+              },
+              {
+                "eventTime": "2015-03-06T11:00:00",
+                "eventCode": "72",
+                "status": "DELIVERED",
+                "eventDescription": "The proof of delivery has been archived",
+                "location": {
+                  "locationId": "177",
+                  "displayName": "Posten",
+                  "name": "Posten",
+                  "countryCode": "SWE",
+                  "country": "Sweden",
+                  "locationType": "HUB"
+                }
+              }
+            ],
+            "references": [
+              {
+                "value": "200441311",
+                "type": "CU",
+                "name": "Sender's reference"
+              }
+            ],
+            "itemRefIds": [],
+            "freeTexts": []
+          }
+        ],
+        "additionalServices": [
+          {
+            "code": "68",
+            "name": "Notification by SMS"
+          }
+        ],
+        "splitStatuses": [],
+        "shipmentReferences": [
+          {
+            "value": "200441311",
+            "type": "CU",
+            "name": "Sender's reference"
+          }
+        ]
+      }
+    ]
+  }
+}
