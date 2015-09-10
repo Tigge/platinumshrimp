@@ -41,23 +41,22 @@ class PackageTracker(plugin.Plugin):
 
     def privmsg(self, server, user, channel, message):
 
-        if message.startswith("!"):
-            if message.startswith("!addpackage "):
-                package_id = message[12:].strip()
-                self.add_package_id(package_id, server, user, channel)
+        if message.startswith("!addpackage "):
+            package_id = message[12:].strip()
+            self.add_package_id(package_id, server, user, channel)
 
-            elif message.startswith("!removepackage "):
-                package_id = message[15:].strip()
-                for package in list(self.packages):
-                    if package.id == package_id:
-                        self.say(server, channel, "Package removed...")
-                        break
-                else:
-                    self.say(server, channel, "Package not found...")
-            elif message.startswith("!listpackages"):
-                self.say(server, channel, "Listing {0} packages...".format(len(self.packages)))
-                for package in self.packages:
-                    self.say(server, channel, str(package.id))
+        elif message.startswith("!removepackage "):
+            package_id = message[15:].strip()
+            for package in list(self.packages):
+                if package.id == package_id:
+                    self.say(server, channel, "Package removed...")
+                    break
+            else:
+                self.say(server, channel, "Package not found...")
+        elif message.startswith("!listpackages"):
+            self.say(server, channel, "Listing {0} packages...".format(len(self.packages)))
+            for package in self.packages:
+                self.say(server, channel, str(package.id))
 
     def add_package_id(self, package_id, server, user, channel):
         package = None

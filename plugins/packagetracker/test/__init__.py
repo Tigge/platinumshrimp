@@ -2,4 +2,4 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ["trakt"]
+__all__ = ["test_postnord"]
