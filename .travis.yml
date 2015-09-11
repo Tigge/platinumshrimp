@@ -8,6 +8,7 @@ install:
   - "pip install python-dateutil"
   - "pip install feedparser"
   - "pip install mock"
+  - "pip install pyzmq"
 
 script:
   - "trial plugins"

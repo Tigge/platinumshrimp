@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import sys
 import os
 import json
@@ -8,9 +6,55 @@ from twisted.internet import endpoints, reactor, protocol
 from twisted.words.protocols import irc
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+import zmq
 
 from utils import settings
-from plugin import PluginProtocol
+
+
+class PluginInterface:
+
+    def __init__(self, name, bot):
+
+        logging.info("PluginInterface.__init__ %s", "ipc://ipc_plugin_" + name)
+        self.name = name
+        self.bot = bot
+
+        context = zmq.Context()
+
+        self._socket_plugin = context.socket(zmq.PAIR)
+        self._socket_plugin.bind("ipc://ipc_plugin_" + name)
+
+        self._poller = zmq.Poller()
+        self._poller.register(self._socket_plugin, zmq.POLLIN)
+
+        self.bot.plugin_started(self)
+
+    def _recieve(self, data):
+        log.msg("PluginInterface._recieve", data)
+        getattr(self.bot, data["function"])(*data["params"])
+
+    def _call(self, function, *args):
+        log.msg("PluginInterface._call", function, args)
+        self._socket_plugin.send_json({"function": function, "params": args})
+
+    def update(self):
+        try:
+            socks = dict(self._poller.poll(timeout=0))
+        except KeyboardInterrupt:
+            return
+
+        if self._socket_plugin in socks:
+            log.msg("PluginInterface.update", self._socket_plugin)
+            self._recieve(self._socket_plugin.recv_json())
+
+    def __getattr__(self, name):
+        log.msg("PluginInterface.__getattr__", name)
+        if name in ["started", "onconnected", "joined", "privmsg"]:
+            def call(*args, **kwarg):
+                self._call(name, *args)
+            return call
+        else:
+            raise AttributeError(self, name)
 
 
 class Server(irc.IRCClient):
@@ -36,7 +80,7 @@ class Server(irc.IRCClient):
         log.msg("Server.connectionLost")
 
     def signedOn(self):
-        log.msg("Server.signedOn " + self._name)
+        log.msg("Server.signedOn " + self._name, self._plugins)
 
         for plugin in self._plugins.iterkeys():
             log.msg("ser " + str(plugin.onconnected))
@@ -46,7 +90,7 @@ class Server(irc.IRCClient):
 
     def msg(self, user, message, length=None):
         log.msg("Server.msg", user, type(message), length)
-        irc.IRCClient.msg(self, user, message.encode(self._encoding), length)
+        irc.IRCClient.msg(self, str(user), message.encode(self._encoding), length)
 
     def topic(self, channel, topic=None):
         log.msg("Server.topic", channel, type(topic))
@@ -92,13 +136,17 @@ class Bot(protocol.ClientFactory):
 
     def plugin_load(self, name, settings):
         log.msg("Bot.plugin_load", name, settings)
-        plugin = PluginProtocol(name, self)
+        plugin = PluginInterface(name, self)
         file_name = "plugins/" + name + "/" + name + ".py"
         if not os.path.isfile(file_name):
             log.err("Unable to load plugin", name)
         else:
             log.msg("Bot.plugin_load plugin", plugin, name, self, sys.executable, [sys.executable, file_name])
-            reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, file_name], env={"PYTHONPATH": os.getcwd()})
+            #reactor.spawnProcess(plugin, sys.executable, args=[sys.executable, file_name], env={"PYTHONPATH": os.getcwd()})
+            os.spawnvpe(os.P_NOWAIT, sys.executable, args=[sys.executable, file_name], env={"PYTHONPATH": os.getcwd()})
+            update_loop = LoopingCall(plugin.update)
+            update_loop.start(0.1, now=True)
+            plugin._call("privmsg", "a", "b", "c", ".reverse reverse")
 
     def plugin_started(self, plugin):
         log.msg("Bot.plugin_started", plugin, self._settings)
@@ -149,7 +197,7 @@ class Bot(protocol.ClientFactory):
     def join(self, server, channel):
         log.msg("Bot.join " + server + ", " + channel)
         if server in self._servers:
-            self._servers[server].join(channel)
+            self._servers[server].join(str(channel))
 
     def buildProtocol(self, addr):
         log.msg("Bot.buildProtocol")

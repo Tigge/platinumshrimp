@@ -1,181 +1,89 @@
-from twisted.internet import protocol, reactor, stdio
-from twisted.protocols import amp
-from twisted.protocols.policies import TimeoutMixin
-from twisted.protocols.amp import String, Command, Unicode
+import threading
+import zmq
+
 from twisted.python import log
 
-
-class Started(Command):
-    arguments = [('settings', String())]
+__author__ = 'tigge'
 
 
-class OnConnected(Command):
-    arguments = [('server', String())]
-
-
-class OnDisconnected(Command):
-    arguments = [('server', String())]
-
-
-class Update(Command):
-    pass
-
-
-class Privmsg(Command):
-    arguments = [('server', String()),
-                 ('user', String()),
-                 ('channel', String()),
-                 ('message', Unicode())]
-
-
-class Join(Command):
-    arguments = [('server', String()),
-                 ('channel', String())]
-
-
-class Joined(Command):
-    arguments = [('server', String()),
-                 ('channel', String())]
-
-
-class Say(Command):
-    arguments = [('server', String()),
-                 ('channel', String()),
-                 ('message', Unicode())]
-
-
-class Invited(Command):
-    arguments = [('server', String()),
-                 ('channel', String())]
-
-
-class BidirectionalAMP(amp.AMP):
-
-    def __init__(self):
-        self.responses = []
-        self.calls = []
-
-    def locateResponder(self, class_name):
-        cls = globals()[class_name]
-        if cls not in self.responses:
-            return None
-        method = getattr(self, cls.__name__.lower())
-
-        def responder_inner(box):
-            params = cls.parseArguments(box, self)
-            result = method(**params)
-            return cls.makeResponse({}, self)
-        return responder_inner
-
-    def __getattr__(self, name):
-        for cls in self.calls:
-            if cls.__name__.lower() == name:
-                def call(*args, **kwarg):
-                    arguments = {}
-                    for i, v in enumerate(cls.arguments):
-                        arguments[v[0]] = args[i]
-                    self.callRemote(cls, **arguments)
-                return call
-        else:
-            raise AttributeError(self, name)
-
-
-class PluginProtocol(protocol.ProcessProtocol, TimeoutMixin):
-
-    class InternalBidirectionalAMP(BidirectionalAMP):
-
-        def __init__(self, bot):
-            BidirectionalAMP.__init__(self)
-            self.bot = bot
-            self.responses = [Say, Join]
-            self.calls = [Started, OnConnected, OnDisconnected, Update, Joined, Privmsg, Invited]
-
-        def __getattr__(self, name):
-            try:
-                return BidirectionalAMP.__getattr__(self, name)
-            except:
-                log.msg("Calling outer function", name)
-                return getattr(self.bot, name)
-
-    def __init__(self, name, bot):
-        log.msg("PluginProtocol.__init__", name, bot)
-        self.name = name
-        self.bot = bot
-
-        self.responses = [Say, Join]
-        self.calls = [Started, OnConnected, OnDisconnected, Update, Joined, Privmsg, Invited]
-
-        self.setTimeout(60)
-
-        self.amp = PluginProtocol.InternalBidirectionalAMP(bot)
-
-    def __getattr__(self, name):
-        return getattr(self.amp, name)
-
-    def makeConnection(self, process):
-        log.msg("PluginProtocol.makeConnection", process)
-        self.amp.makeConnection(self)
-        protocol.ProcessProtocol.makeConnection(self, process)
-
-    def write(self, data):
-        try:
-            self.transport.writeToChild(0, data)
-        except:
-            log.err()
-
-    def getPeer(self):
-        return ('subprocess',)
-
-    def getHost(self):
-        return ('no host',)
-
-    def connectionLost(self, reason):
-        log.msg("PluginProtocol.connectionLost", reason)
-
-    def connectionMade(self):
-        log.msg("PluginProtocol.connectionMade")
-        self.amp.connectionMade()
-        protocol.ProcessProtocol.connectionMade(self)
-        self.bot.plugin_started(self)
-
-    def childDataReceived(self, childFD, data):
-        self.resetTimeout()
-        return self.amp.dataReceived(data)
-
-    def childConnectionLost(self, childFD):
-        log.msg("PluginProtocol.childConnectionLost: " + self.name)
-        self.loseConnection()
-
-    def loseConnection(self):
-        log.msg("PluginProtocol.loseConnection: " + self.name)
-        self.transport.loseConnection()
-        self.transport.signalProcess('KILL')
-
-    def processExited(self, reason):
-        log.msg("PluginProtocol.processExited", self.name, reason)
-
-    def processEnded(self, reason):
-        log.msg("PluginProtocol.processEnded", reason)
-        self.bot.plugin_ended(self)
-
-
-class Plugin(BidirectionalAMP):
+class Plugin:
 
     def __init__(self, name):
-        BidirectionalAMP.__init__(self)
-        self.responses = [Started, OnConnected, OnDisconnected, Update, Joined, Privmsg, Invited]
-        self.calls = [Say, Join]
+        context = zmq.Context()
+
+        self._socket_bot = context.socket(zmq.PAIR)
+        self._socket_bot.connect("ipc://ipc_plugin_" + name)
+
+        self._socket_workers = context.socket(zmq.PULL)
+        self._socket_workers.bind("ipc://ipc_plugin_" + name + "_workers")
+
+        self._poller = zmq.Poller()
+        self._poller.register(self._socket_bot, zmq.POLLIN)
+        self._poller.register(self._socket_workers, zmq.POLLIN)
+
         self.name = name
+
+        log.msg("Plugin.init", threading.current_thread().ident)
+
+        self.threading_data = threading.local()
+        self.threading_data.call_socket = self._socket_bot
+
+
+    def _recieve(self, data):
+        log.msg("Plugin.receive", threading.current_thread().ident)
+        getattr(self, data["function"])(*data["params"])
+
+    def _call(self, function, *args):
+        log.msg("Plugin.call", self.threading_data.__dict__)
+        socket = self.threading_data.call_socket
+        socket.send_json({"function": function, "params": args})
+
+    def _thread(self, function, *args, **kwargs):
+        logging.info("Plugin._thread %r", function)
+
+        def starter():
+            context = zmq.Context()
+            sock = context.socket(zmq.PUSH)
+            sock.connect("ipc://ipc_plugin_" + self.name + "_workers")
+            self.threading_data.call_socket = sock
+
+            function(*args, **kwargs)
+
+        thread = threading.Thread(target=starter)
+        thread.start()
+
+    def _run(self):
+        while True:
+            try:
+                socks = dict(self._poller.poll())
+            except KeyboardInterrupt:
+                break
+
+            if self._socket_bot in socks:
+                self._recieve(self._socket_bot.recv_json())
+
+            if self._socket_workers in socks:
+                self._socket_bot.send(self._socket_workers.recv())
+
+            log.msg("Plugin._run", socks)
 
     @classmethod
     def run(cls):
-        try:
-            instance = cls()
-            log.startLogging(open(instance.name + '.log', 'a'))
-            stdio.StandardIO(instance)
-            reactor.run()
-        except:
-            log.err()
+        log.startLogging(open('Reverser.log', 'a'))
+        instance = cls()
+        log.msg("Plugin.run", cls, instance)
+        instance._run()
+
+    def __getattr__(self, name):
+        log.msg("Plugin.__getattr__", name)
+        if name in ["say", "join"]:
+            def call(*args, **kwarg):
+                self._call(name, *args)
+            return call
+        else:
+            def call(*args, **kwarg):
+                pass
+            return call
 
     # Methods to override:
     def started(self, settings):
