@@ -1,6 +1,7 @@
-from twisted.trial import unittest
+import unittest
 
 from utils import settings
+
 
 class TestSettings(unittest.TestCase):
 

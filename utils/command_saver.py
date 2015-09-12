@@ -3,9 +3,6 @@ import os
 
 from twisted.python import log
 
-from utils.json_utils import read_json
-
-
 # The CommandSaver can be used for saving string parameter lists persistent
 # between bot runs.
 #
@@ -33,6 +30,13 @@ class CommandSaver():
     def __init__(self, filename):
         self.filename = filename
 
+    def read_json(self, filename):
+        try:
+            with open(filename, "r") as f:
+                return json.load(f)
+        except IOError:
+            return []
+
     # Call read for emptying the saved file and feed the stored information
     # to a function callback.
     def read(self, callback):
@@ -46,7 +50,7 @@ class CommandSaver():
             if os.path.isfile(self.filename):
                 log.err("os.rename did not move file, removing it manually")
                 os.remove(self.filename)
-            data = read_json(BACKUP) or []
+            data = self.read_json(BACKUP)
             for line in data:
                 try:
                     callback(*line)
@@ -56,7 +60,7 @@ class CommandSaver():
             log.err("Unable to open file {}, file does not exist".format(self.filename))
 
     def save(self, *args):
-        data = read_json(self.filename) or []
+        data = self.read_json(self.filename)
         data.append(args)
         with open(self.filename, 'w+') as file:
             file.write(json.dumps(data))
@@ -64,7 +68,7 @@ class CommandSaver():
     # This will remove a single item matching the arguments given.
     # Note that this has to be an exact match for the item to be removed
     def remove_item(self, *args):
-        data = read_json(self.filename) or []
+        data = self.read_json(self.filename)
         try:
           data.remove(list(args))
         except:
@@ -73,7 +77,7 @@ class CommandSaver():
             file.write(json.dumps(data))
 
     def remove(self, index):
-        data = read_json(self.filename) or []
+        data = self.read_json(self.filename)
         if index >= len(data):
             log.err("Trying to remove something out of index? size: {}, index: {}".format(len(data), index))
             return
