@@ -2,12 +2,10 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import json
 import sys
-import datetime
-import threading
+import logging
 
 import requests
 import dateutil.parser
-from twisted.python import log
 
 import plugin
 
@@ -18,15 +16,15 @@ API_ACTIVITY = "/users/{0}/history/{1}"
 
 class Trakt(plugin.Plugin):
     def __init__(self):
-        log.msg("Trakt.__init__")
-        plugin.Plugin.__init__(self, "Trakt")
+        plugin.Plugin.__init__(self, "trakt")
+        logging.info("Trakt.__init__")
 
         self.settings = {}
-        self.users = []
+        self.users = {}
         self.ticks = 0
 
     def get(self, url):
-        log.msg("Trakt.get", url)
+        logging.info("Trakt.get %s", url)
         headers = {"Content-Type": "application/json",
                    "trakt-api-version": 2,
                    "trakt-api-key": self.settings["key"]}
@@ -36,10 +34,10 @@ class Trakt(plugin.Plugin):
             try:
                 return r.json()
             except ValueError as e:
-                log.err()
+                logging.exception("")
                 return []
             except requests.exceptions.ConnectionError as e:
-                log.err()
+                logging.exception("")
                 return []
         elif r.status_code == 400:
             raise Exception("Request couldn't be parsed")
@@ -57,33 +55,32 @@ class Trakt(plugin.Plugin):
             raise Exception(str(r.status_code) + ": " + r.reason)
 
     def started(self, settings):
-        log.msg("Trakt.started", settings)
+        logging.info("Trakt.started %s", settings)
         self.settings = json.loads(settings)
 
         self.users = dict(map(lambda user: (user, {}), self.settings["users"]))
 
-    def onconnected(self, server):
-        log.msg("Trakt.onconnected", server)
+    def on_welcome(self, server, source, target, message):
+        logging.info("Trakt.onconnected %s", server)
         self.join(str(self.settings["server"]), str(self.settings["channel"]))
 
-    def joined(self, server, channel):
-        log.msg("Trakt.joined", server, channel)
+    def on_join(self, server, source, channel):
+        logging.info("Trakt.joined %s %s", server, channel)
 
     def echo(self, message):
-        log.msg("Trakt.echo", message.encode('ascii', 'replace'))
-        self.say(str(self.settings["server"]), str(self.settings["channel"]), "Trakt: " + message)
+        logging.info("Trakt.echo %s", message)
+        self.privmsg(self.settings["server"], self.settings["channel"], "Trakt: " + message)
 
     @staticmethod
     def get_date(date):
         return dateutil.parser.parse(date)
 
     def update(self):
-        #log.msg("Trakt.update")
+        #logging.info("Trakt.update")
         self.ticks += 1
         if self.ticks % self.settings["interval"] == 0:
             for user in self.users:
-                thread = threading.Thread(target=self.update_user, args=(user,))
-                thread.start()
+                self._thread(self.update_user, user)
 
     def update_user(self, user):
         for typ in ["episodes", "movies"]:
@@ -110,9 +107,7 @@ class Trakt(plugin.Plugin):
                 self.users[user]["last_sync_" + typ] = Trakt.get_date(res[0]["watched_at"])
 
             except Exception as e:
-                log.msg("Unhandled exception when fetching", API_ACTIVITY.format(user, typ))
-                log.msg("User:", user)
-                log.err()
+                logging.exception("Unhandled exception when fetching (for %s) on %s", user, API_ACTIVITY.format(user, typ))
 
     @staticmethod
     def format_activity(activity, user):
