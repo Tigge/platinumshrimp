@@ -1,7 +1,7 @@
 import feedparser
+import logging
 import sys
-
-from twisted.python import log
+import time
 
 import plugin
 from utils import str_utils, command_saver
@@ -23,28 +23,30 @@ NO_FEED_MESSAGE = u"No feeds"
 
 DEFAULT_FETCH_TIME = 10*60
 
+
 def FeedItemToString(title, link, feed_title = ""):
     return str_utils.sanitize_string(u"{}: {} <{}>".format(feed_title, title, link))
 
+
 # The Feed class handles printing out new entries
-class Feed():
+class Feed:
     # Note that data could both be a url, or an already parsed feed
     def __init__(self, data, title):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = feedparser.parse(data)
-        self.last_entry = 0
+        self.last_entry = time.localtime(0)
         self._set_last(data.entries)
         self.title = title
         self._update_title(data)
 
     def update(self, data, say):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = feedparser.parse(data)
         if data.bozo != 0:
-            log.msg("Error updating feed " + self.title)
+            logging.info("Error updating feed %s", self.title)
             return
         self._update_title(data)
-        log.msg("Updating feed: " + self.title)
+        logging.info("Updating feed: %s", self.title)
         for entry in data.entries:
             # TODO: Check id, title and link, etc
             # Maybe save the entire data.entries and remove all duplicate when
@@ -64,9 +66,9 @@ class Feed():
             self.last_entry = entries[0].published_parsed
 
 
-# Simple polling class, fetches the feed in a regular intervall and passes
+# Simple polling class, fetches the feed in a regular interval and passes
 # the information on to the Feed object
-class Feedpoller():
+class Feedpoller:
     def __init__(self, say, url, update_freq=DEFAULT_FETCH_TIME, title=""):
         parsed = feedparser.parse(url)
         self.feed = Feed(parsed, title)
@@ -98,19 +100,20 @@ class Feedpoller():
                 self.feed.update(parsed, self.say)
                 self.consecutive_fails = 0
 
+
 # Aggregator class for adding and handling feeds
 class Feedretriever(plugin.Plugin):
     def __init__(self):
-        plugin.Plugin.__init__(self, "Feedretriever")
+        plugin.Plugin.__init__(self, "feedretriever")
         self.feeds = []
         self.saver = command_saver.CommandSaver(SAVE_FILE)
 
     def started(self, settings):
-        log.msg("Feedretriever.started", settings)
-        self.saver.read(lambda server, channel, message: self.privmsg(str(server), None, str(channel), message))
+        logging.info("Feedretriever.started %s", settings)
+        self.saver.read(lambda server, channel, message: self.privmsg(server, channel, message))
 
-    def privmsg(self, server, user, channel, message):
-        say = lambda msg: self.say(server, channel, msg)
+    def on_pubmsg(self, server, user, channel, message):
+        say = lambda msg: self.privmsg(server, channel, msg)
         if message.startswith("!feed") or message.startswith("!addfeed"):
             _, url, time, title = str_utils.split(message, " ", 4)
             try:
@@ -125,14 +128,14 @@ class Feedretriever(plugin.Plugin):
         elif message.startswith("!removefeed"):
             feeds = []
             for i in message.split(" "):
-                i = int(i) if unicode(i).isdecimal() else -1
+                i = int(i) if i.isdecimal() else -1
                 if i >= 0 and i < len(self.feeds):
-                    feeds.append(i);
+                    feeds.append(i)
             for i in sorted(feeds, reverse=True):
                 say(REMOVING_FEED_MESSAGE.format(i, self.feeds[i].feed.title))
                 del self.feeds[i]
                 self.saver.remove(i)
-                log.msg("Removed feed: " + str(i))
+                logging.info("Removed feed: %d", i)
         elif message.startswith("!listfeed"):
             if len(self.feeds) == 0:
                 say(NO_FEED_MESSAGE)

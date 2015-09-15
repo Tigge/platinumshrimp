@@ -1,43 +1,46 @@
 import os
-
-from twisted.trial import unittest
+import unittest
 
 from utils.command_saver import CommandSaver
 
 BASIC_COUNT_CONTENT = "[[0], [1], [2], [3]]"
 DOUBLE_COUNT_CONTENT = "[[0, 1], [1, 2], [2, 3]]"
 
+
 class CommandSaverTest(unittest.TestCase):
     def prepare_test_file(self, content):
         filename = "test_file.save"
         with open(filename, 'w') as f:
-            print>>f, content
+            f.write(content)
         return filename
 
     def verify_content(self, filename, content):
         with open(filename, 'r') as f:
-          self.assertEquals(f.read(), content)
+            self.assertEqual(f.read(), content)
 
     def test_basic_read(self):
         filename = self.prepare_test_file(BASIC_COUNT_CONTENT)
         saver = CommandSaver(filename)
-        # Workaround for changing non-local variable in python 2:
-        index = [0]
+        index = 0
+
         def counter(i):
-            self.assertEquals(index[0], i)
-            index[0] += 1
+            nonlocal index
+            self.assertEqual(index, i)
+            index += 1
         saver.read(counter)
-        self.assertEquals(index[0], 4)
+        self.assertEqual(index, 4)
         self.assertFalse(os.path.isfile(filename))
 
     def test_basic_save(self):
         filename = "basic_save_test_file.save"
+        os.remove(filename)
         saver = CommandSaver(filename)
         saver.save(0)
         saver.save(1)
         saver.save(2)
         saver.save(3)
         self.verify_content(filename, BASIC_COUNT_CONTENT)
+
 
     def test_basic_remove(self):
         filename = self.prepare_test_file(BASIC_COUNT_CONTENT)
@@ -95,14 +98,15 @@ class CommandSaverTest(unittest.TestCase):
     def test_double_read(self):
         filename = self.prepare_test_file(DOUBLE_COUNT_CONTENT)
         saver = CommandSaver(filename)
-        # Workaround for changing non-local variable in python 2:
-        index = [0]
+        index = 0
+
         def counter(i, j):
-            self.assertEquals(index[0], i)
-            self.assertEquals(i + 1, j)
-            index[0] += 1
+            nonlocal index
+            self.assertEqual(index, i)
+            self.assertEqual(i + 1, j)
+            index += 1
         saver.read(counter)
-        self.assertEquals(index[0], 3)
+        self.assertEqual(index, 3)
         self.assertFalse(os.path.isfile(filename))
 
     # Make sure we don't get any half reads when we give a callback with
@@ -110,12 +114,13 @@ class CommandSaverTest(unittest.TestCase):
     def test_double_read_too_few_parameters(self):
         filename = self.prepare_test_file(DOUBLE_COUNT_CONTENT)
         saver = CommandSaver(filename)
-        # Workaround for changing non-local variable in python 2:
-        index = [0]
+        index = 0
+
         def counter(i):
-            index[0] += 1
+            nonlocal index
+            index += 1
         saver.read(counter)
-        self.assertEquals(index[0], 0, "Got read call with too few parameters")
+        self.assertEqual(index, 0, "Got read call with too few parameters")
 
     def test_double_remove(self):
         filename = self.prepare_test_file(DOUBLE_COUNT_CONTENT)
@@ -151,6 +156,7 @@ class CommandSaverTest(unittest.TestCase):
 
     def test_double_save(self):
         filename = "double_save_test_file.save"
+        os.remove(filename)
         saver = CommandSaver(filename)
         saver.save(0, 1)
         saver.save(1, 2)

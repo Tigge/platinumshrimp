@@ -1,4 +1,4 @@
-from twisted.trial import unittest
+import unittest
 
 from utils import file_utils
 
@@ -12,7 +12,7 @@ class TestStrUtils(unittest.TestCase):
 
     def assert_result(self, file_name, expected_result):
         with open(file_name, 'r') as f:
-            self.assertEquals(f.read().splitlines(), expected_result)
+            self.assertEqual(f.read().splitlines(), expected_result)
 
     def test_remove_first_line(self):
         generate_test_file(TEST_FILE)
