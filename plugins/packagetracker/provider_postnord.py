@@ -1,12 +1,12 @@
 # coding=utf-8
 
 from __future__ import division, absolute_import, print_function, unicode_literals
+
 import requests
 import dateutil
 import dateutil.parser
 
 from plugins.packagetracker.packagetracker import Package
-
 
 __author__ = 'tigge'
 
@@ -50,7 +50,6 @@ class PostnordPackage(Package):
                 if len(data["TrackingInformationResponse"]["shipments"]) > 0:
                     return True
         return False
-
 
     @classmethod
     def _get_data(cls, package_id, locale="en"):

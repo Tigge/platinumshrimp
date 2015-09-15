@@ -1,12 +1,12 @@
 # coding=utf-8
 
 from __future__ import division, absolute_import, print_function, unicode_literals
+
 import json
+import logging
 import datetime
-import threading
 import sys
 
-from twisted.python import log
 import plugin
 import plugins.packagetracker.provider_postnord
 
@@ -15,8 +15,8 @@ __author__ = 'tigge'
 
 class PackageTracker(plugin.Plugin):
     def __init__(self):
-        log.msg("PackageTracker.__init__")
-        plugin.Plugin.__init__(self, "PackageTracker")
+        logging.info("PackageTracker.__init__")
+        plugin.Plugin.__init__(self, "packagetracker")
 
         self.settings = {}
         self.packages = []
@@ -24,22 +24,21 @@ class PackageTracker(plugin.Plugin):
         self.ticks = 0
 
     def started(self, settings):
-        log.msg("PackageTracker.started", settings)
+        logging.info("PackageTracker.started %s", settings)
         self.settings = json.loads(settings)
 
         plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
 
     def update(self):
-        #log.msg("PackageTracker.update")
+        # logging.info("PackageTracker.update")
         self.ticks += 1
         if self.ticks % self.settings["interval"] == 0:
 
             for package in self.packages:
-                # self.say(package.server, package.channel, package.user + ": Package update... " + package.id)
-                thread = threading.Thread(target=self.update_package, args=(package,))
-                thread.start()
+                # self.privmsg(package.server, package.channel, package.user + ": Package update... " + package.id)
+                self._thread(self.update_package, package)
 
-    def privmsg(self, server, user, channel, message):
+    def on_pubmsg(self, server, user, channel, message):
 
         if message.startswith("!addpackage "):
             package_id = message[12:].strip()
@@ -49,14 +48,14 @@ class PackageTracker(plugin.Plugin):
             package_id = message[15:].strip()
             for package in list(self.packages):
                 if package.id == package_id:
-                    self.say(server, channel, "Package removed...")
+                    self.privmsg(server, channel, "Package removed...")
                     break
             else:
-                self.say(server, channel, "Package not found...")
+                self.privmsg(server, channel, "Package not found...")
         elif message.startswith("!listpackages"):
-            self.say(server, channel, "Listing {0} packages...".format(len(self.packages)))
+            self.privmsg(server, channel, "Listing {0} packages...".format(len(self.packages)))
             for package in self.packages:
-                self.say(server, channel, str(package.id))
+                self.privmsg(server, channel, str(package.id))
 
     def add_package_id(self, package_id, server, user, channel):
         package = None
@@ -68,9 +67,9 @@ class PackageTracker(plugin.Plugin):
             package.channel = channel
             package.user = user.split('!', 1)[0]
             self.add_package(package)
-            self.say(server, channel, "Package added...")
+            self.privmsg(server, channel, "Package added...")
         else:
-            self.say(server, channel, "Package not found in any provider...")
+            self.privmsg(server, channel, "Package not found in any provider...")
 
     def add_package(self, package):
         package.on_event = lambda event: self.on_event(package, event)
@@ -80,9 +79,9 @@ class PackageTracker(plugin.Plugin):
         package.update()
 
     def on_event(self, package, event):
-        self.say(package.server, package.channel,
-                 "{0}: {1} - {2:%Y-%m-%d %H:%M}: {3}".format(package.user, package.id, event.datetime,
-                                                             event.description))
+        self.privmsg(package.server, package.channel,
+                     "{0}: {1} - {2:%Y-%m-%d %H:%M}: {3}".format(package.user, package.id, event.datetime,
+                                                                 event.description))
 
 
 class Package:
