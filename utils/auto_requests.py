@@ -1,6 +1,6 @@
 import cgi
 import codecs
-import HTMLParser
+import html.parser
 import re
 import requests
 
@@ -14,6 +14,7 @@ def encoding_from_bom(string):
         return "utf_16_be"
     else:
         return None
+
 
 def find_encoding(response):
     # 1. Byte Order Mark
@@ -29,18 +30,18 @@ def find_encoding(response):
 
     # 3. XML declaration
     xmldecl_regex = re.compile(
-        r'<\?xml(?:.*?)encoding=(?:"|\')([a-zA-Z0-9-_]+)(?:"|\')(?:.*?)\?>',
+        rb'<\?xml(?:.*?)encoding=(?:"|\')([a-zA-Z0-9-_]+)(?:"|\')(?:.*?)\?>',
         re.IGNORECASE | re.DOTALL)
     xmldecl = xmldecl_regex.search(response.content[:1024])
     if xmldecl is not None:
-        return xmldecl.group(1).lower()
+        return xmldecl.group(1).lower().decode("ascii")
 
     # 4. Meta http-equiv
     # 5. Meta charset
-    class MyHTMLParser(HTMLParser.HTMLParser):
+    class MyHTMLParser(html.parser.HTMLParser):
 
         def __init__(self):
-            HTMLParser.HTMLParser.__init__(self)
+            html.parser.HTMLParser.__init__(self)
             self.charset = None
 
         def handle_starttag(self, tag, attrs):
@@ -55,6 +56,7 @@ def find_encoding(response):
     parser = MyHTMLParser()
     parser.feed(response.content[:1024].decode('ascii', 'ignore'))  # As per HTML5 standard
     return parser.charset
+
 
 def get(*args, **kwargs):
     response = requests.get(*args, **kwargs)

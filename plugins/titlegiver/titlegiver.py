@@ -1,11 +1,11 @@
-import htmlentitydefs
+import html
 import re
 import sys
-
-from twisted.python import log
+import logging
 
 import plugin
 from utils import url_parser, auto_requests
+
 
 class Titlegiver(plugin.Plugin):
 
@@ -13,10 +13,11 @@ class Titlegiver(plugin.Plugin):
     WHITESPACE_REGEX = re.compile(r'\s+')
 
     MAX_CONTENT_LENGTH = 64 * 1024
-    USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.37 Safari/537.36"
+    USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/43.0.2357.37 Safari/537.36")
 
     def __init__(self):
-        plugin.Plugin.__init__(self, "Titlegiver")
+        plugin.Plugin.__init__(self, "titlegiver")
 
     @staticmethod
     def get_title_from_url(url):
@@ -35,32 +36,31 @@ class Titlegiver(plugin.Plugin):
             title = Titlegiver.WHITESPACE_REGEX.sub(" ", Titlegiver.TITLE_REGEX.search(text).group(1))
             return Titlegiver.unescape_entities(title)
         except:
-            log.err()
+            logging.exception("Regexp or unescape failed")
             return None
 
     @staticmethod
     def unescape_entities(text):
         def replace_entity(match):
             try:
-                if match.group(1) in htmlentitydefs.name2codepoint:
-                    return unichr(htmlentitydefs.name2codepoint[match.group(1)])
+                if match.group(1) in html.entities.name2codepoint:
+                    return chr(html.entities.name2codepoint[match.group(1)])
                 elif match.group(1).lower().startswith("#x"):
-                    return unichr(int(match.group(1)[2:], 16))
+                    return chr(int(match.group(1)[2:], 16))
                 elif match.group(1).startswith("#"):
-                    return unichr(int(match.group(1)[1:]))
+                    return chr(int(match.group(1)[1:]))
             except (ValueError, KeyError):
                 pass  # Fall through to default return
             return match.group(0)
 
         return re.sub(r'&([#a-zA-Z0-9]+);', replace_entity, text)
 
-    def privmsg(self, server, user, channel, message):
+    def on_pubmsg(self, server, user, channel, message):
         for url in url_parser.find_urls(message):
             try:
-                self.say(server, channel, Titlegiver.get_title_from_url(url))
+                self.privmsg(server, channel, Titlegiver.get_title_from_url(url))
             except:
-                log.msg("Unable to find title for:", url)
-                log.err()
+                logging.exception("Unable to find title for: %s", url)
 
 
 if __name__ == "__main__":
