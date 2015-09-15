@@ -1,18 +1,20 @@
 language: python
 python:
-  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+
+sudo: false
 
 install:
-  - "pip install twisted"
   - "pip install requests"
   - "pip install python-dateutil"
   - "pip install feedparser"
-  - "pip install mock"
   - "pip install pyzmq"
+  - "pip install irc"
 
 script:
-  - "trial plugins"
-  - "trial utils"
+  - "python -m unittest discover -v"
 
 notifications:
   irc:
