@@ -1,13 +1,12 @@
-__author__ = 'sebbz'
-import os
-
-from twisted.trial import unittest
+import unittest
 
 from plugins.reverser.reverser import Reverser
+
+__author__ = 'sebbz'
 
 
 class FormatTestCase(unittest.TestCase):
 
     def test_reverse(self):
-        message = Reverser._reverseString("sirap")
+        message = Reverser._reverse_string("sirap")
         self.assertEqual(message, "paris")
