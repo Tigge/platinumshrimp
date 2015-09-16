@@ -1,10 +1,9 @@
+import logging
 import sys
-from HTMLParser import HTMLParser
-
+import html
 import json
 import requests
-import urllib
-from twisted.python import log
+import urllib.parse
 
 import plugin
 from utils import str_utils
@@ -14,11 +13,12 @@ DECIMAL_APPROXIMATION_POD_START = "<pod title='Decimal approximation'"
 RESULT_SUB_POD = "<plaintext>"
 API_URL = "http://api.wolframalpha.com/v2/query?appid={key}&input={query}&format=plaintext"
 
+
 def get_answer(query, key):
-    query = urllib.quote(query)
+    query = urllib.parse.quote(query)
     result = requests.get(API_URL.format(key=key, query=query)).text
-    if not RESULT_POD_START in result:
-        if not DECIMAL_APPROXIMATION_POD_START in result:
+    if RESULT_POD_START not in result:
+        if DECIMAL_APPROXIMATION_POD_START not in result:
             return
         else:
             result = result[result.index(DECIMAL_APPROXIMATION_POD_START):]
@@ -30,9 +30,10 @@ def get_answer(query, key):
     result = result[:result.index("<")]
     return str_utils.sanitize_string(result)
 
+
 class Wolfram(plugin.Plugin):
     def __init__(self):
-        plugin.Plugin.__init__(self, "Wolfram")
+        plugin.Plugin.__init__(self, "wolfram")
         self.key = ""
         self.trigger = ""
 
@@ -41,14 +42,14 @@ class Wolfram(plugin.Plugin):
         self.key = settings["key"] # str
         self.trigger = settings["trigger"] # str
 
-    def privmsg(self, server, user, channel, message):
+    def on_pubmsg(self, server, user, channel, message):
         if message.startswith(self.trigger):
             try:
                 query = message[len(self.trigger) + 1:]
-                result = HTMLParser().unescape(get_answer(query, self.key))
-                self.say(server, channel, result)
+                result = html.unescape(get_answer(query, self.key))
+                self.privmsg(server, channel, result)
             except:
-                log.err()
+                logging.exception("Unable to query")
 
 if __name__ == "__main__":
     sys.exit(Wolfram.run())
