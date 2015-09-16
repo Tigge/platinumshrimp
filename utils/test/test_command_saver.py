@@ -1,5 +1,7 @@
 import os
 import unittest
+import shutil
+import tempfile
 
 from utils.command_saver import CommandSaver
 
@@ -8,8 +10,17 @@ DOUBLE_COUNT_CONTENT = "[[0, 1], [1, 2], [2, 3]]"
 
 
 class CommandSaverTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.folder = tempfile.mkdtemp()
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.folder)
+
     def prepare_test_file(self, content):
-        filename = "test_file.save"
+        filename = os.path.join(self.folder, "test_file.save")
         with open(filename, 'w') as f:
             f.write(content)
         return filename
@@ -32,8 +43,7 @@ class CommandSaverTest(unittest.TestCase):
         self.assertFalse(os.path.isfile(filename))
 
     def test_basic_save(self):
-        filename = "basic_save_test_file.save"
-        os.remove(filename)
+        filename = os.path.join(self.folder,"basic_save_test_file.save")
         saver = CommandSaver(filename)
         saver.save(0)
         saver.save(1)
@@ -155,8 +165,7 @@ class CommandSaverTest(unittest.TestCase):
         self.verify_content(filename, "[]")
 
     def test_double_save(self):
-        filename = "double_save_test_file.save"
-        os.remove(filename)
+        filename = os.path.join(self.folder,"double_save_test_file.save")
         saver = CommandSaver(filename)
         saver.save(0, 1)
         saver.save(1, 2)
