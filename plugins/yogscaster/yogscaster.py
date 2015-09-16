@@ -1,13 +1,10 @@
 import json
+import logging
 import sys
 import re
 import requests
-import htmlentitydefs
-
-from twisted.python import log
 
 import plugin
-from utils import url_parser
 
 
 class Yogscaster(plugin.Plugin):
@@ -40,25 +37,24 @@ class Yogscaster(plugin.Plugin):
         return video
 
     def echo(self, message):
-        log.msg("Echo: ", message.encode("utf-8"))
+        logging.info("Echo: ", message.encode("utf-8"))
         self.say(0, str(self.settings["channel"]), message)
 
     def started(self, settings):
-        log.msg("Yogscaster.started", settings)
+        logging.info("Yogscaster.started", settings)
         self.settings = json.loads(settings)
         self.join(0, str(self.settings["channel"]))
 
     def update(self):
         self.count += 1
         if self.count % self.update_freq == 0:
-            log.msg("Yogscaster.update")
+            logging.info("Yogscaster.update")
             latest = Yogscaster.poll_site()
             if self.latest != latest["title"] and latest["author"] in self.settings["whitelist"]:
-                log.msg("Latest: ", latest)
+                logging.info("Latest: ", latest)
                 self.latest = latest["title"]
                 message = "%s: %s %s" % (latest["author"], latest["link"], latest["title"])
                 self.echo(message)
-
 
 
 if __name__ == "__main__":
