@@ -1,21 +1,19 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import sys
+import logging
 
 import plugin
-
-from twisted.python import log
 
 
 class Invitejoiner(plugin.Plugin):
 
     def __init__(self):
-        plugin.Plugin.__init__(self, "Invitejoiner")
+        plugin.Plugin.__init__(self, "invitejoiner")
 
-    def invited(self, server, channel):
-        log.msg("Invited to: ", channel)
+    def on_invite(self, server, source, target, channel):
+        logging.info("Invited to '%s' on '%s' by '%s", channel, server, source)
         self.join(server, channel)
 
 if __name__ == "__main__":
     sys.exit(Invitejoiner.run())
-
