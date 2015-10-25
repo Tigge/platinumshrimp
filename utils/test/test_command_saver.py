@@ -75,6 +75,22 @@ class CommandSaverTest(unittest.TestCase):
         saver.remove_item(0)
         self.verify_content(filename, "[]")
 
+    # Make sure we're able to repeat a read if we save in the read callback
+    def test_read_with_save(self):
+        filename = self.prepare_test_file(BASIC_COUNT_CONTENT)
+        saver = CommandSaver(filename)
+        # Workaround for changing non-local variable in python 2:
+        index = [0]
+        def counter(i):
+            self.assertEquals(index[0], i)
+            index[0] += 1
+            saver.save(i)
+        saver.read(counter)
+        self.assertEquals(index[0], 4)
+        index = [0]
+        saver.read(counter)
+        self.assertEquals(index[0], 4)
+
     # Make sure we're able to call read with multiple parameters in one callback
     def test_double_read(self):
         filename = self.prepare_test_file(DOUBLE_COUNT_CONTENT)
