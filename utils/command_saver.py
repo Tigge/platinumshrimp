@@ -1,6 +1,5 @@
 import json
-import os.path
-import shutil
+import os
 
 from twisted.python import log
 
@@ -39,7 +38,14 @@ class CommandSaver():
     def read(self, callback):
         if os.path.isfile(self.filename):
             BACKUP = self.filename + ".backup"
-            shutil.move(self.filename, BACKUP)
+            # On Linux, os.rename will silently overwrite, but that is not the
+            # case on Windows, so just remove the old backup if it exists:
+            if os.path.isfile(BACKUP):
+                os.remove(BACKUP)
+            os.rename(self.filename, BACKUP)
+            if os.path.isfile(self.filename):
+                log.err("os.rename did not move file, removing it manually")
+                os.remove(self.filename)
             data = read_json(BACKUP) or []
             for line in data:
                 try:
@@ -49,9 +55,6 @@ class CommandSaver():
         else:
             log.err("Unable to open file {}, file does not exist".format(self.filename))
 
-    # Note that if any argument (except for the last one) includes the same
-    # combination of characters as is used as param_separator, it will make
-    # reading and spliting parameters in read() fail.
     def save(self, *args):
         data = read_json(self.filename) or []
         data.append(args)
