@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import os
 import json
@@ -7,7 +9,7 @@ from twisted.words.protocols import irc
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 
-import settings
+from utils import settings
 from plugin import PluginProtocol
 
 
@@ -169,9 +171,12 @@ class Bot(protocol.ClientFactory):
 if __name__ == '__main__':
     log.startLogging(open('Bot.log', 'a'))
     log.msg("main")
-    settings = settings.get_settings()
-    factory = Bot(settings)
-    for server in settings['servers']:
+    config = settings.get_settings()
+    if not settings.validate_settings(config):
+        print("Error parsing settings")
+        sys.exit(1)
+    factory = Bot(config)
+    for server in config['servers']:
         log.msg("main: creating endpoint for host:", server['host'], "port:", server['port'])
         endpoint = endpoints.clientFromString(reactor, "tcp:host={}:port={}".format(server['host'], server['port']))
         conn = endpoint.connect(factory).addCallback(lambda s: factory.connected(server['name'], s))
