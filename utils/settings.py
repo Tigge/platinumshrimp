@@ -13,7 +13,8 @@ DEFAULT_SETTINGS = {
         'servers': [{
             'name': 'chalmersit',
             'host': 'irc.chalmers.it',
-            'port': 6667,
+            'port': 9999,
+            'ssl': True
         }],
         'plugins': [
             {

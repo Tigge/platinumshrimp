@@ -177,7 +177,9 @@ if __name__ == '__main__':
         sys.exit(1)
     factory = Bot(config)
     for server in config['servers']:
-        log.msg("main: creating endpoint for host:", server['host'], "port:", server['port'])
-        endpoint = endpoints.clientFromString(reactor, "tcp:host={}:port={}".format(server['host'], server['port']))
+        log.msg("main: creating endpoint for host:", server['host'], "port:", server['port'], "ssl:", server['ssl'])
+        con_type = "ssl" if server['ssl'] else "tcp"
+        con_desc = "{}:host={}:port={}".format(con_type, server['host'], server['port'])
+        endpoint = endpoints.clientFromString(reactor, con_desc)
         conn = endpoint.connect(factory).addCallback(lambda s: factory.connected(server['name'], s))
     reactor.run()
