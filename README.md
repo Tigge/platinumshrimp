@@ -1,6 +1,9 @@
 platinumshrimp
 =================================================
 
+[![Travis CI Build Status](https://travis-ci.org/Tigge/platinumshrimp.svg?branch=master)](https://travis-ci.org/Tigge/platinumshrimp)
+
+
 Get the code:
 
  - git clone https://github.com/Tigge/platinumshrimp.git
