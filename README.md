@@ -28,5 +28,5 @@ Run:
 
 Clean up:
 
- - ``rm -Rf `find . -name "*.pyc" -or -name __pycache__ -or -name _trial_temp -or -name "*.log"` ``
+ - ``rm -Rf `find . -name "*.pyc" -or -name __pycache__ -or -name _trial_temp -or -name "*.log" -or -name "ipc_plugin_*"` ``
 
