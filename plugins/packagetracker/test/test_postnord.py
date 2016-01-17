@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-import mock
+from unittest import mock
 
 from plugins.packagetracker.provider_postnord import PostnordPackage
 

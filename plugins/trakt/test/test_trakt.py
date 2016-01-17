@@ -4,8 +4,8 @@ import json
 import os
 import unittest
 
-from mock import patch
-from mock import Mock
+from unittest.mock import patch
+from unittest.mock import Mock
 from dateutil import relativedelta
 
 from plugins.trakt.trakt import Trakt
