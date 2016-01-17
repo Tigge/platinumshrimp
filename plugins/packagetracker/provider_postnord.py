@@ -1,7 +1,5 @@
 # coding=utf-8
 
-from __future__ import division, absolute_import, print_function, unicode_literals
-
 import requests
 import dateutil
 import dateutil.parser

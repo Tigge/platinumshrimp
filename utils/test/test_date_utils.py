@@ -1,5 +1,3 @@
-from __future__ import division, absolute_import, print_function, unicode_literals
-
 import datetime
 import unittest
 
@@ -44,3 +42,4 @@ class TestDateUtils(unittest.TestCase):
         date_new = datetime.datetime(2015, 7, 7, 17, 38, 30)
         string = date_utils.format(date_old, date_new)
         self.assertEqual(string, "6 years ago")
+
