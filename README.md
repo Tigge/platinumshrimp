@@ -8,17 +8,15 @@ Get the code:
 
  - git clone https://github.com/Tigge/platinumshrimp.git
 
-Install dependencies:
+Install dependencies in Debian/Ubuntu:
 
- -  `sudo yum install python3-pip`
-  or
  - `sudo apt-get install python3-pip`
+ - `sudo pip3 install requests feedparser python-dateutil pyzmq irc`
 
- - `sudo pip3 install requests`
- - `sudo pip3 install feedparser`
- - `sudo pip3 install python-dateutil`
- - `sudo pip3 install pyzmq`
- - `sudo pip3 install irc`
+Install dependencies in Fedora:
+
+ - `sudo dnf install python3-devel python3-pip zeromq-devel`
+ - `sudo pip-python3 install requests feedparser python-dateutil pyzmq irc six`
 
 Run plugins unit tests:
 
