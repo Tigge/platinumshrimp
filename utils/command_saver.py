@@ -53,8 +53,8 @@ class CommandSaver():
             for line in data:
                 try:
                     callback(*line)
-                except Exception as e:
-                    logging.exception("Error while reading")
+                except:
+                    logging.error("Error while reading.  Not the right amount of parameters maybe?")
         else:
             logging.error("Unable to open file %s, file does not exist", self.filename)
 
