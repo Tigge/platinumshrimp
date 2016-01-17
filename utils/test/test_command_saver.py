@@ -95,14 +95,14 @@ class CommandSaverTest(unittest.TestCase):
         # Workaround for changing non-local variable in python 2:
         index = [0]
         def counter(i):
-            self.assertEquals(index[0], i)
+            self.assertEqual(index[0], i)
             index[0] += 1
             saver.save(i)
         saver.read(counter)
-        self.assertEquals(index[0], 4)
+        self.assertEqual(index[0], 4)
         index = [0]
         saver.read(counter)
-        self.assertEquals(index[0], 4)
+        self.assertEqual(index[0], 4)
 
     # Make sure we're able to call read with multiple parameters in one callback
     def test_double_read(self):
