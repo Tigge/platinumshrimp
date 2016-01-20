@@ -45,7 +45,6 @@ class PluginInterface:
             logging.error("Undefined function %s called with %r", data["function"], data["params"])
 
     def _call(self, function, *args):
-        logging.info("PluginInterface._call %s %s", function, args)
         self._socket_plugin.send_json({"function": function, "params": args})
 
     def process_once(self, timeout=0):

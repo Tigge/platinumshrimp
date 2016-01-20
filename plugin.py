@@ -30,7 +30,6 @@ class Plugin:
         self.threading_data.call_socket = self._socket_bot
 
     def _recieve(self, data):
-        logging.info("Plugin.receive %s", threading.current_thread().ident)
         getattr(self, data["function"])(*data["params"])
 
     def _call(self, function, *args):
@@ -65,8 +64,6 @@ class Plugin:
             if self._socket_workers in socks:
                 self._socket_bot.send(self._socket_workers.recv())
 
-            logging.info("Plugin._run %s", socks)
-
     @classmethod
     def run(cls):
         instance = cls()
@@ -74,7 +71,6 @@ class Plugin:
         instance._run()
 
     def __getattr__(self, name):
-        logging.info("Plugin.__getattr__ %s", name)
         if name in ["privmsg", "join"]:
             def call(*args, **kwarg):
                 self._call(name, *args)
