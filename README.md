@@ -10,7 +10,7 @@ Get the code:
 
 Install dependencies in Debian/Ubuntu:
 
- - `sudo apt-get install python3-pip`
+ - `sudo apt-get install python3-pip libzmq3-dev`
  - `sudo pip3 install requests feedparser python-dateutil pyzmq irc`
 
 Install dependencies in Fedora:
