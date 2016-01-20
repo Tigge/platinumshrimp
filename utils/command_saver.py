@@ -47,7 +47,7 @@ class CommandSaver():
                 os.remove(BACKUP)
             os.rename(self.filename, BACKUP)
             if os.path.isfile(self.filename):
-                log.err("os.rename did not move file, removing it manually")
+                logging.info("os.rename did not move file, removing it manually")
                 os.remove(self.filename)
             data = self.read_json(BACKUP)
             for line in data:
@@ -56,7 +56,7 @@ class CommandSaver():
                 except:
                     logging.error("Error while reading.  Not the right amount of parameters maybe?")
         else:
-            logging.error("Unable to open file %s, file does not exist", self.filename)
+            logging.info("Unable to open file %s, file does not exist", self.filename)
 
     def save(self, *args):
         data = self.read_json(self.filename)
