@@ -6,7 +6,7 @@ import time
 import plugin
 from utils import str_utils, command_saver
 
-SAVE_FILE    = "feedretriver_settings.save"
+SAVE_FILE    = "feedretriever_feeds.save"
 FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "
                 "the !listfeed and !removefeed commands.")
 
@@ -110,7 +110,7 @@ class Feedretriever(plugin.Plugin):
 
     def started(self, settings):
         logging.info("Feedretriever.started %s", settings)
-        self.saver.read(lambda server, channel, message: self.privmsg(server, channel, message))
+        self.saver.read(lambda server, channel, message: self.on_pubmsg(server, None, channel, message))
 
     def on_pubmsg(self, server, user, channel, message):
         say = lambda msg: self.privmsg(server, channel, msg)
