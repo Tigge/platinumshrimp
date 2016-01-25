@@ -40,7 +40,10 @@ class PluginInterface:
                                 "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
                                 "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
                                 "whowas"]:
-            getattr(self.bot.servers[server], data["function"])(*data["params"][1:])
+            try:
+                getattr(self.bot.servers[server], data["function"])(*data["params"][1:])
+            except (irc.client.InvalidCharacters, irc.client.MessageTooLong) as e:
+                logging.exception("Failed to call function from plugin %r", data)
         else:
             logging.error("Undefined function %s called with %r", data["function"], data["params"])
 
