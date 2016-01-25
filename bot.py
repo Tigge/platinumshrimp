@@ -4,11 +4,11 @@ import os
 import json
 import time
 import logging
+import tempfile
+from utils import settings
 
 import zmq
 import irc.client
-
-from utils import settings
 
 
 class PluginInterface:
@@ -17,11 +17,12 @@ class PluginInterface:
         logging.info("PluginInterface.__init__ %s", "ipc://ipc_plugin_" + name)
         self.name = name
         self.bot = bot
+        socket_path = os.path.join(self.bot.temp_folder, "ipc_plugin_" + name)
 
         context = zmq.Context()
 
         self._socket_plugin = context.socket(zmq.PAIR)
-        self._socket_plugin.bind("ipc://ipc_plugin_" + name)
+        self._socket_plugin.bind("ipc://" + os.path.abspath(socket_path))
 
         self._poller = zmq.Poller()
         self._poller.register(self._socket_plugin, zmq.POLLIN)
@@ -68,7 +69,7 @@ class PluginInterface:
 
 
 class Bot:
-    def __init__(self):
+    def __init__(self, temp_folder):
         logging.basicConfig(filename="Bot.log", level=logging.DEBUG)
 
         self.settings = settings.get_settings()
@@ -77,6 +78,7 @@ class Bot:
             sys.exit(1)
         self.plugins = list()
         self.servers = dict()
+        self.temp_folder = temp_folder
 
         self.reactor = irc.client.Reactor()
         self.reactor.add_global_handler("all_events", self._dispatcher, -10)
@@ -119,7 +121,7 @@ class Bot:
         else:
             logging.info("Bot.plugin_load plugin %s, %s, %s, %s", name, self, sys.executable,
                          [sys.executable, file_name])
-            os.spawnvpe(os.P_NOWAIT, sys.executable, args=[sys.executable, file_name], env={"PYTHONPATH": os.getcwd()})
+            os.spawnvpe(os.P_NOWAIT, sys.executable, args=[sys.executable, file_name, "--socket_path", self.temp_folder], env={"PYTHONPATH": os.getcwd()})
             self.plugins.append(PluginInterface(name, self))
 
     def plugin_started(self, plugin):
@@ -143,5 +145,6 @@ class Bot:
 
 
 if __name__ == '__main__':
-    bot = Bot()
-    bot.run()
+    with tempfile.TemporaryDirectory(prefix="platinumshrimp_") as temp_folder:
+        bot = Bot(temp_folder)
+        bot.run()
