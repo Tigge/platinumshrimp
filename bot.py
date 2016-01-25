@@ -92,7 +92,7 @@ class Bot:
             s = self.reactor.server()
             self.servers[server['name']] = s
             s.name = server['name']
-            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server and server["ssl"] else None
+            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server and server["ssl"] else irc.connection.Factory()
             s.connect(server['host'], server['port'], nickname=self.settings['nickname'],
                       ircname=self.settings['realname'], username=self.settings['username'],
                       connect_factory=factory)
