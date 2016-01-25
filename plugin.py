@@ -1,9 +1,16 @@
 import logging
 import threading
 import zmq
+import os
+import tempfile
+import argparse
 
 __author__ = 'tigge'
 
+plugin_argparser = argparse.ArgumentParser(description='Start a platinumshrimp plugin')
+plugin_argparser.add_argument("--socket_path", type=str, default=tempfile.gettempdir(),
+                              help="The path to the location where platinumshrimp stores the IPC socket",
+                             dest="socket_path")
 
 class Plugin:
 
@@ -12,11 +19,14 @@ class Plugin:
 
         context = zmq.Context()
 
+        args, _ = plugin_argparser.parse_known_args()
+        self.socket_base_path = args.socket_path
+
         self._socket_bot = context.socket(zmq.PAIR)
-        self._socket_bot.connect("ipc://ipc_plugin_" + name)
+        self._socket_bot.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + name)
 
         self._socket_workers = context.socket(zmq.PULL)
-        self._socket_workers.bind("ipc://ipc_plugin_" + name + "_workers")
+        self._socket_workers.bind("ipc://" + self.socket_base_path + "/ipc_plugin_" + name + "_workers")
 
         self._poller = zmq.Poller()
         self._poller.register(self._socket_bot, zmq.POLLIN)
@@ -43,7 +53,7 @@ class Plugin:
         def starter():
             context = zmq.Context()
             sock = context.socket(zmq.PUSH)
-            sock.connect("ipc://ipc_plugin_" + self.name + "_workers")
+            sock.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + self.name + "_workers")
             self.threading_data.call_socket = sock
 
             function(*args, **kwargs)
