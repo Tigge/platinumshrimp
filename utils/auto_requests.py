@@ -36,7 +36,7 @@ def find_encoding(response):
     if xmldecl is not None:
         return xmldecl.group(1).lower().decode("ascii")
 
-    # 4. Meta http-equiv
+    # 4. Meta http-equiv "content-type"
     # 5. Meta charset
     class MyHTMLParser(html.parser.HTMLParser):
 
@@ -58,8 +58,18 @@ def find_encoding(response):
     return parser.charset
 
 
-def get(*args, **kwargs):
-    response = requests.get(*args, **kwargs)
-    response.encoding = find_encoding(response)
-    return response
+def get(url, *args, **kwargs):
+    # TODO: Should we redirect on all refreshs, or only the ones with zero timeout?
+    # TODO: Should we check for http-equiv="refresh"?
+    redirect_re = re.compile('<meta[^>]*?url=(.*?)["\']', re.IGNORECASE)
+    nr_redirects = 0
+    while True:
+        response = requests.get(url, *args, **kwargs)
+        response.encoding = find_encoding(response)
+        match = redirect_re.search(response.text)
+        if not match or nr_redirects > 10:
+            return response
+        # TODO: Maybe use urlparse.urljoin instead?
+        url = match.groups()[0].strip()
+        nr_redirects += 1
 

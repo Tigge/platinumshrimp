@@ -10,6 +10,7 @@ import http.server
 from plugins.titlegiver.titlegiver import Titlegiver
 
 __author__ = 'tigge'
+__author__ = 'reggna'
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -84,6 +85,10 @@ class TitlegiverTestCase(unittest.TestCase):
     def test_redirect(self):
         url = self.URL + "/page"
         result = Titlegiver.get_title_from_url(self.URL + "/redirect?count=10&url={0}".format(url))
+        self.assertEqual(result, u"Simple")
+
+    def test_meta_redirect(self):
+        result = Titlegiver.get_title_from_url(self.URL + "/pages/meta_redirect")
         self.assertEqual(result, u"Simple")
 
     def test_specialchars(self):
