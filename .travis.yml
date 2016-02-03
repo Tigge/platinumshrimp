@@ -18,6 +18,6 @@ script:
 notifications:
   irc:
     channels:
-      - "irc.chalmers.it#platinumshrimp"
+      - "ircs://irc.chalmers.it:9999/#platinumshrimp"
     use_notice: true
     skip_join: true
