@@ -7,6 +7,7 @@ import logging
 
 import zmq
 import irc.client
+import irc.buffer
 
 from utils import settings
 
@@ -95,6 +96,7 @@ class Bot:
             s = self.reactor.server()
             self.servers[server['name']] = s
             s.name = server['name']
+            s.buffer_class = irc.buffer.LenientDecodingLineBuffer
             factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server and server["ssl"] else None
             s.connect(server['host'], server['port'], nickname=self.settings['nickname'],
                       ircname=self.settings['realname'], username=self.settings['username'],
