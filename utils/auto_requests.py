@@ -67,7 +67,11 @@ def get(url, *args, **kwargs):
     while True:
         response = requests.get(url, *args, **kwargs)
         response.encoding = find_encoding(response)
-        match = redirect_re.search(no_script_re.sub("", response.text))
+        text = response.text
+        # Twitter hates us:
+        if not url.startswith("https://t.co/"):
+            text = no_script_re.sub("", text)
+        match = redirect_re.search(text)
         if not match or nr_redirects > 10:
             return response
         # TODO: Maybe use urlparse.urljoin instead?
