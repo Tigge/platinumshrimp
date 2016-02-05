@@ -91,6 +91,10 @@ class TitlegiverTestCase(unittest.TestCase):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/meta_redirect")
         self.assertEqual(result, u"Simple")
 
+    def test_meta_redirect_in_noscript(self):
+        result = Titlegiver.get_title_from_url(self.URL + "/pages/meta_redirect_in_noscript")
+        self.assertEqual(result, u"Title without refreshing")
+
     def test_specialchars(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/specialchar")
         self.assertEqual(result, u"Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_")
