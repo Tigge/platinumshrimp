@@ -30,7 +30,8 @@ class PostnordPackage(Package):
         if len(result) > 0:
             result += ", "
         result += address["postCode"] + " " + address["city"]
-        result += ", " + address["country"]
+        if "country" in address:
+            result += ", " + address["country"]
         return result
 
     @staticmethod
