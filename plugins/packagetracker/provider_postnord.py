@@ -3,6 +3,7 @@
 import requests
 import dateutil
 import dateutil.parser
+import logging
 
 from plugins.packagetracker.packagetracker import Package
 
@@ -22,6 +23,7 @@ class PostnordPackage(Package):
 
     @staticmethod
     def format_address(address):
+        logging.info("PostnordPackage.format_address", address)
         result = ""
         if "street1" in address:
             result += address["street1"]

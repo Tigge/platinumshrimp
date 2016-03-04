@@ -13,8 +13,8 @@ __author__ = 'tigge'
 
 class PackageTracker(plugin.Plugin):
     def __init__(self):
-        logging.info("PackageTracker.__init__")
         plugin.Plugin.__init__(self, "packagetracker")
+        logging.info("PackageTracker.__init__")
 
         self.settings = {}
         self.packages = []
@@ -28,12 +28,10 @@ class PackageTracker(plugin.Plugin):
         plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
 
     def update(self):
-        # logging.info("PackageTracker.update")
         self.ticks += 1
         if self.ticks % self.settings["interval"] == 0:
-
+            logging.info("PackageTracker.update")
             for package in self.packages:
-                # self.privmsg(package.server, package.channel, package.user + ": Package update... " + package.id)
                 self._thread(self.update_package, package)
 
     def on_pubmsg(self, server, user, channel, message):
@@ -70,10 +68,12 @@ class PackageTracker(plugin.Plugin):
             self.privmsg(server, channel, "Package not found in any provider...")
 
     def add_package(self, package):
+        logging.info("PackageTracker.add_package %d", package.id)
         package.on_event = lambda event: self.on_event(package, event)
         self.packages.append(package)
 
     def update_package(self, package):
+        logging.info("PackageTracker.update_package %d", package.id)
         package.update()
 
     def on_event(self, package, event):
