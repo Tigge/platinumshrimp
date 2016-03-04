@@ -44,6 +44,7 @@ class PackageTracker(plugin.Plugin):
             package_id = message[15:].strip()
             for package in list(self.packages):
                 if package.id == package_id:
+                    self.remove_package(package)
                     self.privmsg(server, channel, "Package removed...")
                     break
             else:
@@ -75,6 +76,10 @@ class PackageTracker(plugin.Plugin):
     def update_package(self, package):
         logging.info("PackageTracker.update_package %d", package.id)
         package.update()
+
+    def remove_package(self, package):
+        logging.info("PackageTracker.remove_package %d", package.id)
+        self.packages.remove(package)
 
     def on_event(self, package, event):
         self.privmsg(package.server, package.channel,
