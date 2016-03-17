@@ -61,20 +61,25 @@ class PostnordPackage(Package):
 
     @classmethod
     def _get_data(cls, package_id, locale="en"):
-        return requests.get(PostnordPackage._get_url(package_id, locale)).json()
+        try:
+            return requests.get(PostnordPackage._get_url(package_id, locale)).json()
+        except ValueError as e:
+            logging.exception("Exception while getting package")
+            return {}
 
     def update(self):
 
         res = self._get_data(self.id)
 
-        data = res["TrackingInformationResponse"]
+        try:
+            data = res["TrackingInformationResponse"]
 
-        for shipment in data["shipments"]:
-            self.service = shipment["service"]["name"]
-            self.consignor = shipment["consignor"]["name"]
-            if "address" in  shipment["consignor"]:
-                self.consignor += ", " + PostnordPackage.format_address(shipment["consignor"]["address"])
-            self.consignee = PostnordPackage.format_address(shipment["consignee"]["address"])
+            for shipment in data["shipments"]:
+                self.service = shipment["service"]["name"]
+                self.consignor = shipment["consignor"]["name"]
+                if "address" in  shipment["consignor"]:
+                    self.consignor += ", " + PostnordPackage.format_address(shipment["consignor"]["address"])
+                self.consignee = PostnordPackage.format_address(shipment["consignee"]["address"])
 
             if "totalWeight" in shipment:
                 self.weight = shipment["totalWeight"]["value"] + " " + shipment["totalWeight"]["unit"]
@@ -97,3 +102,7 @@ class PostnordPackage(Package):
                         self.on_event(PostnordPackage.create_event(postnord_event))
 
             self.last_updated = last_updated
+
+        except Exception as e:
+            logging.exception("Exception while updating package")
+            logging.debug("Data: %r", res)

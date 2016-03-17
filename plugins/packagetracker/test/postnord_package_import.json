@@ -1,0 +1,258 @@
+{"TrackingInformationResponse": {
+  "shipments": [
+    {
+      "shipmentId": "UP041475774DE",
+      "uri": "/ntt-service-rest/api/shipment/UP041475774DE/0",
+      "assessedNumberOfItems": 1,
+      "deliveryDate": "2016-03-04T18:37:00",
+      "estimatedTimeOfArrival": "2016-03-03T11:40:00",
+      "service": {
+        "code": "98",
+        "name": "Import-EPG"
+      },
+      "consignor": {
+        "name": "Posten Logistik AB / IMPORT",
+        "address": {
+          "city": "STOCKHOLM",
+          "countryCode": "SE",
+          "postCode": "10500"
+        }
+      },
+      "consignee": {
+        "address": {
+          "city": "GÖTEBORG",
+          "countryCode": "SWE",
+          "country": "Sweden",
+          "postCode": "41327"
+        }
+      },
+      "statusText": {
+        "header": "The shipment has been delivered to the recipient",
+        "body": "The shipment was delivered on 3/4/2016 at 18:37 PM"
+      },
+      "status": "DELIVERED",
+      "totalWeight": {
+        "value": "1.05",
+        "unit": "kg"
+      },
+      "totalVolume": {
+        "value": "0.01",
+        "unit": "m3"
+      },
+      "items": [
+        {
+          "itemId": "UP041475774DE",
+          "dropOffDate": "2016-03-01T11:58:00",
+          "deliveryDate": "2016-03-04T18:37:00",
+          "typeOfItemActual": "UNDEF",
+          "typeOfItemActualName": "-",
+          "status": "DELIVERED",
+          "statusText": {
+            "header": "The shipment item has been delivered to the recipient",
+            "body": "The shipment item was delivered on 3/4/2016 at 18:37 PM"
+          },
+          "statedMeasurement": {
+            "weight": {
+              "value": "1.05",
+              "unit": "kg"
+            },
+            "length": {
+              "value": "0.3",
+              "unit": "m"
+            },
+            "height": {
+              "value": "0.16",
+              "unit": "m"
+            },
+            "width": {
+              "value": "0.21",
+              "unit": "m"
+            },
+            "volume": {
+              "value": "0.01",
+              "unit": "m3"
+            }
+          },
+          "events": [
+            {
+              "eventTime": "2016-02-29T18:21:00",
+              "eventCode": "74",
+              "status": "EN_ROUTE",
+              "eventDescription": "The transport of the shipment item has started",
+              "location": {
+                "displayName": "",
+                "name": ""
+              }
+            },
+            {
+              "eventTime": "2016-03-01T11:57:00",
+              "eventCode": "31",
+              "status": "EN_ROUTE",
+              "eventDescription": "The shipment item is under transportation",
+              "location": {
+                "locationId": "291",
+                "displayName": "UPK Malmö",
+                "name": "UPK Malmö",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "locationType": "HUB"
+              }
+            },
+            {
+              "eventTime": "2016-03-02T00:50:00",
+              "eventCode": "31",
+              "status": "EN_ROUTE",
+              "eventDescription": "The shipment item is under transportation",
+              "location": {
+                "locationId": "421",
+                "displayName": "Härryda",
+                "name": "Härryda",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "postcode": "43891",
+                "city": "Landvetter",
+                "locationType": "HUB"
+              }
+            },
+            {
+              "eventTime": "2016-03-02T05:45:00",
+              "eventCode": "31",
+              "status": "EN_ROUTE",
+              "eventDescription": "The shipment item is under transportation",
+              "location": {
+                "locationId": "142100",
+                "displayName": "Västra Frölunda",
+                "name": "Högsbo",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "postcode": "42132",
+                "city": "Västra Frölunda",
+                "locationType": "DEPOT"
+              }
+            },
+            {
+              "eventTime": "2016-03-02T08:15:00",
+              "eventCode": "z65",
+              "status": "EN_ROUTE",
+              "eventDescription": "The shipment item has arrived at the distribution terminal",
+              "location": {
+                "locationId": "1142101",
+                "displayName": "Västra Frölunda ",
+                "name": "Västra Frölunda ",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "locationType": "SLINGA"
+              }
+            },
+            {
+              "eventTime": "2016-03-02T08:50:00",
+              "eventCode": "113",
+              "status": "EN_ROUTE",
+              "eventDescription": "The delivery of the shipment item is in progress",
+              "location": {
+                "locationId": "1142101",
+                "displayName": "Västra Frölunda ",
+                "name": "Västra Frölunda ",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "locationType": "SLINGA"
+              }
+            },
+            {
+              "eventTime": "2016-03-02T10:51:00",
+              "eventCode": "109",
+              "status": "DELIVERY_IMPOSSIBLE",
+              "eventDescription": "Delivery has not been possible, a notification has been left at the delivery address",
+              "location": {
+                "locationId": "1142101",
+                "displayName": "Västra Frölunda ",
+                "name": "Västra Frölunda ",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "locationType": "SLINGA"
+              }
+            },
+            {
+              "eventTime": "2016-03-02T19:33:00",
+              "eventCode": "31",
+              "status": "EN_ROUTE",
+              "eventDescription": "The shipment item is under transportation",
+              "location": {
+                "locationId": "421",
+                "displayName": "Härryda",
+                "name": "Härryda",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "postcode": "43891",
+                "city": "Landvetter",
+                "locationType": "HUB"
+              }
+            },
+            {
+              "eventTime": "2016-03-03T11:40:00",
+              "eventCode": "1",
+              "status": "AVAILABLE_FOR_DELIVERY",
+              "eventDescription": "The shipment item has been delivered to a service point",
+              "location": {
+                "locationId": "233275",
+                "displayName": "Hemköp Masthugget",
+                "name": "Hemköp Masthugget",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "postcode": "41327",
+                "city": "Göteborg",
+                "locationType": "SERVICE_POINT"
+              }
+            },
+            {
+              "eventTime": "2016-03-03T16:16:00",
+              "eventCode": "z01",
+              "status": "OTHER",
+              "eventDescription": "A letter notification has been sent to the recipient",
+              "location": {
+                "locationId": "3",
+                "displayName": "PostNord",
+                "name": "PostNord",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "locationType": "HUB"
+              }
+            },
+            {
+              "eventTime": "2016-03-04T18:37:00",
+              "eventCode": "21",
+              "status": "DELIVERED",
+              "eventDescription": "The shipment item has been delivered",
+              "location": {
+                "locationId": "233275",
+                "displayName": "Hemköp Masthugget",
+                "name": "Hemköp Masthugget",
+                "countryCode": "SWE",
+                "country": "Sweden",
+                "postcode": "41327",
+                "city": "Göteborg",
+                "locationType": "SERVICE_POINT"
+              }
+            }
+          ],
+          "references": [
+          ],
+          "itemRefIds": [
+          ],
+          "freeTexts": [
+          ]
+        }
+      ],
+      "additionalServices": [
+        {
+          "code": "66",
+          "name": "Notification by Letter"
+        }
+      ],
+      "splitStatuses": [
+      ],
+      "shipmentReferences": [
+      ]
+    }
+  ]
+}}

@@ -1,0 +1,16 @@
+{
+  "TrackingInformationResponse": {
+    "shipments": [
+      {
+        "shipmentId": "85021697593SE",
+        "uri": "/ntt-service-rest/api/shipment/85021697593SE/0",
+        "assessedNumberOfItems": 1,
+        "deliveryDate": "2015-03-05T18:35:00",
+        "estimatedTimeOfArrival": "2015-03-05T18:00:00",
+        "service": {
+          "code": "32",
+          "name": "Hempaket"
+        },
+        "consignor": {
+          "name": "Dustin Sverige",
+          "address": {
