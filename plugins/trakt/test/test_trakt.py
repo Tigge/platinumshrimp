@@ -4,10 +4,13 @@ import unittest
 
 from unittest.mock import patch
 from unittest.mock import Mock
+
+import requests_mock
 from dateutil import relativedelta
 
 from plugins.trakt.trakt import Trakt
 from plugins.trakt.trakt import API_ACTIVITY
+from plugins.trakt.trakt import API_URL
 
 
 class StubResponse(object):
@@ -111,26 +114,22 @@ class GetTestCase(unittest.TestCase):
     def raise_(self, ex):
         raise ex
 
-    @patch('plugins.trakt.trakt.requests')
-    def test_get_valid(self, mock_request):
+    @requests_mock.mock()
+    def test_get_valid(self, mock_requests):
         response = "{\"movie_id\": 123}"
-        req = StubResponse(200, response)
-        mock_request.get.return_value = req
-        res = self.trakt.get("http://test.now")
-        self.assertEqual(res, response)
+        mock_requests.get(API_URL, text=response)
+        res = self.trakt.get("")
+        self.assertEqual(res, {"movie_id": 123})
 
-    @patch('plugins.trakt.trakt.requests')
-    def test_get_error_code(self, mock_request):
-        req = StubResponse(400, "")
-        mock_request.get.return_value = req
-        self.assertRaises(Exception, self.trakt.get, "http://test.now")
+    @requests_mock.mock()
+    def test_get_error_code(self, mock_requests):
+        mock_requests.get(API_URL, text="", status_code=400)
+        self.assertRaises(Exception, self.trakt.get, "")
 
-    @patch('plugins.trakt.trakt.requests')
-    def test_get_error_json(self, mock_request):
-        req = StubResponse(200, lambda: self.raise_(ValueError()))
-        mock_request.get.return_value = req
-        res = self.trakt.get("http://test.now")
-        self.assertEqual(res, [])
+    @requests_mock.mock()
+    def test_get_error_json(self, mock_requests):
+        mock_requests.get(API_URL, text="{\"broken_json\": \"blä")
+        self.assertEqual(self.trakt.get(""), [])
 
 
 class StartTestCase(unittest.TestCase):

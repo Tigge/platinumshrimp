@@ -53,9 +53,12 @@ class PostnordPackage(Package):
         return False
 
     @classmethod
+    def _get_url(cls, package_id, locale="en"):
+        return PostnordPackage.FIND_IDENTIFIER.format(id=package_id, locale=locale, apikey=PostnordPackage.apikey)
+
+    @classmethod
     def _get_data(cls, package_id, locale="en"):
-        url = PostnordPackage.FIND_IDENTIFIER.format(id=package_id, locale=locale, apikey=PostnordPackage.apikey)
-        return requests.get(url).json()
+        return requests.get(PostnordPackage._get_url(package_id, locale)).json()
 
     def update(self):
 

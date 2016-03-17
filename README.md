@@ -11,12 +11,12 @@ Get the code:
 Install dependencies in Debian/Ubuntu:
 
  - `sudo apt-get install python3-pip libzmq3-dev`
- - `sudo pip3 install requests feedparser python-dateutil pyzmq irc`
+ - `sudo pip3 install requests requests-mock feedparser python-dateutil pyzmq irc`
 
 Install dependencies in Fedora:
 
  - `sudo dnf install python3-devel python3-pip zeromq-devel`
- - `sudo pip-python3 install requests feedparser python-dateutil pyzmq irc six`
+ - `sudo pip-python3 install requests requests-mock feedparser python-dateutil pyzmq irc six`
 
 Run plugins unit tests:
 
