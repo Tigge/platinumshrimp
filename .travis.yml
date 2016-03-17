@@ -22,3 +22,8 @@ notifications:
     channels:
       - "ircs://irc.chalmers.it:9999/#platinumshrimp"
     use_notice: true
+  email:
+    recipients:
+      - platinumshrimp@googlegroups.com
+    on_success: always
+    on_failure: always
