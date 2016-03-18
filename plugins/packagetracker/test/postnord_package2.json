@@ -1,0 +1,146 @@
+{"TrackingInformationResponse": {
+  "shipments": [
+    {
+      "shipmentId": "UA465181603SE",
+      "uri": "/ntt-service-rest/api/shipment/UA465181603SE/0",
+      "assessedNumberOfItems": 1,
+      "service": {
+        "code": "UA",
+        "name": "Varubrev Flyg INTL"
+      },
+      "consignor": {
+        "name": "CDON.COM"
+      },
+      "consignee": {
+        "address": {
+          "postCode": "41762"
+        }
+      },
+      "statusText": {
+        "header": "Delivered to service point",
+        "body": "The shipment is available for collection. Remember to bring  the notification when collecting the shipment."
+      },
+      "status": "AVAILABLE_FOR_DELIVERY",
+      "deliveryPoint": {
+        "locationId": "235171",
+        "displayName": "Coop Extra Eriksberg",
+        "name": "Coop Extra Eriksberg",
+        "address": {
+          "street1": "Kolhamnsgatan 7",
+          "city": "Göteborg",
+          "countryCode": "SWE",
+          "country": "Sweden",
+          "postCode": "41761"
+        },
+        "coordinate": [
+        ],
+        "openingHours": [
+          {
+            "openFrom": "09:00",
+            "openTo": "20:00",
+            "monday": true,
+            "tuesday": true,
+            "wednesday": true,
+            "thursday": true,
+            "friday": true,
+            "saturday": true,
+            "sunday": true
+          }
+        ]
+      },
+      "totalWeight": {
+        "value": "0.3",
+        "unit": "kg"
+      },
+      "items": [
+        {
+          "itemId": "UA465181603SE",
+          "noItems": 1,
+          "status": "AVAILABLE_FOR_DELIVERY",
+          "statusText": {
+            "header": "Delivered to service point",
+            "body": "The shipment item is available for collection. Remember to bring  the notification when collecting the shipment item."
+          },
+          "statedMeasurement": {
+            "weight": {
+              "value": "0.3",
+              "unit": "kg"
+            }
+          },
+          "events": [
+            {
+              "eventTime": "2016-03-17T12:00:00",
+              "eventCode": "VAPO_150",
+              "eventDescription": "The electronic shipping instructions have been received",
+              "location": {
+                "locationId": "999",
+                "displayName": "Edi-kund",
+                "name": "Edi-kund",
+                "locationType": "UNDEF"
+              }
+            },
+            {
+              "eventTime": "2016-03-17T17:19:00",
+              "eventCode": "VAPO_151",
+              "eventDescription": "The Item has been sorted",
+              "location": {
+                "locationId": "34200",
+                "displayName": "Alvesta",
+                "name": "Alvesta",
+                "postcode": "34200",
+                "locationType": "UNDEF"
+              }
+            },
+            {
+              "eventTime": "2016-03-18T01:02:00",
+              "eventCode": "VAPO_153",
+              "eventDescription": "The Item has been sorted",
+              "location": {
+                "locationId": "40510",
+                "displayName": "Göteborg",
+                "name": "Göteborg",
+                "postcode": "40510",
+                "locationType": "UNDEF"
+              }
+            },
+            {
+              "eventTime": "2016-03-18T10:09:00",
+              "eventCode": "VAPO_161",
+              "eventDescription": "The item has arrived at the recipient¿s delivery point.",
+              "location": {
+                "locationId": "235171",
+                "displayName": "Coop Extra Eriksberg",
+                "name": "Coop Extra Eriksberg",
+                "postcode": "41761",
+                "locationType": "SERVICE_POINT"
+              }
+            },
+            {
+              "eventTime": "2016-03-18T10:45:00",
+              "eventCode": "VAPO_175",
+              "eventDescription": "Notification sent to recipient by SMS ",
+              "location": {
+                "locationId": "0472",
+                "displayName": "Posten",
+                "name": "Posten",
+                "locationType": "UNDEF"
+              }
+            }
+          ],
+          "references": [
+          ],
+          "itemRefIds": [
+          ],
+          "freeTexts": [
+          ]
+        }
+      ],
+      "additionalServices": [
+      ],
+      "splitStatuses": [
+      ],
+      "shipmentReferences": [
+      ]
+    }
+  ]
+}}

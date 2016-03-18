@@ -30,6 +30,15 @@ class PostnordTestCase(unittest.TestCase):
         self.assertEqual(package.consignee, "22738 LUND, Sweden")
         self.assertEqual(package.consignor, "Dustin Sverige, Metallvägen 36, 19572 Rosersberg, Sweden")
 
+        package2 = PostnordPackage("FAKE_ID")
+        with open(os.path.join(self.dir, "postnord_package2.json"), "r") as f:
+            mock_requests.get(PostnordPackage._get_url("FAKE_ID"), text=f.read())
+        package2.update()
+
+        self.assertEqual(package2.id, "FAKE_ID")
+        self.assertEqual(package2.consignee, "41762")
+        self.assertEqual(package2.consignor, "CDON.COM")
+
     @requests_mock.mock()
     def test_is_package(self, mock_requests):
         PostnordPackage.set_apikey("FAKE_APIKEY")

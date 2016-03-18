@@ -31,7 +31,10 @@ class PostnordPackage(Package):
             result += ", " + address["street2"]
         if len(result) > 0:
             result += ", "
-        result += address["postCode"] + " " + address["city"]
+        if "postCode" in address:
+            result += address["postCode"]
+            if "city" in address:
+                result += " " + address["city"]
         if "country" in address:
             result += ", " + address["country"]
         return result
@@ -68,12 +71,15 @@ class PostnordPackage(Package):
 
         for shipment in data["shipments"]:
             self.service = shipment["service"]["name"]
-            self.consignor = shipment["consignor"]["name"] + ", " + PostnordPackage.format_address(
-                shipment["consignor"]["address"])
+            self.consignor = shipment["consignor"]["name"]
+            if "address" in  shipment["consignor"]:
+                self.consignor += ", " + PostnordPackage.format_address(shipment["consignor"]["address"])
             self.consignee = PostnordPackage.format_address(shipment["consignee"]["address"])
 
-            self.weight = shipment["totalWeight"]["value"] + " " + shipment["totalWeight"]["unit"]
-            self.volume = shipment["totalVolume"]["value"] + " " + shipment["totalVolume"]["unit"]
+            if "totalWeight" in shipment:
+                self.weight = shipment["totalWeight"]["value"] + " " + shipment["totalWeight"]["unit"]
+            if "totalVolume" in shipment:
+                self.volume = shipment["totalVolume"]["value"] + " " + shipment["totalVolume"]["unit"]
 
             self.status = shipment["statusText"]["header"] + ": " + shipment["statusText"]["body"]
 
