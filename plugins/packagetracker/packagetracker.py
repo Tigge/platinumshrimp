@@ -69,16 +69,16 @@ class PackageTracker(plugin.Plugin):
             self.privmsg(server, channel, "Package not found in any provider...")
 
     def add_package(self, package):
-        logging.info("PackageTracker.add_package %d", package.id)
+        logging.info("PackageTracker.add_package '%s'", package.id)
         package.on_event = lambda event: self.on_event(package, event)
         self.packages.append(package)
 
     def update_package(self, package):
-        logging.info("PackageTracker.update_package %d", package.id)
+        logging.info("PackageTracker.update_package '%s'", package.id)
         package.update()
 
     def remove_package(self, package):
-        logging.info("PackageTracker.remove_package %d", package.id)
+        logging.info("PackageTracker.remove_package '%s'", package.id)
         self.packages.remove(package)
 
     def on_event(self, package, event):
