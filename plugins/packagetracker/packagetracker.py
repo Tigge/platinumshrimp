@@ -1,12 +1,12 @@
 # coding=utf-8
 
+import datetime
 import json
 import logging
-import datetime
 import sys
 
-import plugin
-import plugins.packagetracker.provider_postnord
+from platinumshrimp import plugin
+import provider_postnord
 
 __author__ = 'tigge'
 
@@ -25,7 +25,7 @@ class PackageTracker(plugin.Plugin):
         logging.info("PackageTracker.started %s", settings)
         self.settings = json.loads(settings)
 
-        plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
+        provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
 
     def update(self):
         self.ticks += 1
@@ -56,8 +56,8 @@ class PackageTracker(plugin.Plugin):
 
     def add_package_id(self, package_id, server, user, channel):
         package = None
-        if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(package_id):
-            package = plugins.packagetracker.provider_postnord.PostnordPackage(package_id)
+        if provider_postnord.PostnordPackage.is_package(package_id):
+            package = provider_postnord.PostnordPackage(package_id)
 
         if package is not None:
             package.server = server

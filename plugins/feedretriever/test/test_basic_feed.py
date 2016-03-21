@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from plugins.feedretriever.feedretriever import Feed, FeedItemToString
+from feedretriever import Feed, FeedItemToString
 
 
 class FeedRetriverTest(unittest.TestCase):

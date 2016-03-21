@@ -1,10 +1,10 @@
 import html
+import logging
 import re
 import sys
-import logging
 
-import plugin
-from utils import url_parser, auto_requests
+from platinumshrimp import plugin
+from platinumshrimp.utils import url_parser, auto_requests
 
 
 class Titlegiver(plugin.Plugin):

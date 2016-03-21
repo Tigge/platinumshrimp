@@ -2,11 +2,11 @@
 
 import os
 import unittest
-import requests_mock
-
 from unittest import mock
 
-from plugins.packagetracker.provider_postnord import PostnordPackage
+import requests_mock
+
+from provider_postnord import PostnordPackage
 
 __author__ = 'tigge'
 

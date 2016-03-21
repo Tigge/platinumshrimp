@@ -1,7 +1,7 @@
-import sys
 import logging
+import sys
 
-import plugin
+from platinumshrimp import plugin
 
 
 class Invitejoiner(plugin.Plugin):

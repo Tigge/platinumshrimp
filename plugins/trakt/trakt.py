@@ -1,12 +1,11 @@
 import json
-import sys
 import logging
+import sys
 
-import requests
 import dateutil.parser
+import requests
 
-import plugin
-
+from platinumshrimp import plugin
 
 API_URL = "https://api-v2launch.trakt.tv"
 API_ACTIVITY = "/users/{0}/history/{1}"

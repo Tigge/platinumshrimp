@@ -1,6 +1,7 @@
 import unittest
 
-from utils import str_utils
+from platinumshrimp.utils import str_utils
+
 
 class TestStrUtils(unittest.TestCase):
     def test_equal_number_of_parameters(self):

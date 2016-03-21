@@ -7,15 +7,10 @@ python:
 sudo: false
 
 install:
-  - "pip install requests"
-  - "pip install requests-mock"
-  - "pip install python-dateutil"
-  - "pip install feedparser"
-  - "pip install pyzmq"
-  - "pip install irc"
+  - "./setup.py develop"
 
 script:
-  - "python -m unittest discover -v"
+  - "./setup.py test"
 
 notifications:
   irc:

@@ -1,13 +1,13 @@
 # coding=utf-8
-import threading
-import urllib
-import os
-import json
-import urllib.parse
-import unittest
 import http.server
+import json
+import os
+import threading
+import unittest
+import urllib
+import urllib.parse
 
-from plugins.titlegiver.titlegiver import Titlegiver
+from titlegiver import Titlegiver
 
 __author__ = 'tigge'
 __author__ = 'reggna'

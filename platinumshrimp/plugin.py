@@ -12,6 +12,7 @@ plugin_argparser.add_argument("--socket_path", type=str, default=tempfile.gettem
                               help="The path to the location where platinumshrimp stores the IPC socket",
                              dest="socket_path")
 
+
 class Plugin:
 
     def __init__(self, name):

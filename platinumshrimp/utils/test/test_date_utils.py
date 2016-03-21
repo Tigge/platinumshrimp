@@ -1,7 +1,7 @@
 import datetime
 import unittest
 
-from utils import date_utils
+from platinumshrimp.utils import date_utils
 
 
 class TestDateUtils(unittest.TestCase):
