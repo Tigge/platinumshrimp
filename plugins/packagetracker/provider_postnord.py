@@ -1,11 +1,12 @@
 # coding=utf-8
 
-import requests
-import dateutil
-import dateutil.parser
 import logging
 
-from plugins.packagetracker.packagetracker import Package
+import dateutil
+import dateutil.parser
+import requests
+
+from platinumshrimp.plugins.packagetracker.packagetracker import Package
 
 __author__ = 'tigge'
 

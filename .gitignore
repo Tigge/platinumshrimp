@@ -7,3 +7,13 @@ __pycache__/
 
 # PyCharm
 .idea/
+
+# Setuptools
+/dist
+/build
+/ez_setup.py
+/*.egg-info
+
+# platinumshrimp
+settings.json
+*.log

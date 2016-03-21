@@ -1,6 +1,6 @@
 import unittest
 
-from plugins.reverser.reverser import Reverser
+from reverser import Reverser
 
 __author__ = 'sebbz'
 

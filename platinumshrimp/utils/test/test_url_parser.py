@@ -1,6 +1,6 @@
 import unittest
 
-from utils.url_parser import find_urls
+from platinumshrimp.utils.url_parser import find_urls
 
 class TestStrUtils(unittest.TestCase):
     def test_non_ascii(self):

@@ -1,16 +1,15 @@
 import json
 import os
 import unittest
-
-from unittest.mock import patch
 from unittest.mock import Mock
+from unittest.mock import patch
 
 import requests_mock
 from dateutil import relativedelta
 
-from plugins.trakt.trakt import Trakt
-from plugins.trakt.trakt import API_ACTIVITY
-from plugins.trakt.trakt import API_URL
+from trakt import API_ACTIVITY
+from trakt import API_URL
+from trakt import Trakt
 
 
 class StubResponse(object):
@@ -137,7 +136,7 @@ class StartTestCase(unittest.TestCase):
     def setUp(self):
         self.trakt = Trakt()
 
-    @patch('plugins.trakt.trakt.json')
+    @patch('trakt.json')
     def test_user_setup(self, mock_json):
         data_users = ['adam', 'dave', 'sue', 'eva']
         user_json = {'users': data_users}

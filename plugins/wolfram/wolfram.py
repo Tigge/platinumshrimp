@@ -1,12 +1,13 @@
-import logging
-import sys
 import html
 import json
-import requests
+import logging
+import sys
 import urllib.parse
 
-import plugin
-from utils import str_utils
+import requests
+
+from platinumshrimp import plugin
+from platinumshrimp.utils import str_utils
 
 RESULT_POD_START = "<pod title='Result"
 DECIMAL_APPROXIMATION_POD_START = "<pod title='Decimal approximation'"

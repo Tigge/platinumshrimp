@@ -1,10 +1,11 @@
-import feedparser
 import logging
 import sys
 import time
 
-import plugin
-from utils import str_utils, command_saver
+import feedparser
+
+from platinumshrimp import plugin
+from platinumshrimp.utils import str_utils, command_saver
 
 SAVE_FILE    = "feedretriever_feeds.save"
 FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "

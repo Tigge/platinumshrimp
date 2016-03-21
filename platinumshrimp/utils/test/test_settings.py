@@ -1,6 +1,6 @@
 import unittest
 
-from utils import settings
+from platinumshrimp.utils import settings
 
 
 class TestSettings(unittest.TestCase):

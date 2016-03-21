@@ -6,27 +6,27 @@ platinumshrimp
 
 Get the code:
 
- - git clone https://github.com/Tigge/platinumshrimp.git
+ - `git clone https://github.com/Tigge/platinumshrimp.git``
 
 Install dependencies in Debian/Ubuntu:
 
  - `sudo apt-get install python3-pip libzmq3-dev`
- - `sudo pip3 install requests requests-mock feedparser python-dateutil pyzmq irc`
+ - `./setup.py develop`
 
 Install dependencies in Fedora:
 
  - `sudo dnf install python3-devel python3-pip zeromq-devel`
- - `sudo pip-python3 install requests requests-mock feedparser python-dateutil pyzmq irc six`
+ - `./setup.py develop`
 
 Run plugins unit tests:
 
- - `python3 -m unittest discover -v`
+ - `./setup.py tests`
 
 Run:
 
- - `python3 bot.py`
+ - `platinumshrimp`
 
 Clean up:
 
- - ``rm -Rf `find . -name "*.pyc" -or -name __pycache__ -or -name _trial_temp -or -name "*.log" -or -name "ipc_plugin_*"` ``
+ - ```rm -Rf `find . -name "*.pyc" -or -name __pycache__ -or -name "*.log"` ```
 

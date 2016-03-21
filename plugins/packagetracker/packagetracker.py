@@ -1,12 +1,12 @@
 # coding=utf-8
 
+import datetime
 import json
 import logging
-import datetime
 import sys
 
-import plugin
-import plugins.packagetracker.provider_postnord
+from platinumshrimp import plugin
+import provider_postnord
 
 __author__ = 'tigge'
 
@@ -17,7 +17,9 @@ class PackageTracker(plugin.Plugin):
         logging.info("PackageTracker.__init__")
 
         self.settings = {}
+        self.providers = []
         self.packages = []
+        self.packages_pending = set()
 
         self.ticks = 0
 
@@ -25,7 +27,8 @@ class PackageTracker(plugin.Plugin):
         logging.info("PackageTracker.started %s", settings)
         self.settings = json.loads(settings)
 
-        plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
+        provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
+        self.providers.append(provider_postnord.PostnordPackage)
 
     def update(self):
         self.ticks += 1
@@ -56,17 +59,20 @@ class PackageTracker(plugin.Plugin):
 
     def add_package_id(self, package_id, server, user, channel):
         package = None
-        if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(package_id):
-            package = plugins.packagetracker.provider_postnord.PostnordPackage(package_id)
-
-        if package is not None:
-            package.server = server
-            package.channel = channel
-            package.user = user.split('!', 1)[0]
-            self.add_package(package)
-            self.privmsg(server, channel, "Package added...")
+        for provider in self.providers:
+            if provider.is_package(package_id):
+                package = provider(package_id)
+                break
         else:
-            self.privmsg(server, channel, "Package not found in any provider...")
+            self.packages_pending.add({package_id, server, user, channel})
+            self.privmsg(server, channel, "Package pending.")
+            return
+
+        package.server = server
+        package.channel = channel
+        package.user = user.split('!', 1)[0]
+        self.add_package(package)
+        self.privmsg(server, channel, "Package added...")
 
     def add_package(self, package):
         logging.info("PackageTracker.add_package '%s'", package.id)

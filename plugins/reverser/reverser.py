@@ -1,6 +1,7 @@
-import sys
-import plugin
 import logging
+import sys
+
+from platinumshrimp import plugin
 
 
 class Reverser(plugin.Plugin):

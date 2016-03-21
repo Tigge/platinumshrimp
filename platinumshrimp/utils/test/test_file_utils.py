@@ -1,9 +1,9 @@
 import os
+import shutil
 import tempfile
 import unittest
-import shutil
 
-from utils import file_utils
+from platinumshrimp.utils import file_utils
 
 
 def generate_test_file(file_name):

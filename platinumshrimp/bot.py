@@ -1,15 +1,18 @@
+#!/usr/bin/env python3
+
+import json
+import logging
+import os
 import ssl
 import sys
-import os
-import json
-import time
-import logging
 import tempfile
-from utils import settings
+import time
 
-import zmq
-import irc.client
 import irc.buffer
+import irc.client
+import zmq
+
+from platinumshrimp.utils import settings
 
 
 class PluginInterface:
@@ -120,7 +123,7 @@ class Bot:
 
     def load_plugin(self, name, settings):
         logging.info("Bot.plugin_load %s, %s", name, settings)
-        file_name = "plugins/" + name + "/" + name + ".py"
+        file_name = "platinumshrimp/plugins/" + name + "/" + name + ".py"
         if not os.path.isfile(file_name):
             logging.error("Unable to load plugin %s", name)
         else:
@@ -149,7 +152,10 @@ class Bot:
             time.sleep(0)  # yield
 
 
-if __name__ == '__main__':
+def run():
     with tempfile.TemporaryDirectory(prefix="platinumshrimp_") as temp_folder:
         bot = Bot(temp_folder)
         bot.run()
+
+if __name__ == '__main__':
+    run()

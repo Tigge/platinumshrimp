@@ -1,10 +1,11 @@
 import json
 import logging
-import sys
 import re
+import sys
+
 import requests
 
-import plugin
+from platinumshrimp import plugin
 
 
 class Yogscaster(plugin.Plugin):

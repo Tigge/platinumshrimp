@@ -1,7 +1,8 @@
 import json
 import sys
 
-import plugin
+from platinumshrimp import plugin
+
 
 class Autojoiner(plugin.Plugin):
 
