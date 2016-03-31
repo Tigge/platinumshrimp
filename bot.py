@@ -126,7 +126,9 @@ class Bot:
         else:
             logging.info("Bot.plugin_load plugin %s, %s, %s, %s", name, self, sys.executable,
                          [sys.executable, file_name])
-            os.spawnvpe(os.P_NOWAIT, sys.executable, args=[sys.executable, file_name, "--socket_path", self.temp_folder], env={"PYTHONPATH": os.getcwd()})
+            environment = os.environ
+            environment.update(PYTHONPATH=os.getcwd())
+            os.spawnvpe(os.P_NOWAIT, sys.executable, args=[sys.executable, file_name, "--socket_path", self.temp_folder], env=environment)
             self.plugins.append(PluginInterface(name, self))
 
     def plugin_started(self, plugin):
