@@ -64,10 +64,8 @@ setup(
         'feedparser>=5.2.1',
         'python-dateutil>=2.4.2',
         'pyzmq>=14.0',
-        'irc>=13.0'
-    ],
-    tests_require=[
-        'requests-mock>=0.7.0',
+        'irc>=13.0',
+        'requests-mock>=0.7.0'
     ],
 
     include_package_data=True,
