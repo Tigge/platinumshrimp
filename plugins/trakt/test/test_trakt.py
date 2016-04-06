@@ -386,7 +386,7 @@ class SummaryTestCase(unittest.TestCase):
 
     def test_empty_list(self):
         result = self.trakt.create_activity_summary([])
-        self.assertEquals(result, [])
+        self.assertEqual(result, [])
 
     def test_single_activity(self):
         result = self.trakt.create_activity_summary([ACTIVITY_PRESET_EPISODE_1])
