@@ -22,7 +22,7 @@ class Titlegiver(plugin.Plugin):
     @staticmethod
     def get_title_from_url(url):
         # Fetch page (no need to verfiy SSL certs for titles)
-        response = auto_requests.get(url, verify=False, headers={"User-Agent": Titlegiver.USER_AGENT})
+        response = auto_requests.get(url, verify=False, headers={"User-Agent": Titlegiver.USER_AGENT, "Accept-Language": "en_US"})
         content = response.text[:Titlegiver.MAX_CONTENT_LENGTH]
 
         # Avoid leaving dangling redirects when we've got the content
