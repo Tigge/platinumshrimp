@@ -108,6 +108,7 @@ class Trakt(plugin.Plugin):
 
     def update_user(self, userName):
         user = self.users[userName]
+        print("update_user")
         for typ in ["episodes", "movies"]:
 
             try:
@@ -123,17 +124,34 @@ class Trakt(plugin.Plugin):
 
                 activity_summary = self.create_activity_summary(activities)
 
+                print("got activites2 %s" % activity_summary)
+
                 for entry in activity_summary:
+                    print("loop")
                     for series in entry["series"]:
+                        print("get message")
                         message = Trakt.format_activity(series, userName, entry["action"])
+                        print("message %s" % message)
                         if message is not None:
+                            print("echo function %s" % self.echo)
                             self.echo(message)
 
             except Exception as e:
                 logging.exception("Unhandled exception when fetching (for %s) on %s", user, API_ACTIVITY.format(user, typ))
 
     def create_activity_summary(self, activities):
-        return []
+        result = {}
+        for activity in activities:
+            print("aqqs %s" % activity)
+            key = "%s_%s" % (activity["action"], activity["show"]["title"])
+            if key not in result:
+                result[key] = {
+                    "show": activity["show"]["title"],
+                    "action": activity["action"],
+                    "episodes": (),
+                }
+
+        return [ value for (key, value) in result.items() ]
 
     @staticmethod
     def format_activity(activity={}, userName="", action=""):

@@ -1,9 +1,7 @@
 import json
 import os
 import unittest
-from unittest.mock import Mock
-from unittest.mock import patch
-from mock import patch
+from unittest.mock import Mock, ANY, call, patch
 import requests_mock
 from dateutil import relativedelta
 from datetime import datetime
@@ -164,11 +162,8 @@ class GetTestCase(unittest.TestCase):
 
     @requests_mock.mock()
     def test_get_error_json(self, mock_requests):
-	response_callback = lambda: self.raise_(ValueError("test"))
-        mock_requests.get(API_URL, text=response_callback)
+        mock_requests.get(API_URL, text="{\"movie_id\": 123abc\"}") # note: missing quote
         res = self.trakt.get("")
-        gc.collect()
-        self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
         self.assertEqual(res, [])
 
 class StartTestCase(unittest.TestCase):
@@ -209,14 +204,16 @@ class UpdateTestCase(unittest.TestCase):
 
         self.assertFalse("last_sync_episodes" in self.trakt.users["adam"])
         self.assertFalse("last_sync_movies" in self.trakt.users["adam"])
-        self.failIf(mock_echo.called, "No message should be sent if no new activies are present")
+        self.assertFalse(mock_echo.called, "No message should be sent if no new activies are present")
 
     def test_sets_last_sync_on_first_load(self):
-        mock_fetch, mock_echo, _ = self.setupMocks((lambda url, sync: ([], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)))
+        mock_fetch, mock_echo, _ = self.setupMocks((lambda url, sync: (
+            [], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)))
 
         self.trakt.update_user("adam")
 
-        self.assertEqual(mock_fetch.call_args_list == [call(ANY, None), call(ANY, None)])
+        self.assertTrue(mock_fetch.call_args_list == [call(ANY, None), call(ANY, None)])
+        self.assertTrue("last_sync_episodes" in self.trakt.users["adam"])
         self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
                          Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
         self.assertFalse("last_sync_movies" in self.trakt.users["adam"])
@@ -224,34 +221,44 @@ class UpdateTestCase(unittest.TestCase):
 
     @patch("plugins.trakt.trakt.Trakt.format_activity")
     def test_single_episode(self, format_):
-        fetch_return = lambda url, sync: ([ACTIVITY_PRESET_EPISODE_1], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)
-        summary = {"action":"WOOT","series": [{"data":"dummy"}]}
+        user_name = "adam"
+        fetch_return = lambda url, sync: ([ACTIVITY_PRESET_EPISODE_1], Trakt.get_date(
+                ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)
+        summary = {"action": "WOOT", "series": [{"data": "dummy"}]}
         summary_return = lambda _: [summary]
         mock_fetch, mock_echo, _ = self.setupMocks(fetch_return, summary_return)
-        self.trakt.users["adam"]["last_sync_episodes"] = Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]) - relativedelta.relativedelta(days=1)
+        self.trakt.users["adam"]["last_sync_episodes"] = Trakt.get_date(
+                ACTIVITY_PRESET_EPISODE_1["watched_at"]) - relativedelta.relativedelta(days=1)
 
-        self.trakt.update_user("adam")
+        self.trakt.update_user(user_name)
 
         self.assertTrue(mock_echo.called, "A message should have been sent")
-        format_.assert_called_once_with(summary["series"][0], "adam", summary["action"])
-        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
+        format_.assert_called_once_with(summary["series"][0], user_name, summary["action"])
+        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
+                         Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
 
     def test_no_new_episodes(self):
-        fetch_return = lambda url, sync: ([], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)
+        fetch_return = lambda url, sync: (
+            [], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)
         mock_fetch, mock_echo, _ = self.setupMocks(fetch_return)
-        self.trakt.users["adam"]["last_sync_episodes"] = Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]) - relativedelta.relativedelta(days=1)
+        self.trakt.users["adam"]["last_sync_episodes"] = Trakt.get_date(
+                ACTIVITY_PRESET_EPISODE_1["watched_at"]) - relativedelta.relativedelta(days=1)
 
         self.trakt.update_user("adam")
 
         self.assertFalse(mock_echo.called, "No message should be sent if no new activities were found")
-        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
+        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
+                         Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
 
     def test_new_activity_both_types(self):
-        fetch_return = lambda url, sync: ([ACTIVITY_PRESET_EPISODE_1], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([ACTIVITY_PRESET_MOVIE_1], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
-        summary_episode = {"action":"WOOT","series":[{"data":"dummy_episode"}]}
-        summary_movie = {"action":"WOOT","series":[{"data":"dummy_movie"}]}
-        summary_return = lambda activities: [summary_episode] if activities == [ACTIVITY_PRESET_EPISODE_1] else [summary_movie]
-        mock_fetch, mock_echo, _ = self.setupMocks(fetch_return, summary_return);
+        fetch_return = lambda url, sync: ([ACTIVITY_PRESET_EPISODE_1], Trakt.get_date(
+                ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else (
+            [ACTIVITY_PRESET_MOVIE_1], Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
+        summary_episode = {"action": "WOOT", "series": [{"data": "dummy_episode2000"}]}
+        summary_movie = {"action": "WOOT", "series": [{"data": "dummy_movie1000"}]}
+        summary_return = lambda activities: [summary_episode] if activities == [ACTIVITY_PRESET_EPISODE_1] else [
+            summary_movie]
+        mock_fetch, mock_echo, _ = self.setupMocks(fetch_return, summary_return)
         self.trakt.users["adam"]["last_sync_episodes"] = Trakt.get_date("2013-03-31T09:28:53.000Z")
         self.trakt.users["adam"]["last_sync_movies"] = Trakt.get_date("2013-03-31T09:28:53.000Z")
 
@@ -282,8 +289,8 @@ class FetchTestCase(unittest.TestCase):
 
         activities, last_sync = self.trakt.fetch_new_activities(self.test_url, None)
 
-        self.failIf(len(activities) > 0, "Should not have gotten any activities")
-        self.assertEquals(last_sync, None, "Should not have gotton a last_sync")
+        self.assertFalse(len(activities) > 0, "Should not have gotten any activities")
+        self.assertEqual(last_sync, None, "Should not have gotten a last_sync")
 
     def test_no_sync_yes_activities(self):
         get_return = lambda url, params: [ACTIVITY_PRESET_EPISODE_1]
@@ -291,8 +298,10 @@ class FetchTestCase(unittest.TestCase):
 
         activities, last_sync = self.trakt.fetch_new_activities(self.test_url, None)
 
-        self.failIf(len(activities) > 0, "Should not have gotten any activities if there was no previous last_sync")
-        self.assertEquals(last_sync, Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]), "A new last_sync should have been added")
+        self.assertFalse(len(activities) > 0,
+                         "Should not have gotten any activities if there was no previous last_sync")
+        self.assertEqual(last_sync, Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]),
+                         "A new last_sync should have been added")
 
     def test_sync_no_activities(self):
         get_return = lambda url, params=None: []
@@ -301,12 +310,13 @@ class FetchTestCase(unittest.TestCase):
 
         activities, last_sync = self.trakt.fetch_new_activities(self.test_url, current_last_sync)
 
-        self.failIf(len(activities) > 0, "No new activities found so none should be returned")
-        self.assertEquals(last_sync, current_last_sync, "The new last_sync should be the same as the old one")
+        self.assertFalse(len(activities) > 0, "No new activities found so none should be returned")
+        self.assertEqual(last_sync, current_last_sync, "The new last_sync should be the same as the old one")
 
     def test_no_pagination_few_items(self):
         now = int(time.time()) - 60
-        result = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"), "number": n + 1, "season": 1} for n in range(10)]
+        result = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                   "number": n + 1, "season": 1} for n in range(10)]
 
         get_return = lambda url, params=None: result if params["page"] == 1 else []
         self.setupMocks(get_return)
@@ -314,12 +324,15 @@ class FetchTestCase(unittest.TestCase):
 
         activities, last_sync = self.trakt.fetch_new_activities(self.test_url, current_last_sync)
 
-        self.failUnless(len(activities) == len(result), "Got wrong number of activities back. Wanted %s, got %s" % (len(result), len(activities)))
-        self.assertEquals(last_sync, Trakt.get_date(result[0]["watched_at"]), "last_sync should be same as latest episode but was %s" % last_sync)
+        self.assertTrue(len(activities) == len(result),
+                        "Got wrong number of activities back. Wanted %s, got %s" % (len(result), len(activities)))
+        self.assertEqual(last_sync, Trakt.get_date(result[0]["watched_at"]),
+                         "last_sync should be same as latest episode but was %s" % last_sync)
 
     def test_no_pagination_filtered_by_sync(self):
         now = int(time.time()) - 60
-        result = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"), "number": n + 1, "season": 1} for n in range(10)]
+        result = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                   "number": n + 1, "season": 1} for n in range(10)]
 
         get_return = lambda url, params=None: result if params["page"] == 1 else []
         self.setupMocks(get_return)
@@ -327,20 +340,67 @@ class FetchTestCase(unittest.TestCase):
 
         activities, last_sync = self.trakt.fetch_new_activities(self.test_url, current_last_sync)
 
-        self.failUnless(activities == result[:4], "Got wrong activities back. Wanted %s, got %s" % (result[:4], activities))
-        self.assertEquals(last_sync, Trakt.get_date(result[0]["watched_at"]), "last_sync should be same as latest episode but was %s" % last_sync)
+        self.assertTrue(activities == result[:4],
+                        "Got wrong activities back. Wanted %s, got %s" % (result[:4], activities))
+        self.assertEqual(last_sync, Trakt.get_date(result[0]["watched_at"]),
+                         "last_sync should be same as latest episode but was %s" % last_sync)
 
     def test_tes_pagination_filtered_by_sync(self):
         now = int(time.time()) - 60
-        result_1 = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"), "number": n + 1, "season": 1} for n in range(10)]
-        result_2 = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"), "number": n + 1, "season": 1} for n in range(10,20)]
+        result_1 = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                     "number": n + 1, "season": 1} for n in range(10)]
+        result_2 = [{"watched_at": datetime.fromtimestamp(now - n * 24 * 3600).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                     "number": n + 1, "season": 1} for n in range(10, 20)]
 
-        get_return = lambda url, params=None: result_1 if params["page"] == 1 else result_2 if params["page"] == 2 else []
+        get_return = lambda url, params=None: result_1 if params["page"] == 1 else result_2 if params[
+                                                                                                   "page"] == 2 else []
         self.setupMocks(get_return)
         current_last_sync = Trakt.get_date(result_2[6]["watched_at"])
 
         activities, last_sync = self.trakt.fetch_new_activities(self.test_url, current_last_sync)
 
         total_result = result_1 + result_2[:6]
-        self.failUnless(activities == total_result, "Got wrong activities back. Wanted %s, got %s" % (total_result, activities))
-        self.assertEquals(last_sync, Trakt.get_date(result_1[0]["watched_at"]), "last_sync should be same as latest episode but was %s" % last_sync)
+        self.assertTrue(activities == total_result,
+                        "Got wrong activities back. Wanted %s, got %s" % (total_result, activities))
+        self.assertEqual(last_sync, Trakt.get_date(result_1[0]["watched_at"]),
+                         "last_sync should be same as latest episode but was %s" % last_sync)
+
+class SummaryTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.trakt = Trakt()
+        self.trakt.users = {"adam": {}}
+
+    def create_activity(self, action, title, year, season, number):
+        return {
+            "action": action,
+            "episode": {
+                "season": season,
+                "number": number
+            },
+            "show": {
+                "title": title,
+                "year": year
+            }
+        }
+
+    def test_empty_list(self):
+        result = self.trakt.create_activity_summary([])
+        self.assertEquals(result, [])
+
+    def test_single_activity(self):
+        result = self.trakt.create_activity_summary([ACTIVITY_PRESET_EPISODE_1])
+
+        self.assertTrue(len(result) == 1, "Should have gotten one show back. Got: %s" % len(result))
+        res = result[0]
+        res_show = res["show"]
+        res_episodes = res["episodes"]
+        self.assertTrue(res["action"] == ACTIVITY_PRESET_EPISODE_1["action"], "Wrong action. Value: %s" % result[0]["action"])
+        self.assertEqual(res_show["title"] == ACTIVITY_PRESET_EPISODE_1["show"]["title"])
+        self.assertEqual(res_show["year"] == ACTIVITY_PRESET_EPISODE_1["show"]["year"])
+        self.assertEqual(res_episodes, [(2, 3)])
+
+    def test_single_season_range(self):
+        list_ = []
+        result = self.trakt.create_activity_summary()
+        
