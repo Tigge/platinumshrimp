@@ -174,7 +174,7 @@ class Trakt(plugin.Plugin):
         elif "episode" in item:
             return "/episodes/{0}".format(item["episode"]["ids"]["trakt"])
         elif "show" in item:
-            return "/shows/{0}".format(item["episode"]["ids"]["trakt"])
+            return "/shows/{0}".format(item["show"]["ids"]["trakt"])
 
     @staticmethod
     def format_movie(movie):
