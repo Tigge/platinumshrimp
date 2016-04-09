@@ -101,37 +101,35 @@ ACTIVITY_TEMPLATE_1 = {
     }
 }
 
+
 class FormatTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.dir = os.path.join("..", os.path.dirname(__file__))
 
-    def raise_(self, ex):
-        raise ex
-
     def test_watch_episode(self):
-        with open(os.path.join(self.dir, "test_format_watch_episode.json")) as f:
+        with open(os.path.join(self.dir, "format", "test_format_watch_episode.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User watched 'Marvel's Agents of S.H.I.E.L.D.', "
                                       "S01E11 'The Magical Place' http://www.trakt.tv/episodes/74015")
 
     def test_scrobble_episode(self):
-        with open(os.path.join(self.dir, "test_format_scrobble_episode.json")) as f:
+        with open(os.path.join(self.dir, "format", "test_format_scrobble_episode.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User scrobbled 'The Simpsons', "
                                       "S26E10 'The Man Who Came to Be Dinner' http://www.trakt.tv/episodes/1390653")
 
     def test_watch_movie(self):
-        with open(os.path.join(self.dir, "test_format_watch_movie.json")) as f:
+        with open(os.path.join(self.dir, "format", "test_format_watch_movie.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User watched 'Soul Kitchen' (2009) http://www.trakt.tv/movies/19911")
 
     def test_utf8(self):
-        with open(os.path.join(self.dir, "test_format_unicode.json")) as f:
+        with open(os.path.join(self.dir, "format", "test_format_unicode.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User watched 'The Walking Dead \u263b', "
