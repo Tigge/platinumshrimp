@@ -1,0 +1,32 @@
+[
+    {
+        "aired_episodes": 11,
+        "episode_count": 11,
+        "first_aired": "2014-11-12T05:00:00.000Z",
+        "ids": {
+            "tmdb": null,
+            "trakt": 85737,
+            "tvdb": null,
+            "tvrage": null
+        },
+        "number": 1,
+        "overview": null,
+        "rating": 7.75,
+        "votes": 4
+    },
+    {
+        "aired_episodes": 10,
+        "episode_count": 10,
+        "first_aired": "2015-12-09T05:00:00.000Z",
+        "ids": {
+            "tmdb": 73919,
+            "trakt": 117827,
+            "tvdb": 642013,
+            "tvrage": null
+        },
+        "number": 2,
+        "overview": null,
+        "rating": 10.0,
+        "votes": 1
+    }
+]

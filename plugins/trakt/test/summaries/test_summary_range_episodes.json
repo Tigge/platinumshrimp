@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1938809397,
+    "watched_at": "2016-04-09T08:23:20.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 7,
+      "title": "Too Many Hats",
+      "ids": {
+        "trakt": 2032506,
+        "tvdb": 5375655,
+        "imdb": null,
+        "tmdb": 0,
+        "tvrage": null
+      }
+    },
+    "show": {
+      "title": "The Cyanide & Happiness Show",
+      "year": 2014,
+      "ids": {
+        "trakt": 80265,
+        "slug": "the-cyanide-happiness-show",
+        "tvdb": 288120,
+        "imdb": "tt4306696",
+        "tmdb": 61858,
+        "tvrage": null
+      }
+    }
+  },
+  {
+    "id": 1937950333,
+    "watched_at": "2016-04-08T20:23:26.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 6,
+      "title": "Too Deep Too Furious",
+      "ids": {
+        "trakt": 2032497,
+        "tvdb": 5375654,
+        "imdb": null,
+        "tmdb": 0,
+        "tvrage": null
+      }
+    },
+    "show": {
+      "title": "The Cyanide & Happiness Show",
+      "year": 2014,
+      "ids": {
+        "trakt": 80265,
+        "slug": "the-cyanide-happiness-show",
+        "tvdb": 288120,
+        "imdb": "tt4306696",
+        "tmdb": 61858,
+        "tvrage": null
+      }
+    }
+  },
+  {
+    "id": 1936128205,
+    "watched_at": "2016-04-07T20:28:23.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 5,
+      "title": "World War Too",
+      "ids": {
+        "trakt": 2032496,
+        "tvdb": 5375653,
+        "imdb": null,
+        "tmdb": 0,
+        "tvrage": null
+      }
+    },
+    "show": {
+      "title": "The Cyanide & Happiness Show",
+      "year": 2014,
+      "ids": {
+        "trakt": 80265,
+        "slug": "the-cyanide-happiness-show",
+        "tvdb": 288120,
+        "imdb": "tt4306696",
+        "tmdb": 61858,
+        "tvrage": null
+      }
+    }
+  }
+]
