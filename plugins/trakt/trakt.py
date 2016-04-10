@@ -171,7 +171,7 @@ class Trakt(plugin.Plugin):
         def find_episode_ranges(season):
             ranges = []
             range_test = []
-            for episode in range(1, season["episode_count"]):
+            for episode in range(1, season["episode_count"] + 1):
                 if episode not in season["episodes"]:
                     if len(range_test) > 0:
                         ranges.append(range_test[:])
