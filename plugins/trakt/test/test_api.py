@@ -48,6 +48,13 @@ class GetAllTestCase(unittest.TestCase):
         self.assertEqual(len(items), 6, msg="Should have gotten all (6) activities")
 
     @requests_mock.mock()
+    def test_all_no_pagination(self, mock_requests):
+        mock_requests.get("/FAKEURL", text="[1,2,3,4,5,6]")
+
+        items = list(self.trakt._get_all("/FAKEURL"))
+        self.assertEqual(len(items), 6, msg="Should have gotten all (6) activities")
+
+    @requests_mock.mock()
     def test_filter(self, mock_requests):
         mock_requests.get("/FAKEURL", text="[1,2,3,4,5,6]",
                           headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})

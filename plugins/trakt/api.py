@@ -66,6 +66,8 @@ class Trakt(object):
                     return
                 yield item
 
+            if "X-Pagination-Page" not in response.headers or "X-Pagination-Page-Count" not in response.headers:
+                return
             if response.headers["X-Pagination-Page"] >= response.headers["X-Pagination-Page-Count"]:
                 return
             params["page"] = int(response.headers["X-Pagination-Page"]) + 1
