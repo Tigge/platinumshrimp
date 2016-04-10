@@ -55,36 +55,33 @@ class Trakt(plugin.Plugin):
 
         for typ in ["episodes", "movies"]:
 
-            def is_new_item(item):
+            def is_new_item(item, typ=typ):
                 return api.Trakt.get_date(item["watched_at"]) > user["last_sync_" + typ]
 
-            activities = self.fetch_new_activities(user, typ, is_new_item)
+            try:
+                activities = self.fetch_new_activities(username, typ, is_new_item)
 
-            # Continue if we have no entries
-            if len(activities) == 0:
-                continue
+                # Continue if we have no entries
+                if len(activities) == 0:
+                    continue
 
-            for activity in activities:
-                self.users[username]["last_sync_" + typ] = max(self.users[username]["last_sync_" + typ],
-                                                               api.Trakt.get_date(activity["watched_at"]))
+                # Update last sync
+                for activity in activities:
+                    user["last_sync_" + typ] = max(user["last_sync_" + typ],
+                                                   api.Trakt.get_date(activity["watched_at"]))
 
-            activity_summary = self.create_activity_summary(activities)
+                if typ == "episodes":
+                    activity_summary = self.create_activity_summary(activities)
+                    for activity in activity_summary:
+                        message = Trakt.format_activity(activity, username, activity["action"])
+                        if message is not None:
+                            self.echo(message)
+                else:
+                    for activity in activities:
+                        self.echo(Trakt.format_activity(activity, username, activity["action"]))
 
-            #print("got activites2 %s" % activity_summary)
-
-            for entry in activity_summary:
-                print("loop", entry)
-                for series in entry["series"]:
-                    print("get message", series)
-                    message = Trakt.format_activity(series, username, entry["action"])
-                    print("message %s" % message)
-                    if message is not None:
-                        print("echo function %s" % self.echo)
-                        self.echo(message)
-
-            #except Exception as e:
-            #    print("EXCEPTION", repr(e), sys.exc_info()[2].tb_lineno)
-            #    logging.exception("Unhandled exception when fetching for %s of type %s", user, typ)
+            except Exception as e:
+                logging.exception("Unhandled exception when fetching for %s of type %s", user, typ)
 
     def fetch_new_activities(self, user, typ, is_new_item):
         return list(self.trakt.users_history(user, typ, is_new_item))
