@@ -1,14 +1,11 @@
 import json
 import os
 import unittest
-from unittest.mock import Mock, ANY, call, patch
+from unittest.mock import Mock, patch
+
 import requests_mock
 from dateutil import relativedelta
-from datetime import datetime
-import time
 
-#from trakt import API_ACTIVITY
-#from trakt import API_URL
 from trakt import Trakt
 import api
 
@@ -155,28 +152,6 @@ class UpdateTestCase(unittest.TestCase):
 
         return fetch, echo, summary
 
-    # def test_no_entries(self):
-    #     mock_fetch, mock_echo, _ = self.setupMocks(lambda _, __: ([], None))
-    #
-    #     self.trakt.update_user("adam")
-    #
-    #     self.assertFalse("last_sync_episodes" in self.trakt.users["adam"])
-    #     self.assertFalse("last_sync_movies" in self.trakt.users["adam"])
-    #     self.assertFalse(mock_echo.called, "No message should be sent if no new activies are present")
-    #
-    # def test_sets_last_sync_on_first_load(self):
-    #     mock_fetch, mock_echo, _ = self.setupMocks((lambda url, sync: (
-    #         [], api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"])) if "episodes" in url else ([], None)))
-    #
-    #     self.trakt.update_user("adam")
-    #
-    #     #self.assertTrue(mock_fetch.call_args_list == [call(ANY, None), call(ANY, None)])
-    #     self.assertTrue("last_sync_episodes" in self.trakt.users["adam"])
-    #     self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
-    #                      api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
-    #     #self.assertFalse("last_sync_movies" in self.trakt.users["adam"])
-    #     self.assertFalse(mock_echo.called, "No message should be sent if no last_sync had been set before")
-
     @patch("trakt.Trakt.format_activity")
     def test_single_episode(self, format_):
         user_name = "adam"
@@ -271,7 +246,7 @@ class SummaryTestCase(unittest.TestCase):
                 res = result[0]
                 self.assertTrue(res["action"], "scrobble")
                 res_show = res["show"]
-                self.assertEqual(res_show["title"],"The Cyanide & Happiness Show")
+                self.assertEqual(res_show["title"], "The Cyanide & Happiness Show")
                 self.assertEqual(res_show["year"], 2014)
                 res_seasons = res["seasons"]
                 self.assertEqual(len(res_seasons), 2)
@@ -291,7 +266,7 @@ class SummaryTestCase(unittest.TestCase):
                 res = result[0]
                 self.assertTrue(res["action"], "scrobble")
                 res_show = res["show"]
-                self.assertEqual(res_show["title"],"The Cyanide & Happiness Show")
+                self.assertEqual(res_show["title"], "The Cyanide & Happiness Show")
                 self.assertEqual(res_show["year"], 2014)
                 res_seasons = res["seasons"]
                 self.assertEqual(len(res_seasons), 2)

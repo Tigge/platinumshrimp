@@ -1,12 +1,12 @@
-import json
 import dateutil.parser
 import logging
 import requests
 
 
-class Trakt:
+class Trakt(object):
 
     API_URL = "https://api-v2launch.trakt.tv"
+
     API_USERS_HISTORY = "/users/{0}/history/{1}"
 
     API_SEASONS_SUMMARY = "/shows/{0}/seasons"
@@ -71,8 +71,6 @@ class Trakt:
             params["page"] = int(response.headers["X-Pagination-Page"]) + 1
 
     def users_history(self, user, typ, accept_function=None, extended="min"):
-
-        accept_function = accept_function if accept_function is not None else lambda item: True
         return self._get_all(Trakt.API_USERS_HISTORY.format(user, typ), accept_function, extended)
 
     def seasons_summary(self, show, extended="min"):

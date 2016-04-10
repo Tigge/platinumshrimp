@@ -3,12 +3,9 @@ import json
 import logging
 import sys
 import datetime
-import threading
 
 import dateutil.parser
 import dateutil.tz
-import itertools
-import requests
 
 from platinumshrimp import plugin
 
@@ -34,7 +31,6 @@ class Trakt(plugin.Plugin):
                 "last_sync_episodes": datetime.datetime.now(tz=dateutil.tz.tzutc()),
 
             }
-        #self.users = dict(map(lambda user: (user, {}), self.settings["users"]))
 
     def on_welcome(self, server, source, target, message):
         logging.info("Trakt.onconnected %s", server)
