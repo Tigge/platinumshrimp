@@ -86,7 +86,8 @@ class PostnordPackage(Package):
             if "totalVolume" in shipment:
                 self.volume = shipment["totalVolume"]["value"] + " " + shipment["totalVolume"]["unit"]
 
-            self.status = shipment["statusText"]["header"] + ": " + shipment["statusText"]["body"]
+            if "statusText" in shipment and "header" in shipment["statusText"] and "body" in shipment["statusText"]:
+                self.status = shipment["statusText"]["header"] + ": " + shipment["statusText"]["body"]
 
             last_updated = self.last_updated
 
