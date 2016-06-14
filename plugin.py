@@ -81,12 +81,14 @@ class Plugin:
         instance._run()
 
     def __getattr__(self, name):
-        if name in ["privmsg", "join"]:
+        if name in ["action", "admin", "cap", "ctcp", "ctcp_reply", "globops", "info", "invite", "ison",
+                    "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
+                    "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
+                    "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
+                    "whowas"]:
             def call(*args, **kwarg):
                 self._call(name, *args)
             return call
         else:
-            def call(*args, **kwarg):
-                pass
-            return call
+            raise AttributeError(name + ' not found.')
 
