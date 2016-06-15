@@ -85,10 +85,13 @@ class Plugin:
                     "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
                     "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
                     "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
-                    "whowas"]:
+                    "whowas", "started", 'privnotice', 'updated']:
             def call(*args, **kwarg):
                 self._call(name, *args)
             return call
         else:
-            raise AttributeError(name + ' not found.')
+            logging.warning('Warning replacing __getattr_ return with empty method for name ' + name)
+            def call(*args, **kwargs):
+                pass
+            return call
 
