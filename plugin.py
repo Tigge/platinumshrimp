@@ -42,10 +42,13 @@ class Plugin:
     def _recieve(self, data):
         func_name = data["function"]
         if func_name.startswith('on_') or func_name in ["started", 'update']:
+            func = None
             try:
-                getattr(self, func_name)(*data["params"])
+                func = getattr(self, func_name)
             except AttributeError as e:
                 pass # Not all plugins implements all functions, therefore silencing if not found.
+            if func:
+                func(*data["params"])
 
         else:
             logging.warning("Unsupported call to plugin function with name " + func_name)
