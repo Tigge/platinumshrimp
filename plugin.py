@@ -1,7 +1,6 @@
 import logging
 import threading
 import zmq
-import os
 import tempfile
 import argparse
 
@@ -11,6 +10,7 @@ plugin_argparser = argparse.ArgumentParser(description='Start a platinumshrimp p
 plugin_argparser.add_argument("--socket_path", type=str, default=tempfile.gettempdir(),
                               help="The path to the location where platinumshrimp stores the IPC socket",
                              dest="socket_path")
+
 
 class Plugin:
 
@@ -40,7 +40,17 @@ class Plugin:
         self.threading_data.call_socket = self._socket_bot
 
     def _recieve(self, data):
-        getattr(self, data["function"])(*data["params"])
+        func_name = data["function"]
+        if func_name.startswith('on_') or func_name in ["started", 'update']:
+            try:
+                func = getattr(self, func_name)
+            except AttributeError as e:
+                pass # Not all plugins implements all functions, therefore silencing if not found.
+            else:
+                func(*data["params"])
+
+        else:
+            logging.warning("Unsupported call to plugin function with name " + func_name)
 
     def _call(self, function, *args):
         logging.info("Plugin.call %s", self.threading_data.__dict__)
@@ -81,6 +91,7 @@ class Plugin:
         instance._run()
 
     def __getattr__(self, name):
+        # List covers available commands to be sent to the IRC server
         if name in ["action", "admin", "cap", "ctcp", "ctcp_reply", "globops", "info", "invite", "ison",
                     "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
                     "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
@@ -90,5 +101,4 @@ class Plugin:
                 self._call(name, *args)
             return call
         else:
-            raise AttributeError(name + ' not found.')
-
+            raise AttributeError('Unsupported internal function call to function: ' + name)
