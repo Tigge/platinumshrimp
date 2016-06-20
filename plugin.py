@@ -1,7 +1,6 @@
 import logging
 import threading
 import zmq
-import os
 import tempfile
 import argparse
 
@@ -42,8 +41,12 @@ class Plugin:
 
     def _recieve(self, data):
         func_name = data["function"]
-        if func_name.startswith('on_') or func_name in ["started", 'updated']:
-            getattr(self, func_name)(*data["params"])
+        if func_name.startswith('on_') or func_name in ["started", 'update']:
+            try:
+                getattr(self, func_name)(*data["params"])
+            except AttributeError as e:
+                pass # Not all plugins implements all functions, therefore silencing if not found.
+
         else:
             logging.warning("Unsupported call to plugin function with name " + func_name)
 
@@ -86,12 +89,12 @@ class Plugin:
         instance._run()
 
     def __getattr__(self, name):
+        # List covers available commands to be sent to the IRC server
         if name in ["action", "admin", "cap", "ctcp", "ctcp_reply", "globops", "info", "invite", "ison",
                     "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
                     "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
                     "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
-                    "whowas", "started", 'privnotice', 'updated']:
-
+                    "whowas"]:
             def call(*args, **kwarg):
                 self._call(name, *args)
             return call
