@@ -34,7 +34,7 @@ class Feed:
     def __init__(self, data, title):
         if isinstance(data, str):
             data = feedparser.parse(data)
-        self.last_entry = time.localtime(0)
+        self.last_entry = None
         self._set_last(data.entries)
         self.title = title
         self._update_title(data)
@@ -48,11 +48,17 @@ class Feed:
         self._update_title(data)
         logging.info("Updating feed: %s", self.title)
         for entry in data.entries:
-            # TODO: Check id, title and link, etc
+            # TODO: Check id, link, etc
             # Maybe save the entire data.entries and remove all duplicate when
             # a new update happens?
-            if entry.published_parsed <= self.last_entry:
-                break
+            if self.last_entry != None:
+                if "published_parsed" in entry:
+                    if entry.published_parsed <= self.last_entry.published_parsed:
+                        break
+                else:
+                    if entry.title == self.last_entry.title:
+                        break
+
             say(FeedItemToString(entry.title, entry.link, self.title))
         self._set_last(data.entries)
 
@@ -63,7 +69,7 @@ class Feed:
 
     def _set_last(self, entries):
         if len(entries) > 0:
-            self.last_entry = entries[0].published_parsed
+            self.last_entry = entries[0]
 
 
 # Simple polling class, fetches the feed in a regular interval and passes

@@ -1,0 +1,40 @@
+<?xml version="1.0" standalone="yes"?>
+<rss version="2.0" xmlns:act="http://services.iamnerdwin.com/feed_v2.xsd">
+  <channel>
+    <title>Personal Activity Feed</title>
+    <link>http://services.iamnerdwin.com/runkeeper/feed/1526134</link>
+    <description>Personal RunKeeper Activity Feed from RunKeeper</description>
+    <item>
+      <title>Walking Activity on 2016-07-11 17:33:27</title>
+      <link>https://runkeeper.com/user/mikesir87/activity/823715917</link>
+      <description></description>
+      <guid isPermaLink="false">/fitnessActivities/823715917</guid>
+      <act:start_time>2016-07-11 17:33:27</act:start_time>
+      <act:distance>1.1521278235107</act:distance>
+      <act:duration>
+        <act:seconds>1197</act:seconds>
+        <act:time>00:19:57</act:time>
+      </act:duration>
+      <act:climb>52.162073490814</act:climb>
+      <act:calories>119</act:calories>
+      <act:equipment>None</act:equipment>
+      <act:notes></act:notes>
+    </item>
+    <item>
+      <title>Walking Activity on 2016-07-11 07:45:01</title>
+      <link>https://runkeeper.com/user/mikesir87/activity/823368881</link>
+      <description></description>
+      <guid isPermaLink="false">/fitnessActivities/823368881</guid>
+      <act:start_time>2016-07-11 07:45:01</act:start_time>
+      <act:distance>1.1751434124712</act:distance>
+      <act:duration>
+        <act:seconds>911</act:seconds>
+        <act:time>00:15:11</act:time>
+      </act:duration>
+      <act:climb>135.45898950131</act:climb>
+      <act:calories>145</act:calories>
+      <act:equipment>None</act:equipment>
+      <act:notes></act:notes>
+    </item>
+  </channel>
+</rss>
