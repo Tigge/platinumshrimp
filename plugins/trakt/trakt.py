@@ -24,7 +24,7 @@ class Trakt(plugin.Plugin):
     def get(self, url):
         logging.info("Trakt.get %s", url)
         headers = {"Content-Type": "application/json",
-                   "trakt-api-version": 2,
+                   "trakt-api-version": str(2),
                    "trakt-api-key": self.settings["key"]}
         r = requests.get(API_URL + url, headers=headers, verify=False)
 
