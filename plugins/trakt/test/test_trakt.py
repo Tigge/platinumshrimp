@@ -41,6 +41,22 @@ ACTIVITY_PRESET_EPISODE_1 = {
     }
 }
 
+ACTIVITY_PRESET_SERIES_1 = {
+    "number": 2,
+    "ids": {
+        "trakt": 18965,
+        "tvdb": 83141,
+        "tmdb": 18456,
+        "tvrage": None
+    },
+    "rating": 8.49162,
+    "votes": 179,
+    "episode_count": 24,
+    "aired_episodes": 24,
+    "overview": "...",
+    "first_aired": "2009-09-18T00:00:00.000Z"
+}
+
 ACTIVITY_PRESET_MOVIE_1 = {
     "watched_at": "2014-03-31T09:28:53.000Z",
     "action": "scrobble",
@@ -207,6 +223,29 @@ class UpdateTestCase(unittest.TestCase):
                          api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
         self.assertEqual(self.trakt.users["adam"]["last_sync_movies"],
                          api.Trakt.get_date(ACTIVITY_PRESET_MOVIE_1["watched_at"]))
+
+    @requests_mock.mock()
+    def test_stack(self, mock_requests):
+        self.trakt.users["adam"]["last_sync_movies"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
+        self.trakt.users["adam"]["last_sync_episodes"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
+        mock_requests.get("/users/adam/history/episodes", text=json.dumps([ACTIVITY_PRESET_EPISODE_1]),
+                          headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})
+        mock_requests.get("/users/adam/history/movies", text=json.dumps([ACTIVITY_PRESET_MOVIE_1]),
+                          headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})
+        mock_requests.get("/shows/4/seasons", text=json.dumps([ACTIVITY_PRESET_SERIES_1]),
+                          headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})
+
+        self.trakt.echo = Mock()
+        self.trakt.update_user("adam")
+
+        self.assertEqual(self.trakt.users["adam"]["last_sync_movies"],
+                         api.Trakt.get_date(ACTIVITY_PRESET_MOVIE_1["watched_at"]))
+        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
+                         api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
+
+        self.trakt.echo.assert_any_call("adam watched 'Parks and Recreation', S02E03 'Beauty Pageant' http://www.trakt.tv/shows/4")
+        self.trakt.echo.assert_any_call("adam scrobbled 'The Dark Knight' (2008) http://www.trakt.tv/movies/4")
+        self.assertEqual(self.trakt.echo.call_count, 2)
 
 
 class SummaryTestCase(unittest.TestCase):
