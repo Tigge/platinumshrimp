@@ -1,0 +1,62 @@
+[
+  {
+    "number": 0,
+    "ids": {
+      "trakt": 92076,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 8.15385,
+    "votes": 13,
+    "episode_count": 1,
+    "aired_episodes": 1,
+    "overview": null,
+    "first_aired": "2014-04-07T02:00:00.000Z"
+  },
+  {
+    "number": 1,
+    "ids": {
+      "trakt": 61226,
+      "tvdb": null,
+      "tmdb": 59905,
+      "tvrage": null
+    },
+    "rating": 8.36905,
+    "votes": 420,
+    "episode_count": 8,
+    "aired_episodes": 8,
+    "overview": "Introverted programmer Richard and his pals are going nowhere fast--until his website's unique search algorithm becomes the subject of an extreme bidding war.",
+    "first_aired": "2014-04-07T02:00:00.000Z"
+  },
+  {
+    "number": 2,
+    "ids": {
+      "trakt": 97477,
+      "tvdb": null,
+      "tmdb": 64396,
+      "tvrage": null
+    },
+    "rating": 8.5977,
+    "votes": 348,
+    "episode_count": 10,
+    "aired_episodes": 10,
+    "overview": "After taking the tech world by storm with their debut at TechCrunch Disrupt last season, Richard and his Pied Piper team look ahead to a big future--one that's immediately soured by legal woes and petty revenge plans from Hooli overlord Gavin Belson. This season, Monica finds herself torn between her allegiance to Richard and her job working under a new head honcho. Meanwhile, the presence of Richard's departed longtime pal Big Head looms large, as Gavin decides to use him to his fullest potential.",
+    "first_aired": "2015-04-13T02:00:00.000Z"
+  },
+  {
+    "number": 3,
+    "ids": {
+      "trakt": 114092,
+      "tvdb": null,
+      "tmdb": 74544,
+      "tvrage": null
+    },
+    "rating": 8.60221,
+    "votes": 181,
+    "episode_count": 10,
+    "aired_episodes": 10,
+    "overview": null,
+    "first_aired": "2016-04-25T02:00:00.000Z"
+  }
+]

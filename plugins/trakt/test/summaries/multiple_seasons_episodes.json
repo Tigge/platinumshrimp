@@ -1,0 +1,842 @@
+[
+  {
+    "id": 2179120522,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 10,
+      "title": "The Uptick",
+      "ids": {
+        "trakt": 2135678,
+        "tvdb": 5598489,
+        "imdb": null,
+        "tmdb": 1191842,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120521,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 9,
+      "title": "Daily Active Users",
+      "ids": {
+        "trakt": 2135676,
+        "tvdb": 5598488,
+        "imdb": null,
+        "tmdb": 1191841,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120520,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 8,
+      "title": "Bachman's Earning's Over-Ride",
+      "ids": {
+        "trakt": 2135675,
+        "tvdb": 5598487,
+        "imdb": null,
+        "tmdb": 1191840,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120519,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 7,
+      "title": "To Build a Better Beta",
+      "ids": {
+        "trakt": 2135674,
+        "tvdb": 5598486,
+        "imdb": null,
+        "tmdb": 1191839,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120518,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 6,
+      "title": "Bachmanity Insanity",
+      "ids": {
+        "trakt": 2135673,
+        "tvdb": 5493958,
+        "imdb": "tt5218484",
+        "tmdb": 1185000,
+        "tvrage": 1065919486
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120517,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 5,
+      "title": "The Empty Chair",
+      "ids": {
+        "trakt": 2135672,
+        "tvdb": 5493957,
+        "imdb": "tt5218422",
+        "tmdb": 1184999,
+        "tvrage": 1065919485
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120516,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 4,
+      "title": "Maleant Data Systems Solutions",
+      "ids": {
+        "trakt": 2135670,
+        "tvdb": 5493956,
+        "imdb": "tt5218414",
+        "tmdb": 1184998,
+        "tvrage": 1065919484
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120515,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 3,
+      "title": "Meinertzhagen's Haversack",
+      "ids": {
+        "trakt": 2135669,
+        "tvdb": 5493955,
+        "imdb": "tt5218400",
+        "tmdb": 1184997,
+        "tvrage": 1065909496
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120514,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 2,
+      "title": "Two in the Box",
+      "ids": {
+        "trakt": 2135664,
+        "tvdb": 5493954,
+        "imdb": "tt5218398",
+        "tmdb": 1184996,
+        "tvrage": 1065909495
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120513,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 3,
+      "number": 1,
+      "title": "Founder Friendly",
+      "ids": {
+        "trakt": 1942811,
+        "tvdb": 5444157,
+        "imdb": "tt4633480",
+        "tmdb": 1165531,
+        "tvrage": 1065903841
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120512,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 10,
+      "title": "Two Days of the Condor",
+      "ids": {
+        "trakt": 1833956,
+        "tvdb": 5196852,
+        "imdb": "tt4185460",
+        "tmdb": 1056834,
+        "tvrage": 1065794967
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120511,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 9,
+      "title": "Binding Arbitration",
+      "ids": {
+        "trakt": 1833955,
+        "tvdb": 5196851,
+        "imdb": "tt4185454",
+        "tmdb": 1056833,
+        "tvrage": 1065794966
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120510,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 8,
+      "title": "White Hat/Black Hat",
+      "ids": {
+        "trakt": 1832341,
+        "tvdb": 5195801,
+        "imdb": "tt3682604",
+        "tmdb": 1056832,
+        "tvrage": 1065794215
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120509,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 7,
+      "title": "Adult Content",
+      "ids": {
+        "trakt": 1832340,
+        "tvdb": 5195800,
+        "imdb": "tt3682588",
+        "tmdb": 1056831,
+        "tvrage": 1065794214
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120508,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 6,
+      "title": "Homicide",
+      "ids": {
+        "trakt": 1832339,
+        "tvdb": 5195799,
+        "imdb": "tt3682592",
+        "tmdb": 1056830,
+        "tvrage": 1065791605
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120507,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 5,
+      "title": "Server Space",
+      "ids": {
+        "trakt": 1832338,
+        "tvdb": 5195798,
+        "imdb": "tt3682590",
+        "tmdb": 1056829,
+        "tvrage": 1065787792
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120506,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 4,
+      "title": "The Lady",
+      "ids": {
+        "trakt": 1780386,
+        "tvdb": 5148407,
+        "imdb": "tt3682586",
+        "tmdb": 1047149,
+        "tvrage": 1065761971
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120505,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 3,
+      "title": "Bad Money",
+      "ids": {
+        "trakt": 1780385,
+        "tvdb": 5148406,
+        "imdb": "tt3682606",
+        "tmdb": 1047148,
+        "tvrage": 1065761970
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120504,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 2,
+      "title": "Runaway Devaluation",
+      "ids": {
+        "trakt": 1780384,
+        "tvdb": 5148405,
+        "imdb": "tt3682600",
+        "tmdb": 1047147,
+        "tvrage": 1065761969
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120503,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2,
+      "number": 1,
+      "title": "Sand Hill Shuffle",
+      "ids": {
+        "trakt": 1544269,
+        "tvdb": 5091616,
+        "imdb": "tt3682540",
+        "tmdb": 1033916,
+        "tvrage": 1065699975
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120502,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 8,
+      "title": "Optimal Tip-to-Tip Efficiency",
+      "ids": {
+        "trakt": 960993,
+        "tvdb": 4822932,
+        "imdb": "tt3557358",
+        "tmdb": 976647,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120501,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 7,
+      "title": "Proof of Concept",
+      "ids": {
+        "trakt": 960992,
+        "tvdb": 4794509,
+        "imdb": "tt3388032",
+        "tmdb": 975434,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120500,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 6,
+      "title": "Third Party Insourcing",
+      "ids": {
+        "trakt": 960991,
+        "tvdb": 4794508,
+        "imdb": "tt3557356",
+        "tmdb": 975433,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120499,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 5,
+      "title": "Signaling Risk",
+      "ids": {
+        "trakt": 960990,
+        "tvdb": 4794507,
+        "imdb": "tt3467892",
+        "tmdb": 975373,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120498,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 4,
+      "title": "Fiduciary Duties",
+      "ids": {
+        "trakt": 960989,
+        "tvdb": 4794506,
+        "imdb": null,
+        "tmdb": 973805,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120497,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 3,
+      "title": "Articles of Incorporation",
+      "ids": {
+        "trakt": 960988,
+        "tvdb": 4794505,
+        "imdb": null,
+        "tmdb": 973804,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120496,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 2,
+      "title": "The Cap Table",
+      "ids": {
+        "trakt": 960987,
+        "tvdb": 4794504,
+        "imdb": null,
+        "tmdb": 973803,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  },
+  {
+    "id": 2179120495,
+    "watched_at": "2016-09-01T06:08:46.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 1,
+      "number": 1,
+      "title": "Minimum Viable Product",
+      "ids": {
+        "trakt": 960986,
+        "tvdb": 4765079,
+        "imdb": null,
+        "tmdb": 972002,
+        "tvrage": 0
+      }
+    },
+    "show": {
+      "title": "Silicon Valley",
+      "year": 2014,
+      "ids": {
+        "trakt": 60157,
+        "slug": "silicon-valley",
+        "tvdb": 277165,
+        "imdb": "tt2575988",
+        "tmdb": 60573,
+        "tvrage": 33759
+      }
+    }
+  }
+]

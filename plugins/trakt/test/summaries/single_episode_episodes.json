@@ -1,0 +1,32 @@
+[
+  {
+    "id": 2179994354,
+    "watched_at": "2016-09-01T20:26:58.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 2016,
+      "number": 8,
+      "title": "The Simple Solution to Traffic",
+      "ids": {
+        "trakt": 2327792,
+        "tvdb": 5733589,
+        "imdb": null,
+        "tmdb": null,
+        "tvrage": null
+      }
+    },
+    "show": {
+      "title": "CGP Grey",
+      "year": 2011,
+      "ids": {
+        "trakt": 71663,
+        "slug": "cgp-grey",
+        "tvdb": 265220,
+        "imdb": null,
+        "tmdb": null,
+        "tvrage": null
+      }
+    }
+  }
+]

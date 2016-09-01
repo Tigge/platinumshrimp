@@ -134,6 +134,10 @@ class Trakt(plugin.Plugin):
             episode_number = activity["episode"]["number"]
             result[key]["seasons"][season_number]["episodes"][episode_number] = activity["episode"]
 
+        # Filter seasons without episodes
+        for key in result:
+            result[key]["seasons"] = {k: v for k, v in result[key]["seasons"].items() if len(v["episodes"]) > 0}
+
         return [value for (key, value) in result.items()]
 
     @staticmethod
@@ -156,6 +160,13 @@ class Trakt(plugin.Plugin):
     def format_url(item):
         if "movie" in item:
             return "/movies/{0}".format(item["movie"]["ids"]["trakt"])
+        elif "seasons" in item and len(item["seasons"]) == 1:
+            season = list(item["seasons"].values())[0]
+            if len(season["episodes"]) == 1:
+                episode = list(season["episodes"].values())[0]
+                return "/episodes/{0}".format(episode["ids"]["trakt"])
+            else:
+                return "/seasons/{0}".format(season["ids"]["trakt"])
         elif "episode" in item:
             return "/episodes/{0}".format(item["episode"]["ids"]["trakt"])
         elif "show" in item:
@@ -183,13 +194,13 @@ class Trakt(plugin.Plugin):
             return ranges
 
         episode_count = (0, None)
+        strings = []
         for season in summary["seasons"].values():
             if len(season["episodes"]) == 0:
                 continue
             episode_count = (episode_count[0] + len(season["episodes"]), next(iter(season["episodes"].values())))
             episode_ranges = find_episode_ranges(season)
 
-            strings = []
             for episode_range in episode_ranges:
                 if len(episode_range) > 1:
                     strings.append("S{:02d}E{:02d}-E{:02d}".format(season["number"], episode_range[0], episode_range[-1]))

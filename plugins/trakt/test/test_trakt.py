@@ -243,7 +243,7 @@ class UpdateTestCase(unittest.TestCase):
         self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
                          api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
 
-        self.trakt.echo.assert_any_call("adam watched 'Parks and Recreation', S02E03 'Beauty Pageant' http://www.trakt.tv/shows/4")
+        self.trakt.echo.assert_any_call("adam watched 'Parks and Recreation', S02E03 'Beauty Pageant' http://www.trakt.tv/episodes/253")
         self.trakt.echo.assert_any_call("adam scrobbled 'The Dark Knight' (2008) http://www.trakt.tv/movies/4")
         self.assertEqual(self.trakt.echo.call_count, 2)
 
@@ -275,42 +275,58 @@ class SummaryTestCase(unittest.TestCase):
         result = self.trakt.create_activity_summary([])
         self.assertEqual(result, [])
 
-    def test_single_activity(self):
-        with open(os.path.join(self.dir, "summaries", "test_summary_range_episodes.json")) as fe:
-            with open(os.path.join(self.dir, "summaries", "test_summary_range_seasons.json")) as fs:
-                self.trakt.trakt.seasons_summary = Mock(return_value=json.load(fs))
-                result = self.trakt.create_activity_summary([json.load(fe)[0]])
+    def test_single_episode(self):
+        with open(os.path.join(self.dir, "summaries", "single_episode_episodes.json")) as episodes_json, \
+             open(os.path.join(self.dir, "summaries", "single_episode_show.json")) as show_json:
+            self.trakt.trakt.seasons_summary = Mock(return_value=json.load(show_json))
+            result = self.trakt.create_activity_summary([json.load(episodes_json)[0]])
 
-                self.assertTrue(len(result) == 1, "Should have gotten one show back. Got: %s" % len(result))
-                res = result[0]
-                self.assertTrue(res["action"], "scrobble")
-                res_show = res["show"]
-                self.assertEqual(res_show["title"], "The Cyanide & Happiness Show")
-                self.assertEqual(res_show["year"], 2014)
-                res_seasons = res["seasons"]
-                self.assertEqual(len(res_seasons), 2)
-                self.assertEqual(len(res_seasons[1]["episodes"]), 0)
-                self.assertEqual(len(res_seasons[2]["episodes"]), 1)
-                self.assertEqual(res_seasons[2]["episodes"][7]["title"], "Too Many Hats")
+            self.assertTrue(len(result) == 1, "Should have gotten one show back. Got: %s" % len(result))
+            res = result[0]
+            self.assertTrue(res["action"], "scrobble")
+            self.assertEqual(res["show"]["title"], "CGP Grey")
+            self.assertEqual(res["show"]["year"], 2011)
+            self.assertEqual(len(res["seasons"]), 1)
+            self.assertEqual(len(res["seasons"][2016]["episodes"]), 1)
+            self.assertEqual(res["seasons"][2016]["episodes"][8]["title"], "The Simple Solution to Traffic")
 
-                self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
-                                 "user watched 'The Cyanide & Happiness Show', S02E07 'Too Many Hats' http://www.trakt.tv/shows/80265")
+            self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
+                             "user watched 'CGP Grey', S2016E08 'The Simple Solution to Traffic' http://www.trakt.tv/episodes/2327792")
 
-    def test_single_season_range(self):
-        with open(os.path.join(self.dir, "summaries", "test_summary_range_episodes.json")) as fe:
-            with open(os.path.join(self.dir, "summaries", "test_summary_range_seasons.json")) as fs:
+    def test_single_season(self):
+        with open(os.path.join(self.dir, "summaries", "single_season_episodes.json")) as fe:
+            with open(os.path.join(self.dir, "summaries", "single_season_show.json")) as fs:
                 self.trakt.trakt.seasons_summary = Mock(return_value=json.load(fs))
                 result = self.trakt.create_activity_summary(json.load(fe))
                 self.assertTrue(len(result) == 1, "Should have gotten one show back. Got: %s" % len(result))
                 res = result[0]
                 self.assertTrue(res["action"], "scrobble")
-                res_show = res["show"]
-                self.assertEqual(res_show["title"], "The Cyanide & Happiness Show")
-                self.assertEqual(res_show["year"], 2014)
-                res_seasons = res["seasons"]
-                self.assertEqual(len(res_seasons), 2)
-                self.assertEqual(len(res_seasons[1]["episodes"]), 0)
-                self.assertEqual(len(res_seasons[2]["episodes"]), 3)
+                self.assertEqual(res["show"]["title"], "The Cyanide & Happiness Show")
+                self.assertEqual(res["show"]["year"], 2014)
+                self.assertEqual(len(res["seasons"]), 1)
+                self.assertEqual(len(res["seasons"][2]["episodes"]), 3)
 
                 self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
-                                 "user watched 'The Cyanide & Happiness Show' S02E05-E07 http://www.trakt.tv/shows/80265")
+                                 "user watched 'The Cyanide & Happiness Show' S02E05-E07 http://www.trakt.tv/seasons/117827")
+
+    def test_multiple_seasons(self):
+
+        with open(os.path.join(self.dir, "summaries", "multiple_seasons_episodes.json")) as episodes_json, \
+             open(os.path.join(self.dir, "summaries", "multiple_seasons_show.json")) as shows_json:
+
+            self.trakt.trakt.seasons_summary = Mock(return_value=json.load(shows_json))
+            result = self.trakt.create_activity_summary(json.load(episodes_json))
+            self.assertTrue(len(result) == 1, "Should have gotten one show back. Got: %s" % len(result))
+            res = result[0]
+
+            # Verify season information
+            self.assertTrue(res["action"], "scrobble")
+            self.assertEqual(res["show"]["title"], "Silicon Valley")
+            self.assertEqual(res["show"]["year"], 2014)
+            self.assertEqual(len(res["seasons"]), 3)
+            self.assertEqual(len(res["seasons"][1]["episodes"]), 8)
+            self.assertEqual(len(res["seasons"][2]["episodes"]), 10)
+            self.assertEqual(len(res["seasons"][3]["episodes"]), 10)
+
+            self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
+                             "user watched 'Silicon Valley' S01E01-E08, S02E01-E10, S03E01-E10 http://www.trakt.tv/shows/60157")

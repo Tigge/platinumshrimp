@@ -1,0 +1,107 @@
+[
+  {
+    "number": 0,
+    "ids": {
+      "trakt": 77483,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 5,
+    "aired_episodes": 5,
+    "overview": null,
+    "first_aired": "2011-10-24T04:00:00.000Z"
+  },
+  {
+    "number": 2011,
+    "ids": {
+      "trakt": 77490,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 19,
+    "aired_episodes": 19,
+    "overview": null,
+    "first_aired": "2011-01-30T05:00:00.000Z"
+  },
+  {
+    "number": 2012,
+    "ids": {
+      "trakt": 77659,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 22,
+    "aired_episodes": 22,
+    "overview": null,
+    "first_aired": "2012-01-09T05:00:00.000Z"
+  },
+  {
+    "number": 2013,
+    "ids": {
+      "trakt": 77714,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 16,
+    "aired_episodes": 16,
+    "overview": null,
+    "first_aired": "2013-01-21T05:00:00.000Z"
+  },
+  {
+    "number": 2014,
+    "ids": {
+      "trakt": 77739,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 17,
+    "aired_episodes": 17,
+    "overview": null,
+    "first_aired": "2014-02-12T05:00:00.000Z"
+  },
+  {
+    "number": 2015,
+    "ids": {
+      "trakt": 105249,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 11,
+    "aired_episodes": 11,
+    "overview": null,
+    "first_aired": "2015-02-09T05:00:00.000Z"
+  },
+  {
+    "number": 2016,
+    "ids": {
+      "trakt": 123874,
+      "tvdb": null,
+      "tmdb": null,
+      "tvrage": null
+    },
+    "rating": 0.0,
+    "votes": 0,
+    "episode_count": 8,
+    "aired_episodes": 8,
+    "overview": null,
+    "first_aired": "2016-02-29T05:00:00.000Z"
+  }
+]
