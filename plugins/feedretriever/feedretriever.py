@@ -84,7 +84,7 @@ class Feedpoller:
             say("Added feed: " + self.feed.title)
         else:
             self.modified = ""
-            say(FAIL_MESSAGE)
+            say(self.feed.title + ": " + FAIL_MESSAGE)
         self.say = say
         self.url = url
         self.consecutive_fails = 0
@@ -99,7 +99,7 @@ class Feedpoller:
             if parsed.bozo == 1:
                 self.consecutive_fails += 1
                 if self.consecutive_fails % 10 == 0:
-                    self.say(FAIL_MESSAGE)
+                    self.say(self.feed.title + ": " + FAIL_MESSAGE)
             else:
                 self.modified = parsed.get("modified", None)
                 self.etag = parsed.get("etag", None)
