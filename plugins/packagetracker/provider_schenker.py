@@ -38,31 +38,23 @@ class SchenkerPackage(Package):
         return etree.fromstring(response.content)
 
     def update(self):
-
         try:
             res = self._get_data(self.id)
             parcel = res.find("body/parcel")
-
             self.service = "Schenker"
-
             self.consignor = parcel.find("customername").text
             self.consignee = parcel.find("receiverzipcode").text + parcel.find("receivercity").text
-
             self.totalWeight = parcel.find("actualweight").text
-
             last_updated = self.last_updated
 
             for schenker_event in parcel.findall("event"):
                 event = self.create_event(schenker_event)
-
                 if event.datetime > last_updated:
                     last_updated = event.datetime
-
                 if event.datetime > self.last_updated:
                     self.on_event(event)
 
             self.last_updated = last_updated
-
         except Exception as e:
             logging.exception("Exception while updating package")
             logging.debug("Data: %r", res)
