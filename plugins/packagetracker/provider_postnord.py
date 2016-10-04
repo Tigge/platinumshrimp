@@ -5,7 +5,7 @@ import dateutil
 import dateutil.parser
 import logging
 
-from plugins.packagetracker.packagetracker import Package
+from plugins.packagetracker.provider import Package
 
 __author__ = 'tigge'
 
