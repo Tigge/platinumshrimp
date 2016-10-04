@@ -8,6 +8,7 @@ class Trakt(object):
     API_URL = "https://api-v2launch.trakt.tv"
 
     API_USERS_HISTORY = "/users/{0}/history/{1}"
+    API_USERS_RATINGS = "/users/{0}/ratings/{1}"
 
     API_SEASONS_SUMMARY = "/shows/{0}/seasons"
 
@@ -74,6 +75,9 @@ class Trakt(object):
 
     def users_history(self, user, typ, accept_function=None, extended="min"):
         return self._get_all(Trakt.API_USERS_HISTORY.format(user, typ), accept_function, extended)
+
+    def users_ratings(self, user, typ, accept_function=None, extended="min"):
+        return self._get_all(Trakt.API_USERS_RATINGS.format(user, typ), accept_function, extended)
 
     def seasons_summary(self, show, extended="min"):
         return self._get_all(Trakt.API_SEASONS_SUMMARY.format(show), extended=extended)
