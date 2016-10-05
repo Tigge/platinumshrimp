@@ -7,6 +7,7 @@ import sys
 
 import plugin
 import plugins.packagetracker.provider_postnord
+import plugins.packagetracker.provider_schenker
 
 __author__ = 'tigge'
 
@@ -58,6 +59,8 @@ class PackageTracker(plugin.Plugin):
         package = None
         if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(package_id):
             package = plugins.packagetracker.provider_postnord.PostnordPackage(package_id)
+        if plugins.packagetracker.provider_schenker.SchenkerPackage.is_package(package_id):
+            package = plugins.packagetracker.provider_schenker.SchenkerPackage(package_id)
 
         if package is not None:
             package.server = server
@@ -85,26 +88,6 @@ class PackageTracker(plugin.Plugin):
         self.privmsg(package.server, package.channel,
                      "{0}: {1} - {2:%Y-%m-%d %H:%M}: {3}".format(package.user, package.id, event.datetime,
                                                                  event.description))
-
-
-class Package:
-    class Event:
-        def __init__(self):
-            self.datetime = datetime.datetime(1970, 1, 1)
-            self.description = ""
-
-    def __init__(self, package_id):
-        self.id = package_id
-        self.last = None
-        self.consignor = None
-        self.consignee = None
-        self.last_updated = datetime.datetime(1970, 1, 1)
-
-    def on_event(self, event):
-        pass
-
-    def update(self):
-        pass
 
 
 if __name__ == "__main__":
