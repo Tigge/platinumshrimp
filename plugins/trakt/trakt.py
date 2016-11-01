@@ -65,6 +65,13 @@ class Trakt(plugin.Plugin):
                 if len(activities) == 0:
                     continue
 
+                # Fetch ratings if a new movie was watched
+                if typ == "movies":
+                    ratings = {}
+                    user_ratings = self.trakt.users_ratings(username, "movies")
+                    for user_rating in user_ratings:
+                        ratings[user_rating["movie"]["ids"]["trakt"]] = user_rating["rating"]
+
                 # Update last sync
                 for activity in activities:
                     user["last_sync_" + typ] = max(user["last_sync_" + typ],
@@ -78,7 +85,10 @@ class Trakt(plugin.Plugin):
                             self.echo(message)
                 else:
                     for activity in activities:
-                        self.echo(Trakt.format_activity(activity, username, activity["action"]))
+                        message = Trakt.format_activity(activity, username, activity["action"])
+                        if "movie" in activity and activity["movie"]["ids"]["trakt"] in ratings:
+                            message += " (rated it {})".format(ratings[activity["movie"]["ids"]["trakt"]])
+                        self.echo(message)
 
             except Exception as e:
                 logging.exception("Unhandled exception when fetching for %s of type %s", user, typ)

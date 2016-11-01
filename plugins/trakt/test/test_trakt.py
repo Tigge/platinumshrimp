@@ -206,46 +206,27 @@ class UpdateTestCase(unittest.TestCase):
         self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
                          api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
 
-    def test_new_activity_both_types(self):
-        fetch_return = lambda url, typ, func: [ACTIVITY_PRESET_EPISODE_1] if typ == "episodes" else [ACTIVITY_PRESET_MOVIE_1]
-        summary_episode = {"action": "WOOT", "series": [{"data": "dummy_episode2000"}]}
-        summary_movie = {"action": "WOOT", "series": [{"data": "dummy_movie1000"}]}
-        summary_return = lambda activities: [summary_episode] if activities == [ACTIVITY_PRESET_EPISODE_1] else [
-            summary_movie]
-        mock_fetch, mock_echo, _ = self.setupMocks(fetch_return, summary_return)
-        self.trakt.users["adam"]["last_sync_episodes"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
-        self.trakt.users["adam"]["last_sync_movies"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
-
-        self.trakt.update_user("adam")
-
-        self.assertEqual(mock_echo.call_count, 2)
-        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
-                         api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
-        self.assertEqual(self.trakt.users["adam"]["last_sync_movies"],
-                         api.Trakt.get_date(ACTIVITY_PRESET_MOVIE_1["watched_at"]))
-
     @requests_mock.mock()
-    def test_stack(self, mock_requests):
-        self.trakt.users["adam"]["last_sync_movies"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
-        self.trakt.users["adam"]["last_sync_episodes"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
-        mock_requests.get("/users/adam/history/episodes", text=json.dumps([ACTIVITY_PRESET_EPISODE_1]),
-                          headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})
-        mock_requests.get("/users/adam/history/movies", text=json.dumps([ACTIVITY_PRESET_MOVIE_1]),
-                          headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})
-        mock_requests.get("/shows/4/seasons", text=json.dumps([ACTIVITY_PRESET_SERIES_1]),
-                          headers={"x-pagination-page": "1", "x-pagination-page-count": "1"})
-
+    def test_new_activity_both_types(self, mock_requests):
+        mock_requests.get("/users/adam/history/episodes", text=json.dumps([ACTIVITY_PRESET_EPISODE_1]))
+        mock_requests.get("/users/adam/history/movies", text=json.dumps([ACTIVITY_PRESET_MOVIE_1]))
+        mock_requests.get("/shows/4/seasons", text=json.dumps([ACTIVITY_PRESET_SERIES_1]))
+        mock_requests.get("/users/adam/ratings/movies", text="[]")
         self.trakt.echo = Mock()
-        self.trakt.update_user("adam")
 
-        self.assertEqual(self.trakt.users["adam"]["last_sync_movies"],
-                         api.Trakt.get_date(ACTIVITY_PRESET_MOVIE_1["watched_at"]))
-        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
-                         api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
+        self.trakt.users["adam"]["last_sync_episodes"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
+        self.trakt.users["adam"]["last_sync_movies"] = api.Trakt.get_date("2013-03-31T09:28:53.000Z")
+
+        self.trakt.update_user("adam")
 
         self.trakt.echo.assert_any_call("adam watched 'Parks and Recreation', S02E03 'Beauty Pageant' http://www.trakt.tv/episodes/253")
         self.trakt.echo.assert_any_call("adam scrobbled 'The Dark Knight' (2008) http://www.trakt.tv/movies/4")
         self.assertEqual(self.trakt.echo.call_count, 2)
+
+        self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
+                         api.Trakt.get_date(ACTIVITY_PRESET_EPISODE_1["watched_at"]))
+        self.assertEqual(self.trakt.users["adam"]["last_sync_movies"],
+                         api.Trakt.get_date(ACTIVITY_PRESET_MOVIE_1["watched_at"]))
 
 
 class SummaryTestCase(unittest.TestCase):
