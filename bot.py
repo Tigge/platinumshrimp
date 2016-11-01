@@ -143,7 +143,7 @@ class Bot:
 
     def run(self):
         while True:
-            self.reactor.process_once(timeout=0)
+            self.reactor.process_once(timeout=0.1)
 
             for plugin in self.plugins:
                 plugin.process_once(timeout=0)
