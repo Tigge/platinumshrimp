@@ -14,6 +14,10 @@ class Package:
         self.consignee = None
         self.last_updated = datetime.datetime(1970, 1, 1)
 
+    @classmethod
+    def get_type(cls):
+        return "Undefined"
+
     def on_event(self, event):
         pass
 

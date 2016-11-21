@@ -18,6 +18,10 @@ class PostnordPackage(Package):
     apikey = None
 
     @classmethod
+    def get_type(cls):
+        return "Postnord"
+
+    @classmethod
     def set_apikey(cls, id):
         cls.apikey = id
 

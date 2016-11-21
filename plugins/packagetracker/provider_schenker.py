@@ -15,6 +15,10 @@ class SchenkerPackage(Package):
     API_URL = "http://privpakportal.schenker.nu"
     FIND_IDENTIFIER = API_URL + "/TrackAndTrace/packagexml.aspx?packageid={id}"
 
+    @classmethod
+    def get_type(cls):
+        return "Schenker"
+
     @staticmethod
     def create_event(event):
         e = SchenkerPackage.Event()

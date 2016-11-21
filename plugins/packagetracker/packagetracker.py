@@ -67,7 +67,7 @@ class PackageTracker(plugin.Plugin):
             package.channel = channel
             package.user = user.split('!', 1)[0]
             self.add_package(package)
-            self.privmsg(server, channel, "Package added...")
+            self.privmsg(server, channel, "Package ({}, {}) added...".format(package.get_type(), package.id))
         else:
             self.privmsg(server, channel, "Package not found in any provider...")
 
