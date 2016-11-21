@@ -29,8 +29,12 @@ class SchenkerPackage(Package):
 
     @classmethod
     def is_package(cls, package_id):
-        data = cls._get_data(package_id)
-        return data.find("body/programevent") is None
+        try:
+            res = cls._get_data(package_id)
+            return res.find("body/programevent") is None
+        except Exception as e:
+            logging.exception("Exception on SchenkerPackage.is_package")
+            return False
 
     @classmethod
     def _get_url(cls, package_id):
@@ -38,8 +42,11 @@ class SchenkerPackage(Package):
 
     @classmethod
     def _get_data(cls, package_id):
-        response = requests.get(SchenkerPackage._get_url(package_id))
-        return etree.fromstring(response.content)
+        response = requests.get(SchenkerPackage._get_url(package_id), allow_redirects=False)
+        if response.status_code == 200:
+            return etree.fromstring(response.content)
+        else:
+            raise Exception("Redirected away")
 
     def update(self):
         try:
