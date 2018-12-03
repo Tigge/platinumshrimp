@@ -1,12 +1,11 @@
 import feedparser
+import json
 import logging
 import sys
-import time
 
 import plugin
-from utils import str_utils, command_saver
+from utils import str_utils
 
-SAVE_FILE    = "feedretriever_feeds.save"
 FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "
                 "the !listfeed and !removefeed commands.")
 
@@ -24,34 +23,62 @@ NO_FEED_MESSAGE = u"No feeds"
 DEFAULT_FETCH_TIME = 10*60
 
 
-def FeedItemToString(title, link, feed_title = ""):
+def FeedItemToString(title, link, feed_title=""):
     return str_utils.sanitize_string(u"{}: {} <{}>".format(feed_title, title, link))
 
 
-# The Feed class handles printing out new entries
-class Feed:
-    # Note that data could both be a url, or an already parsed feed
-    def __init__(self, data, title):
-        if isinstance(data, str):
-            data = feedparser.parse(data)
-        self.last_entry = None
-        self._set_last(data.entries)
-        self.title = title
-        self._update_title(data)
+# Simple polling class, fetches the feed in a regular interval and passes
+# the information on to the Feed object
+class Feedpoller:
+    def __init__(self, feed, on_created, on_entry, on_error):
+        self.feed = feed
+        self.feed['title'] = str_utils.sanitize_string(self.feed["title"])
 
-    def update(self, data, say):
-        if isinstance(data, str):
-            data = feedparser.parse(data)
-        if data.bozo != 0:
-            logging.info("Error updating feed %s", self.title)
+        self.last_entry = None
+        self.consecutive_fails = 0
+        self.update_count = 0
+        self.on_created = on_created
+        self.on_entry = on_entry
+        self.on_error = on_error
+
+        parsed = self.read(feed['url'])
+        if parsed.bozo == 0:
+            self._set_last(parsed.entries)
+            if self.feed['title'] == "":
+                self.feed['title'] = str_utils.sanitize_string(parsed.feed.title)
+            on_created(self.feed)
+        else:
+            self.modified = ""
+            raise Exception("Could not parse feed")
+
+    def read(self, url, modified=None, etag=None):
+        parsed = feedparser.parse(url, modified=modified, etag=etag)
+        if parsed.bozo == 0:
+            self.modified = parsed.get("modified", None)
+            self.etag = parsed.get("etag", None)
+        return parsed
+
+    def update(self):
+        self.update_count += 1
+        if self.update_count < self.feed['frequency']:
             return
-        self._update_title(data)
-        logging.info("Updating feed: %s", self.title)
-        for entry in data.entries:
+
+        self.update_count = 0
+        self.update_now()
+
+    def update_now(self):
+        parsed = self.read(self.feed['url'], self.modified, self.etag)
+        if parsed.bozo == 1:
+            self.consecutive_fails += 1
+            if self.consecutive_fails % 10 == 0:
+                self.on_error(self.feed, FAIL_MESSAGE)
+            return
+
+        for entry in parsed.entries:
             # TODO: Check id, link, etc
             # Maybe save the entire data.entries and remove all duplicate when
             # a new update happens?
-            if self.last_entry != None:
+            if self.last_entry is not None:
                 if "published_parsed" in entry:
                     if entry.published_parsed <= self.last_entry.published_parsed:
                         break
@@ -59,52 +86,14 @@ class Feed:
                     if entry.title == self.last_entry.title:
                         break
 
-            say(FeedItemToString(entry.title, entry.link, self.title))
-        self._set_last(data.entries)
+            self.on_entry(self.feed, entry)
 
-    def _update_title(self, parsed):
-        if parsed.bozo == 0 and self.title == "":
-            self.title = parsed.feed.title
-        self.title = str_utils.sanitize_string(self.title)
+        self._set_last(parsed.entries)
+        self.consecutive_fails = 0
 
     def _set_last(self, entries):
         if len(entries) > 0:
             self.last_entry = entries[0]
-
-
-# Simple polling class, fetches the feed in a regular interval and passes
-# the information on to the Feed object
-class Feedpoller:
-    def __init__(self, say, url, update_freq=DEFAULT_FETCH_TIME, title=""):
-        parsed = feedparser.parse(url)
-        self.feed = Feed(parsed, title)
-        if parsed.bozo == 0:
-            self.modified = parsed.get("modified", None)
-            self.etag = parsed.get("etag", None)
-            say("Added feed: " + self.feed.title)
-        else:
-            self.modified = ""
-            say(self.feed.title + ": " + FAIL_MESSAGE)
-        self.say = say
-        self.url = url
-        self.consecutive_fails = 0
-        self.update_freq = update_freq
-        self.update_count = 0
-
-    def update(self):
-        self.update_count += 1
-        if self.update_count >= self.update_freq:
-            self.update_count = 0
-            parsed = feedparser.parse(self.url, modified=self.modified, etag=self.etag)
-            if parsed.bozo == 1:
-                self.consecutive_fails += 1
-                if self.consecutive_fails % 10 == 0:
-                    self.say(self.feed.title + ": " + FAIL_MESSAGE)
-            else:
-                self.modified = parsed.get("modified", None)
-                self.etag = parsed.get("etag", None)
-                self.feed.update(parsed, self.say)
-                self.consecutive_fails = 0
 
 
 # Aggregator class for adding and handling feeds
@@ -112,45 +101,82 @@ class Feedretriever(plugin.Plugin):
     def __init__(self):
         plugin.Plugin.__init__(self, "feedretriever")
         self.feeds = []
-        self.saver = command_saver.CommandSaver(SAVE_FILE)
 
     def started(self, settings):
         logging.info("Feedretriever.started %s", settings)
-        self.saver.read(lambda server, channel, message: self.on_pubmsg(server, None, channel, message))
+        self.settings = json.loads(settings)
+
+        logging.info("Feedretriever.started %s", self.settings)
+        for feed in self.settings['feeds']:
+            self.add_feed(feed, new=False)
+
+    def add_feed(self, feed, new=True):
+        def on_created(feed):
+            self.privmsg(feed['server'], feed['channel'], "Added feed: " + feed['title'])
+            self.settings['feeds'].append(feed)
+            self._save_settings(json.dumps(self.settings))
+
+        def on_entry(feed, entry):
+            self.privmsg(feed['server'], feed['channel'], FeedItemToString(entry.title, entry.link, feed['title']))
+
+        def on_error(feed, message):
+            self.privmsg(feed['server'], feed['channel'], feed['title'] + ": " + message)
+
+        try:
+            poller = Feedpoller(
+                feed,
+                on_created=on_created if new else lambda *a, **kw: None,
+                on_entry=on_entry,
+                on_error=on_error
+            )
+            self.feeds.append(poller)
+        except Exception as e:
+            logging.info("Failed to add feed: %r", e)
+            self.privmsg(feed['server'], feed['channel'], "Failed to add: " + feed['url'])
+
+    def remove_feed(self, feed):
+        self.feeds.remove(feed)
+        self.settings['feeds'].remove(feed.feed)
+        self._save_settings(json.dumps(self.settings))
 
     def on_pubmsg(self, server, user, channel, message):
-        say = lambda msg: self.privmsg(server, channel, msg)
+
         if message.startswith("!feed") or message.startswith("!addfeed"):
-            _, url, time, title = str_utils.split(message, " ", 4)
-            try:
-                time = int(time) * 60
-            except:
-                time = DEFAULT_FETCH_TIME
+            _, url, frequency, title = str_utils.split(message, " ", 4)
             if url == "":
-                say(HELP_MESSAGE)
+                self.privmsg(server, channel, HELP_MESSAGE)
                 return
-            self.feeds.append(Feedpoller(say, url, time, title))
-            self.saver.save(server, channel, message)
+
+            try:
+                frequency = int(frequency) * 60
+            except ValueError:
+                frequency = DEFAULT_FETCH_TIME
+
+            feed = {'url': url, 'title': title, 'server': server, 'channel': channel, 'frequency': frequency}
+            self.add_feed(feed)
+
         elif message.startswith("!removefeed"):
-            feeds = []
+            feeds = list(filter(lambda f: f.feed['server'] == server and f.feed['channel'] == channel, self.feeds))
+            feeds_to_remove = []
             for i in message.split(" "):
                 i = int(i) if i.isdecimal() else -1
-                if i >= 0 and i < len(self.feeds):
-                    feeds.append(i)
-            for i in sorted(feeds, reverse=True):
-                say(REMOVING_FEED_MESSAGE.format(i, self.feeds[i].feed.title))
-                del self.feeds[i]
-                self.saver.remove(i)
+                if i >= 0 and i < len(feeds):
+                    feeds_to_remove.append(i)
+            for i in sorted(feeds_to_remove, reverse=True):
+                self.privmsg(server, channel, REMOVING_FEED_MESSAGE.format(i, feeds[i].feed['title']))
+                self.remove_feed(feeds[i])
                 logging.info("Removed feed: %d", i)
         elif message.startswith("!listfeed"):
-            if len(self.feeds) == 0:
-                say(NO_FEED_MESSAGE)
-            for i, feed in enumerate(self.feeds):
-                say(LIST_FEED_ITEM_MESSAGE.format(i, feed.feed.title))
+            feeds = list(filter(lambda f: f.feed['server'] == server and f.feed['channel'] == channel, self.feeds))
+            if len(feeds) == 0:
+                self.privmsg(server, channel, NO_FEED_MESSAGE)
+            for i, feed in enumerate(feeds):
+                self.privmsg(server, channel, LIST_FEED_ITEM_MESSAGE.format(i, feed.feed['title']))
 
     def update(self):
         for feed in self.feeds:
             feed.update()
+
 
 if __name__ == "__main__":
     sys.exit(Feedretriever.run())
