@@ -106,7 +106,8 @@ class Bot:
             self.servers[server_name] = s
             s.name = server_name
             s.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
-            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server_settings and server_settings["ssl"] else irc.connection.Factory()
+            use_ssl = "ssl" in server_settings and server_settings["ssl"]
+            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if use_ssl else irc.connection.Factory()
             s.connect(server_settings['host'], server_settings['port'], nickname=self.settings['nickname'],
                       ircname=self.settings['realname'], username=self.settings['username'],
                       connect_factory=factory)
@@ -135,7 +136,12 @@ class Bot:
                          [sys.executable, file_name])
             environment = os.environ
             environment.update(PYTHONPATH=os.getcwd())
-            os.spawnvpe(os.P_NOWAIT, sys.executable, args=[sys.executable, file_name, "--socket_path", self.temp_folder], env=environment)
+            os.spawnvpe(
+              os.P_NOWAIT,
+              sys.executable,
+              args=[sys.executable, file_name, "--socket_path", self.temp_folder],
+              env=environment
+            )
             self.plugins.append(PluginInterface(name, self))
 
     def plugin_started(self, plugin):
