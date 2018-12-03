@@ -96,7 +96,7 @@ class Plugin:
                     "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
                     "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
                     "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
-                    "whowas"]:
+                    "whowas", "_save_settings"]:
             def call(*args, **kwarg):
                 self._call(name, *args)
             return call

@@ -9,7 +9,7 @@ from utils import settings
 
 import zmq
 import irc.client
-import irc.buffer
+import jaraco.stream
 
 
 class PluginInterface:
@@ -32,6 +32,12 @@ class PluginInterface:
 
     def _recieve(self, data):
         logging.info("PluginInterface._recieve %s", data)
+        if data["function"] == "_save_settings":
+            new_plugin_settings = json.loads(data["params"][0])
+            self.bot.settings['plugins'][self.name] = new_plugin_settings
+            settings.save_settings(self.bot.settings)
+            return
+
         server = data["params"][0]
         if server not in self.bot.servers:
             logging.error("PluginInterface._recieve %s not found", server)
@@ -44,7 +50,7 @@ class PluginInterface:
                                 "whowas"]:
             try:
                 getattr(self.bot.servers[server], data["function"])(*data["params"][1:])
-            except (irc.client.InvalidCharacters, irc.client.MessageTooLong) as e:
+            except (irc.client.InvalidCharacters, irc.client.MessageTooLong):
                 logging.exception("Failed to call function from plugin %r", data)
         else:
             logging.error("Undefined function %s called with %r", data["function"], data["params"])
@@ -98,9 +104,9 @@ class Bot:
             s = self.reactor.server()
             self.servers[server['name']] = s
             s.name = server['name']
-            s.buffer_class = irc.buffer.LenientDecodingLineBuffer
             factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server and server["ssl"] else irc.connection.Factory()
             s.connect(server['host'], server['port'], nickname=self.settings['nickname'],
+            s.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
                       ircname=self.settings['realname'], username=self.settings['username'],
                       connect_factory=factory)
 
@@ -113,7 +119,7 @@ class Bot:
             return
 
         if event.type == "disconnect":
-            connection.execute_delayed(30, self.reconnect, (connection,))
+            self.reactor.scheduler.execute_after(30, lambda: self.reconnect(connection))
 
         for plugin in self.plugins:
             plugin._call("on_" + event.type, connection.name, event.source, event.target, *event.arguments)

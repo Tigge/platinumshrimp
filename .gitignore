@@ -2,8 +2,20 @@
 __pycache__/
 *.py[cod]
 
+# Environment
+.venv
+env/
+pyvenv.cfg
+
+# Packaging
+*.egg-info/
+
 # Backups
 *~
 
 # PyCharm
 .idea/
+
+# Platinumshrimp files
+*.log
+settings.json
