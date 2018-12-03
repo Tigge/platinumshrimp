@@ -82,7 +82,7 @@ class Bot:
     def __init__(self, temp_folder):
         logging.basicConfig(filename="Bot.log", level=logging.DEBUG)
 
-        self.settings = settings.get_settings()
+        self.settings = settings.load_settings()
         if not settings.validate_settings(self.settings):
             logging.error("Error parsing settings")
             sys.exit(1)
@@ -95,18 +95,19 @@ class Bot:
 
         # Load plugins
         if 'plugins' in self.settings:
-            for plugin in self.settings['plugins']:
-                self.load_plugin(plugin['name'], plugin['settings'])
+            for plugin_name, plugin_settings in self.settings['plugins'].items():
+                self.load_plugin(plugin_name, plugin_settings)
 
         # Connect to servers
-        for server in self.settings['servers']:
-            logging.info("Connecting to '%s'", server)
+        servers = self.settings['servers']
+        for server_name, server_settings in servers.items():
+            logging.info("Connecting to %r %r", server_name, server_settings)
             s = self.reactor.server()
-            self.servers[server['name']] = s
-            s.name = server['name']
-            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server and server["ssl"] else irc.connection.Factory()
-            s.connect(server['host'], server['port'], nickname=self.settings['nickname'],
+            self.servers[server_name] = s
+            s.name = server_name
             s.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
+            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if "ssl" in server_settings and server_settings["ssl"] else irc.connection.Factory()
+            s.connect(server_settings['host'], server_settings['port'], nickname=self.settings['nickname'],
                       ircname=self.settings['realname'], username=self.settings['username'],
                       connect_factory=factory)
 
@@ -140,11 +141,11 @@ class Bot:
     def plugin_started(self, plugin):
         logging.info("Bot.plugin_started %s, %s", plugin, self.settings)
 
-        for p in self.settings['plugins']:
-            if p["name"] == plugin.name:
-                plugin.started(json.dumps(p["settings"]))
-                self.reactor.execute_every(1.0, plugin.update)
-                logging.debug("Bot.plugin_started, settings '%s'", p["settings"])
+        for plugin_name, plugin_settings in self.settings['plugins'].items():
+            if plugin_name == plugin.name:
+                plugin.started(json.dumps(plugin_settings))
+                self.reactor.scheduler.execute_every(1.0, plugin.update)
+                logging.debug("Bot.plugin_started, settings %r", plugin_settings)
                 break
 
     def run(self):
