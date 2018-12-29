@@ -134,3 +134,8 @@ class TitlegiverTestCase(unittest.TestCase):
     def test_encoding_meta_httpequiv(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/encoding_meta_httpequiv")
         self.assertEqual(result, u"올드보이")
+
+    def test_split_strip_and_slice(self):
+        title = Titlegiver.get_title_from_url(self.URL + "/pages/linebreaks_with_cr")
+        result = Titlegiver.split_strip_and_slice(title, 2)
+        self.assertEqual(result, [u"Line1", "Line2"])

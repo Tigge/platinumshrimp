@@ -15,6 +15,7 @@ class Titlegiver(plugin.Plugin):
     MAX_CONTENT_LENGTH = 64 * 1024
     USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/43.0.2357.37 Safari/537.36")
+    MAX_LINE_COUNT = 2
 
     def __init__(self):
         plugin.Plugin.__init__(self, "titlegiver")
@@ -55,10 +56,17 @@ class Titlegiver(plugin.Plugin):
 
         return re.sub(r'&([#a-zA-Z0-9]+);', replace_entity, text)
 
+    @staticmethod
+    # Split a given string and remove empty lines
+    def split_strip_and_slice(text, limit=0):
+        return [line.strip() for line in text.splitlines() if line.strip()][0:limit]
+
     def on_pubmsg(self, server, user, channel, message):
         for url in url_parser.find_urls(message):
             try:
-                self.privmsg(server, channel, Titlegiver.get_title_from_url(url))
+                title = Titlegiver.get_title_from_url(url)
+                for line in split_strip_and_slice(title, MAX_LINE_COUNT):
+                    self.privmsg(server, channel, line)
             except:
                 logging.exception("Unable to find title for: %s", url)
 
