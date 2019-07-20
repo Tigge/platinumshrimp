@@ -169,18 +169,18 @@ class Trakt(plugin.Plugin):
     @staticmethod
     def format_url(item):
         if "movie" in item:
-            return "/movies/{0}".format(item["movie"]["ids"]["trakt"])
+            return "/search/trakt/{0}?id_type=movie".format(item["movie"]["ids"]["trakt"])
         elif "seasons" in item and len(item["seasons"]) == 1:
             season = list(item["seasons"].values())[0]
             if len(season["episodes"]) == 1:
                 episode = list(season["episodes"].values())[0]
-                return "/episodes/{0}".format(episode["ids"]["trakt"])
+                return "/search/trakt/{0}?id_type=episode".format(episode["ids"]["trakt"])
             else:
-                return "/seasons/{0}".format(season["ids"]["trakt"])
+                return "/search/trakt/{0}?id_type=season".format(season["ids"]["trakt"])
         elif "episode" in item:
-            return "/episodes/{0}".format(item["episode"]["ids"]["trakt"])
+            return "/search/trakt/{0}?id_type=episode".format(item["episode"]["ids"]["trakt"])
         elif "show" in item:
-            return "/shows/{0}".format(item["show"]["ids"]["trakt"])
+            return "/search/trakt/{0}?id_type=show".format(item["show"]["ids"]["trakt"])
 
     @staticmethod
     def format_movie(movie):
