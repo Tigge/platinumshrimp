@@ -152,7 +152,7 @@ class Trakt(plugin.Plugin):
 
     @staticmethod
     def format_activity(activity={}, username="", action=""):
-        return "{0} {1} {2} http://www.trakt.tv{3}".format(username, Trakt.format_action(action),
+        return "{0} {1} {2} https://www.trakt.tv{3}".format(username, Trakt.format_action(action),
                                                            Trakt.format_item(activity), Trakt.format_url(activity))
 
     @staticmethod
