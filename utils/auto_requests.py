@@ -66,6 +66,9 @@ def get(url, *args, **kwargs):
     nr_redirects = 0
     while True:
         response = requests.get(url, *args, **kwargs)
+        content_type, params = cgi.parse_header(response.headers.get('content-type'))
+        if content_type != 'text/html':
+            return ''
         response.encoding = find_encoding(response)
         text = response.text
         # Twitter hates us:

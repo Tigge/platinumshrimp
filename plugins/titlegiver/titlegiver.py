@@ -61,12 +61,15 @@ class Titlegiver(plugin.Plugin):
     def split_strip_and_slice(text, limit=0):
         return [line.strip() for line in text.splitlines() if line.strip()][0:limit]
 
+    def process(self, url, server, channel):
+        title = Titlegiver.get_title_from_url(url)
+        for line in Titlegiver.split_strip_and_slice(title, Titlegiver.MAX_LINE_COUNT):
+            self.privmsg(server, channel, line)
+
     def on_pubmsg(self, server, user, channel, message):
         for url in url_parser.find_urls(message):
             try:
-                title = Titlegiver.get_title_from_url(url)
-                for line in Titlegiver.split_strip_and_slice(title, Titlegiver.MAX_LINE_COUNT):
-                    self.privmsg(server, channel, line)
+                self._thread(self.process, url, server, channel)
             except:
                 logging.exception("Unable to find title for: %s", url)
 
