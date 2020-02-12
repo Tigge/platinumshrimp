@@ -113,20 +113,20 @@ class FormatTestCase(unittest.TestCase):
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User watched 'Marvel's Agents of S.H.I.E.L.D.', "
-                                      "S01E11 'The Magical Place' http://www.trakt.tv/episodes/74015")
+                                      "S01E11 'The Magical Place' https://www.trakt.tv/search/trakt/74015?id_type=episode")
 
     def test_scrobble_episode(self):
         with open(os.path.join(self.dir, "format", "test_format_scrobble_episode.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User scrobbled 'The Simpsons', "
-                                      "S26E10 'The Man Who Came to Be Dinner' http://www.trakt.tv/episodes/1390653")
+                                      "S26E10 'The Man Who Came to Be Dinner' https://www.trakt.tv/search/trakt/1390653?id_type=episode")
 
     def test_watch_movie(self):
         with open(os.path.join(self.dir, "format", "test_format_watch_movie.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
-            self.assertEqual(message, "User watched 'Soul Kitchen' (2009) http://www.trakt.tv/movies/19911")
+            self.assertEqual(message, "User watched 'Soul Kitchen' (2009) https://www.trakt.tv/search/trakt/19911?id_type=movie")
 
     def test_utf8(self):
         with open(os.path.join(self.dir, "format", "test_format_unicode.json")) as f:
@@ -134,7 +134,7 @@ class FormatTestCase(unittest.TestCase):
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(message, "User watched 'The Walking Dead \u263b', "
                                       "S05E09 'What Happened and What\u2019s Going On \u263b' "
-                                      "http://www.trakt.tv/episodes/998958")
+                                      "https://www.trakt.tv/search/trakt/998958?id_type=episode")
 
 
 class StartTestCase(unittest.TestCase):
@@ -219,8 +219,8 @@ class UpdateTestCase(unittest.TestCase):
 
         self.trakt.update_user("adam")
 
-        self.trakt.echo.assert_any_call("adam watched 'Parks and Recreation', S02E03 'Beauty Pageant' http://www.trakt.tv/episodes/253")
-        self.trakt.echo.assert_any_call("adam scrobbled 'The Dark Knight' (2008) http://www.trakt.tv/movies/4")
+        self.trakt.echo.assert_any_call("adam watched 'Parks and Recreation', S02E03 'Beauty Pageant' https://www.trakt.tv/search/trakt/253?id_type=episode")
+        self.trakt.echo.assert_any_call("adam scrobbled 'The Dark Knight' (2008) https://www.trakt.tv/search/trakt/4?id_type=movie")
         self.assertEqual(self.trakt.echo.call_count, 2)
 
         self.assertEqual(self.trakt.users["adam"]["last_sync_episodes"],
@@ -272,7 +272,7 @@ class SummaryTestCase(unittest.TestCase):
             self.assertEqual(res["seasons"][2016]["episodes"][8]["title"], "The Simple Solution to Traffic")
 
             self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
-                             "user watched 'CGP Grey', S2016E08 'The Simple Solution to Traffic' http://www.trakt.tv/episodes/2327792")
+                             "user watched 'CGP Grey', S2016E08 'The Simple Solution to Traffic' https://www.trakt.tv/search/trakt/2327792?id_type=episode")
 
     def test_single_season(self):
         with open(os.path.join(self.dir, "summaries", "single_season_episodes.json")) as fe:
@@ -288,7 +288,7 @@ class SummaryTestCase(unittest.TestCase):
                 self.assertEqual(len(res["seasons"][2]["episodes"]), 3)
 
                 self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
-                                 "user watched 'The Cyanide & Happiness Show' S02E05-E07 http://www.trakt.tv/seasons/117827")
+                                 "user watched 'The Cyanide & Happiness Show' S02E05-E07 https://www.trakt.tv/search/trakt/117827?id_type=season")
 
     def test_multiple_seasons(self):
 
@@ -310,4 +310,4 @@ class SummaryTestCase(unittest.TestCase):
             self.assertEqual(len(res["seasons"][3]["episodes"]), 10)
 
             self.assertEqual(Trakt.format_activity(result[0], "user", "watch"),
-                             "user watched 'Silicon Valley' S01E01-E08, S02E01-E10, S03E01-E10 http://www.trakt.tv/shows/60157")
+                             "user watched 'Silicon Valley' S01E01-E08, S02E01-E10, S03E01-E10 https://www.trakt.tv/search/trakt/60157?id_type=show")
