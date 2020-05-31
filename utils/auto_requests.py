@@ -70,11 +70,7 @@ def get(url, *args, **kwargs):
         if content_type != 'text/html':
             return ''
         response.encoding = find_encoding(response)
-        text = response.text
-        # Twitter hates us:
-        if not url.startswith("https://t.co/"):
-            text = no_script_re.sub("", text)
-        match = redirect_re.search(text)
+        match = redirect_re.search(response.text)
         if not match or nr_redirects > 10:
             return response
         # TODO: Maybe use urlparse.urljoin instead?
