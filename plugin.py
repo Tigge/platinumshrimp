@@ -1,4 +1,5 @@
 import logging
+import locale
 import threading
 import zmq
 import tempfile
@@ -15,6 +16,7 @@ plugin_argparser.add_argument("--socket_path", type=str, default=tempfile.gettem
 class Plugin:
 
     def __init__(self, name):
+        locale.setlocale(locale.LC_ALL, '')
         logging.basicConfig(filename=name + ".log", level=logging.DEBUG)
 
         context = zmq.Context()
