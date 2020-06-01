@@ -2,6 +2,8 @@ import html
 import re
 import sys
 import logging
+import urllib
+import json
 
 import plugin
 from utils import url_parser, auto_requests
@@ -61,7 +63,16 @@ class Titlegiver(plugin.Plugin):
     def split_strip_and_slice(text, limit=0):
         return [line.strip() for line in text.splitlines() if line.strip()][0:limit]
 
+    def started(self, settings):
+        self.settings = json.loads(settings)
+
     def process(self, url, server, channel):
+
+        parts = urllib.parse.urlparse(url)
+        if parts.netloc in self.settings['blacklist']:
+            logging.info("Blacklisted %s", url)
+            return
+
         title = Titlegiver.get_title_from_url(url)
         for line in Titlegiver.split_strip_and_slice(title, Titlegiver.MAX_LINE_COUNT):
             self.privmsg(server, channel, line)
