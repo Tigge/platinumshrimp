@@ -61,8 +61,8 @@ def find_encoding(response):
 def get(url, *args, **kwargs):
     # TODO: Should we redirect on all refreshs, or only the ones with zero timeout?
     # TODO: Should we check for http-equiv="refresh"?
-    no_script_re = re.compile( "<noscript.*?<\/noscript>", re.IGNORECASE)
-    redirect_re = re.compile('<meta[^>]*?url=(.*?)["\']', re.IGNORECASE)
+    no_script_re = re.compile(r'<noscript.*?<\/noscript>', re.IGNORECASE)
+    redirect_re = re.compile(r'<meta[^>]*?url=(.*?)["\']', re.IGNORECASE)
     nr_redirects = 0
     while True:
         response = requests.get(url, *args, **kwargs)
@@ -70,7 +70,8 @@ def get(url, *args, **kwargs):
         if content_type != 'text/html':
             return ''
         response.encoding = find_encoding(response)
-        match = redirect_re.search(response.text)
+        text = no_script_re.sub("", response.text)
+        match = redirect_re.search(text)
         if not match or nr_redirects > 10:
             return response
         # TODO: Maybe use urlparse.urljoin instead?
