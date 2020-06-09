@@ -1,7 +1,7 @@
 platinumshrimp
 =================================================
 
-[![Travis CI Build Status](https://travis-ci.org/Tigge/platinumshrimp.svg?branch=master)](https://travis-ci.org/Tigge/platinumshrimp)
+[![Travis CI Build Status](https://travis-ci.com/Tigge/platinumshrimp.svg?branch=master)](https://travis-ci.com/Tigge/platinumshrimp)
 
 
 Get the code:
