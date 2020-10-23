@@ -12,7 +12,7 @@ import plugin
 
 class Youtube(plugin.Plugin):
 
-    URL_REGEX = re.compile(r'https?:\/\/.*youtu.*(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})(?:[%#?&]|$)')
+    URL_REGEX = re.compile(r'https?:\/\/.*youtu.*(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})')
 
     DURATION_REGEX = re.compile(
         r'P(?:(?P<days>\d+.?\d*)D){0,1}' \
