@@ -5,18 +5,21 @@ import zmq
 import tempfile
 import argparse
 
-__author__ = 'tigge'
+__author__ = "tigge"
 
-plugin_argparser = argparse.ArgumentParser(description='Start a platinumshrimp plugin')
-plugin_argparser.add_argument("--socket_path", type=str, default=tempfile.gettempdir(),
-                              help="The path to the location where platinumshrimp stores the IPC socket",
-                             dest="socket_path")
+plugin_argparser = argparse.ArgumentParser(description="Start a platinumshrimp plugin")
+plugin_argparser.add_argument(
+    "--socket_path",
+    type=str,
+    default=tempfile.gettempdir(),
+    help="The path to the location where platinumshrimp stores the IPC socket",
+    dest="socket_path",
+)
 
 
 class Plugin:
-
     def __init__(self, name):
-        locale.setlocale(locale.LC_ALL, '')
+        locale.setlocale(locale.LC_ALL, "")
         logging.basicConfig(filename=name + ".log", level=logging.DEBUG)
 
         context = zmq.Context()
@@ -25,10 +28,14 @@ class Plugin:
         self.socket_base_path = args.socket_path
 
         self._socket_bot = context.socket(zmq.PAIR)
-        self._socket_bot.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + name)
+        self._socket_bot.connect(
+            "ipc://" + self.socket_base_path + "/ipc_plugin_" + name
+        )
 
         self._socket_workers = context.socket(zmq.PULL)
-        self._socket_workers.bind("ipc://" + self.socket_base_path + "/ipc_plugin_" + name + "_workers")
+        self._socket_workers.bind(
+            "ipc://" + self.socket_base_path + "/ipc_plugin_" + name + "_workers"
+        )
 
         self._poller = zmq.Poller()
         self._poller.register(self._socket_bot, zmq.POLLIN)
@@ -36,23 +43,29 @@ class Plugin:
 
         self.name = name
 
-        logging.info("Plugin.init %s, %s", threading.current_thread().ident, "ipc://ipc_plugin_" + name)
+        logging.info(
+            "Plugin.init %s, %s",
+            threading.current_thread().ident,
+            "ipc://ipc_plugin_" + name,
+        )
 
         self.threading_data = threading.local()
         self.threading_data.call_socket = self._socket_bot
 
     def _recieve(self, data):
         func_name = data["function"]
-        if func_name.startswith('on_') or func_name in ["started", 'update']:
+        if func_name.startswith("on_") or func_name in ["started", "update"]:
             try:
                 func = getattr(self, func_name)
             except AttributeError as e:
-                pass # Not all plugins implements all functions, therefore silencing if not found.
+                pass  # Not all plugins implements all functions, therefore silencing if not found.
             else:
                 func(*data["params"])
 
         else:
-            logging.warning("Unsupported call to plugin function with name " + func_name)
+            logging.warning(
+                "Unsupported call to plugin function with name " + func_name
+            )
 
     def _call(self, function, *args):
         logging.info("Plugin.call %s", self.threading_data.__dict__)
@@ -65,7 +78,13 @@ class Plugin:
         def starter():
             context = zmq.Context()
             sock = context.socket(zmq.PUSH)
-            sock.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + self.name + "_workers")
+            sock.connect(
+                "ipc://"
+                + self.socket_base_path
+                + "/ipc_plugin_"
+                + self.name
+                + "_workers"
+            )
             self.threading_data.call_socket = sock
 
             function(*args, **kwargs)
@@ -94,13 +113,54 @@ class Plugin:
 
     def __getattr__(self, name):
         # List covers available commands to be sent to the IRC server
-        if name in ["action", "admin", "cap", "ctcp", "ctcp_reply", "globops", "info", "invite", "ison",
-                    "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
-                    "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
-                    "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
-                    "whowas", "_save_settings"]:
+        if name in [
+            "action",
+            "admin",
+            "cap",
+            "ctcp",
+            "ctcp_reply",
+            "globops",
+            "info",
+            "invite",
+            "ison",
+            "join",
+            "kick",
+            "links",
+            "list",
+            "lusers",
+            "mode",
+            "motd",
+            "names",
+            "nick",
+            "notice",
+            "oper",
+            "part",
+            "pass_",
+            "ping",
+            "pong",
+            "privmsg",
+            "quit",
+            "squit",
+            "stats",
+            "time",
+            "topic",
+            "trace",
+            "user",
+            "userhost",
+            "users",
+            "version",
+            "wallops",
+            "who",
+            "whois",
+            "whowas",
+            "_save_settings",
+        ]:
+
             def call(*args, **kwarg):
                 self._call(name, *args)
+
             return call
         else:
-            raise AttributeError('Unsupported internal function call to function: ' + name)
+            raise AttributeError(
+                "Unsupported internal function call to function: " + name
+            )

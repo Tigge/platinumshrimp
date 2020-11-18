@@ -23,15 +23,16 @@ def find_encoding(response):
         return bom_encoding
 
     # 2. Content-Type
-    if 'content-type' in response.headers:
-        content_type, params = cgi.parse_header(response.headers.get('content-type'))
-        if 'charset' in params:
-            return params['charset'].strip("'\"")
+    if "content-type" in response.headers:
+        content_type, params = cgi.parse_header(response.headers.get("content-type"))
+        if "charset" in params:
+            return params["charset"].strip("'\"")
 
     # 3. XML declaration
     xmldecl_regex = re.compile(
         rb'<\?xml(?:.*?)encoding=(?:"|\')([a-zA-Z0-9-_]+)(?:"|\')(?:.*?)\?>',
-        re.IGNORECASE | re.DOTALL)
+        re.IGNORECASE | re.DOTALL,
+    )
     xmldecl = xmldecl_regex.search(response.content[:1024])
     if xmldecl is not None:
         return xmldecl.group(1).lower().decode("ascii")
@@ -39,7 +40,6 @@ def find_encoding(response):
     # 4. Meta http-equiv "content-type"
     # 5. Meta charset
     class MyHTMLParser(html.parser.HTMLParser):
-
         def __init__(self):
             html.parser.HTMLParser.__init__(self)
             self.charset = None
@@ -49,26 +49,33 @@ def find_encoding(response):
                 attributes = dict(attrs)
                 if "charset" in attributes:
                     self.charset = attributes["charset"]
-                elif "http-equiv" in attributes and attributes["http-equiv"].lower() == "content-type":
-                    match = re.search(r'^.*?charset=([a-zA-Z0-9-_]+)$', attributes["content"])
+                elif (
+                    "http-equiv" in attributes
+                    and attributes["http-equiv"].lower() == "content-type"
+                ):
+                    match = re.search(
+                        r"^.*?charset=([a-zA-Z0-9-_]+)$", attributes["content"]
+                    )
                     self.charset = match.group(1) if match is not None else None
 
     parser = MyHTMLParser()
-    parser.feed(response.content[:1024].decode('ascii', 'ignore'))  # As per HTML5 standard
+    parser.feed(
+        response.content[:1024].decode("ascii", "ignore")
+    )  # As per HTML5 standard
     return parser.charset
 
 
 def get(url, *args, **kwargs):
     # TODO: Should we redirect on all refreshs, or only the ones with zero timeout?
     # TODO: Should we check for http-equiv="refresh"?
-    no_script_re = re.compile(r'<noscript.*?<\/noscript>', re.IGNORECASE)
+    no_script_re = re.compile(r"<noscript.*?<\/noscript>", re.IGNORECASE)
     redirect_re = re.compile(r'<meta[^>]*?url=(.*?)["\']', re.IGNORECASE)
     nr_redirects = 0
     while True:
         response = requests.get(url, *args, **kwargs)
-        content_type, params = cgi.parse_header(response.headers.get('content-type'))
-        if content_type != 'text/html':
-            return ''
+        content_type, params = cgi.parse_header(response.headers.get("content-type"))
+        if content_type != "text/html":
+            return ""
         response.encoding = find_encoding(response)
         text = no_script_re.sub("", response.text)
         match = redirect_re.search(text)
@@ -77,4 +84,3 @@ def get(url, *args, **kwargs):
         # TODO: Maybe use urlparse.urljoin instead?
         url = match.groups()[0].strip()
         nr_redirects += 1
-

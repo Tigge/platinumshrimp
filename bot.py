@@ -34,7 +34,7 @@ class PluginInterface:
         logging.info("PluginInterface._recieve %s", data)
         if data["function"] == "_save_settings":
             new_plugin_settings = json.loads(data["params"][0])
-            self.bot.settings['plugins'][self.name] = new_plugin_settings
+            self.bot.settings["plugins"][self.name] = new_plugin_settings
             settings.save_settings(self.bot.settings)
             return
 
@@ -43,17 +43,55 @@ class PluginInterface:
             logging.error("PluginInterface._recieve %s not found", server)
             return
 
-        if data["function"] in ["action", "admin", "cap", "ctcp", "ctcp_reply", "globops", "info", "invite", "ison",
-                                "join", "kick", "links", "list", "lusers", "mode", "motd", "names", "nick", "notice",
-                                "oper", "part", "pass_", "ping", "pong", "privmsg", "quit", "squit", "stats", "time",
-                                "topic", "trace", "user", "userhost", "users", "version", "wallops", "who", "whois",
-                                "whowas"]:
+        if data["function"] in [
+            "action",
+            "admin",
+            "cap",
+            "ctcp",
+            "ctcp_reply",
+            "globops",
+            "info",
+            "invite",
+            "ison",
+            "join",
+            "kick",
+            "links",
+            "list",
+            "lusers",
+            "mode",
+            "motd",
+            "names",
+            "nick",
+            "notice",
+            "oper",
+            "part",
+            "pass_",
+            "ping",
+            "pong",
+            "privmsg",
+            "quit",
+            "squit",
+            "stats",
+            "time",
+            "topic",
+            "trace",
+            "user",
+            "userhost",
+            "users",
+            "version",
+            "wallops",
+            "who",
+            "whois",
+            "whowas",
+        ]:
             try:
                 getattr(self.bot.servers[server], data["function"])(*data["params"][1:])
             except (irc.client.InvalidCharacters, irc.client.MessageTooLong):
                 logging.exception("Failed to call function from plugin %r", data)
         else:
-            logging.error("Undefined function %s called with %r", data["function"], data["params"])
+            logging.error(
+                "Undefined function %s called with %r", data["function"], data["params"]
+            )
 
     def _call(self, function, *args):
         self._socket_plugin.send_json({"function": function, "params": args})
@@ -71,8 +109,10 @@ class PluginInterface:
     def __getattr__(self, name):
         logging.info("PluginInterface.__getattr__ %s", name)
         if name in ["started", "update"]:
+
             def call(*args, **kwarg):
                 self._call(name, *args)
+
             return call
         else:
             raise AttributeError(self, name)
@@ -94,12 +134,12 @@ class Bot:
         self.reactor.add_global_handler("all_events", self._dispatcher, -10)
 
         # Load plugins
-        if 'plugins' in self.settings:
-            for plugin_name, plugin_settings in self.settings['plugins'].items():
+        if "plugins" in self.settings:
+            for plugin_name, plugin_settings in self.settings["plugins"].items():
                 self.load_plugin(plugin_name, plugin_settings)
 
         # Connect to servers
-        servers = self.settings['servers']
+        servers = self.settings["servers"]
         for server_name, server_settings in servers.items():
             logging.info("Connecting to %r %r", server_name, server_settings)
             s = self.reactor.server()
@@ -107,10 +147,19 @@ class Bot:
             s.name = server_name
             s.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
             use_ssl = "ssl" in server_settings and server_settings["ssl"]
-            factory = irc.connection.Factory(wrapper=ssl.wrap_socket) if use_ssl else irc.connection.Factory()
-            s.connect(server_settings['host'], server_settings['port'], nickname=self.settings['nickname'],
-                      ircname=self.settings['realname'], username=self.settings['username'],
-                      connect_factory=factory)
+            factory = (
+                irc.connection.Factory(wrapper=ssl.wrap_socket)
+                if use_ssl
+                else irc.connection.Factory()
+            )
+            s.connect(
+                server_settings["host"],
+                server_settings["port"],
+                nickname=self.settings["nickname"],
+                ircname=self.settings["realname"],
+                username=self.settings["username"],
+                connect_factory=factory,
+            )
 
     def reconnect(self, connection):
         if not connection.is_connected():
@@ -124,7 +173,13 @@ class Bot:
             self.reactor.scheduler.execute_after(30, lambda: self.reconnect(connection))
 
         for plugin in self.plugins:
-            plugin._call("on_" + event.type, connection.name, event.source, event.target, *event.arguments)
+            plugin._call(
+                "on_" + event.type,
+                connection.name,
+                event.source,
+                event.target,
+                *event.arguments
+            )
 
     def load_plugin(self, name, settings):
         logging.info("Bot.plugin_load %s, %s", name, settings)
@@ -132,22 +187,27 @@ class Bot:
         if not os.path.isfile(file_name):
             logging.error("Unable to load plugin %s", name)
         else:
-            logging.info("Bot.plugin_load plugin %s, %s, %s, %s", name, self, sys.executable,
-                         [sys.executable, file_name])
+            logging.info(
+                "Bot.plugin_load plugin %s, %s, %s, %s",
+                name,
+                self,
+                sys.executable,
+                [sys.executable, file_name],
+            )
             environment = os.environ
             environment.update(PYTHONPATH=os.getcwd())
             os.spawnvpe(
-              os.P_NOWAIT,
-              sys.executable,
-              args=[sys.executable, file_name, "--socket_path", self.temp_folder],
-              env=environment
+                os.P_NOWAIT,
+                sys.executable,
+                args=[sys.executable, file_name, "--socket_path", self.temp_folder],
+                env=environment,
             )
             self.plugins.append(PluginInterface(name, self))
 
     def plugin_started(self, plugin):
         logging.info("Bot.plugin_started %s, %s", plugin, self.settings)
 
-        for plugin_name, plugin_settings in self.settings['plugins'].items():
+        for plugin_name, plugin_settings in self.settings["plugins"].items():
             if plugin_name == plugin.name:
                 plugin.started(json.dumps(plugin_settings))
                 self.reactor.scheduler.execute_every(1.0, plugin.update)
@@ -164,7 +224,7 @@ class Bot:
             time.sleep(0)  # yield
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="platinumshrimp_") as temp_folder:
         bot = Bot(temp_folder)
         bot.run()

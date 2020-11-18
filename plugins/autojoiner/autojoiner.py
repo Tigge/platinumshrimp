@@ -6,7 +6,6 @@ import plugin
 
 
 class Autojoiner(plugin.Plugin):
-
     def __init__(self):
         plugin.Plugin.__init__(self, "autojoiner")
         self.settings = {}
@@ -15,7 +14,9 @@ class Autojoiner(plugin.Plugin):
         self.settings = json.loads(settings)
 
     def on_welcome(self, server, source, target, message):
-        logging.info("Welcome to '%s' - '%s', '%s', '%s'", server, source, target, message)
+        logging.info(
+            "Welcome to '%s' - '%s', '%s', '%s'", server, source, target, message
+        )
         self.username = target
         if server in self.settings:
             for channel in self.settings[server]:
@@ -25,7 +26,9 @@ class Autojoiner(plugin.Plugin):
         if target != self.username:
             return
 
-        logging.info("Invited '%s' to '%s' on '%s' by '%s", target, channel, server, source)
+        logging.info(
+            "Invited '%s' to '%s' on '%s' by '%s", target, channel, server, source
+        )
         channels = self.settings.get(server, [])
         channels.append(channel)
         self.settings[server] = channels
@@ -36,7 +39,14 @@ class Autojoiner(plugin.Plugin):
         if target != self.username:
             return
 
-        logging.info("Kicked '%s' from '%s' on '%s' by '%s' because '%s'", target, channel, server, source, reason)
+        logging.info(
+            "Kicked '%s' from '%s' on '%s' by '%s' because '%s'",
+            target,
+            channel,
+            server,
+            source,
+            reason,
+        )
         channels = self.settings.get(server, [])
         channels.remove(channel)
         self._save_settings(json.dumps(self.settings))

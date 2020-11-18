@@ -14,7 +14,6 @@ feedparse = feedparser.parse
 
 
 class FeedRetriverTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.dir = os.path.join("..", os.path.dirname(__file__))
@@ -24,8 +23,12 @@ class FeedRetriverTest(unittest.TestCase):
         read.return_value = feedparse(os.path.join(self.dir, "basic_rss_0-entries.xml"))
         feed_name = """
         Test feed"""
-        poller = Feedpoller({"url": "MOCK_URL", "title": feed_name},
-                            on_created=noop, on_entry=noop, on_error=self.fail)
+        poller = Feedpoller(
+            {"url": "MOCK_URL", "title": feed_name},
+            on_created=noop,
+            on_entry=noop,
+            on_error=self.fail,
+        )
         self.assertEqual(poller.feed["title"], "Test feed")
 
     @unittest.mock.patch("feedparser.parse")
@@ -33,8 +36,12 @@ class FeedRetriverTest(unittest.TestCase):
         read.return_value = feedparse(os.path.join(self.dir, "basic_rss_0-entries.xml"))
         feed_name = """Test feed
         """
-        poller = Feedpoller({"url": "MOCK_URL", "title": feed_name},
-                            on_created=noop, on_entry=noop, on_error=self.fail)
+        poller = Feedpoller(
+            {"url": "MOCK_URL", "title": feed_name},
+            on_created=noop,
+            on_entry=noop,
+            on_error=self.fail,
+        )
         self.assertEqual(poller.feed["title"], "Test feed")
 
     @unittest.mock.patch("feedparser.parse")
@@ -42,6 +49,10 @@ class FeedRetriverTest(unittest.TestCase):
         read.return_value = feedparse(os.path.join(self.dir, "basic_rss_0-entries.xml"))
         feed_name = """Test
         feed"""
-        poller = Feedpoller({"url": "MOCK_URL", "title": feed_name},
-                            on_created=noop, on_entry=noop, on_error=self.fail)
+        poller = Feedpoller(
+            {"url": "MOCK_URL", "title": feed_name},
+            on_created=noop,
+            on_entry=noop,
+            on_error=self.fail,
+        )
         self.assertEqual(poller.feed["title"], "Test feed")

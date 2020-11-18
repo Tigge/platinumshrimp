@@ -7,13 +7,16 @@ import logging
 
 from plugins.packagetracker.provider import Package
 
-__author__ = 'tigge'
+__author__ = "tigge"
 
 
 class PostnordPackage(Package):
     API_URL = "https://api2.postnord.com"
-    FIND_IDENTIFIER = (API_URL + "/rest/shipment/v1/trackandtrace/findByIdentifier.json" +
-                       "?id={id}&locale={locale}&apikey={apikey}")
+    FIND_IDENTIFIER = (
+        API_URL
+        + "/rest/shipment/v1/trackandtrace/findByIdentifier.json"
+        + "?id={id}&locale={locale}&apikey={apikey}"
+    )
 
     apikey = None
 
@@ -47,7 +50,9 @@ class PostnordPackage(Package):
     def create_event(event):
         e = PostnordPackage.Event()
         e.datetime = dateutil.parser.parse(event["eventTime"])
-        e.description = "{0} ({1})".format(event["eventDescription"], event["location"]["displayName"])
+        e.description = "{0} ({1})".format(
+            event["eventDescription"], event["location"]["displayName"]
+        )
         return e
 
     @classmethod
@@ -61,7 +66,9 @@ class PostnordPackage(Package):
 
     @classmethod
     def _get_url(cls, package_id, locale="en"):
-        return PostnordPackage.FIND_IDENTIFIER.format(id=package_id, locale=locale, apikey=PostnordPackage.apikey)
+        return PostnordPackage.FIND_IDENTIFIER.format(
+            id=package_id, locale=locale, apikey=PostnordPackage.apikey
+        )
 
     @classmethod
     def _get_data(cls, package_id, locale="en"):
@@ -81,17 +88,37 @@ class PostnordPackage(Package):
             for shipment in data["shipments"]:
                 self.service = shipment["service"]["name"]
                 self.consignor = shipment["consignor"]["name"]
-                if "address" in  shipment["consignor"]:
-                    self.consignor += ", " + PostnordPackage.format_address(shipment["consignor"]["address"])
-                self.consignee = PostnordPackage.format_address(shipment["consignee"]["address"])
+                if "address" in shipment["consignor"]:
+                    self.consignor += ", " + PostnordPackage.format_address(
+                        shipment["consignor"]["address"]
+                    )
+                self.consignee = PostnordPackage.format_address(
+                    shipment["consignee"]["address"]
+                )
 
             if "totalWeight" in shipment:
-                self.weight = shipment["totalWeight"]["value"] + " " + shipment["totalWeight"]["unit"]
+                self.weight = (
+                    shipment["totalWeight"]["value"]
+                    + " "
+                    + shipment["totalWeight"]["unit"]
+                )
             if "totalVolume" in shipment:
-                self.volume = shipment["totalVolume"]["value"] + " " + shipment["totalVolume"]["unit"]
+                self.volume = (
+                    shipment["totalVolume"]["value"]
+                    + " "
+                    + shipment["totalVolume"]["unit"]
+                )
 
-            if "statusText" in shipment and "header" in shipment["statusText"] and "body" in shipment["statusText"]:
-                self.status = shipment["statusText"]["header"] + ": " + shipment["statusText"]["body"]
+            if (
+                "statusText" in shipment
+                and "header" in shipment["statusText"]
+                and "body" in shipment["statusText"]
+            ):
+                self.status = (
+                    shipment["statusText"]["header"]
+                    + ": "
+                    + shipment["statusText"]["body"]
+                )
 
             last_updated = self.last_updated
 

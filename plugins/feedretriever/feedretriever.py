@@ -6,21 +6,25 @@ import sys
 import plugin
 from utils import str_utils
 
-FAIL_MESSAGE = ("Unable to download or parse feed.  Remove unused feeds using "
-                "the !listfeed and !removefeed commands.")
+FAIL_MESSAGE = (
+    "Unable to download or parse feed.  Remove unused feeds using "
+    "the !listfeed and !removefeed commands."
+)
 
-HELP_MESSAGE = ("!addfeed url [fetch time [custom title]] where:\n"
-                "url - is the url of the atom or rss feed\n"
-                "fetch time - is the number of minutes between each request\n"
-                "custom title - is the title used for this feed.\n"
-                "If no title is given, the default title parsed from the "
-                "feed will be used instead.")
+HELP_MESSAGE = (
+    "!addfeed url [fetch time [custom title]] where:\n"
+    "url - is the url of the atom or rss feed\n"
+    "fetch time - is the number of minutes between each request\n"
+    "custom title - is the title used for this feed.\n"
+    "If no title is given, the default title parsed from the "
+    "feed will be used instead."
+)
 
 REMOVING_FEED_MESSAGE = u"Removing: #{} - {}"
 LIST_FEED_ITEM_MESSAGE = u"#{}: {}"
 NO_FEED_MESSAGE = u"No feeds"
 
-DEFAULT_FETCH_TIME = 10*60
+DEFAULT_FETCH_TIME = 10 * 60
 
 
 def FeedItemToString(title, link, feed_title=""):
@@ -32,7 +36,7 @@ def FeedItemToString(title, link, feed_title=""):
 class Feedpoller:
     def __init__(self, feed, on_created, on_entry, on_error):
         self.feed = feed
-        self.feed['title'] = str_utils.sanitize_string(self.feed["title"])
+        self.feed["title"] = str_utils.sanitize_string(self.feed["title"])
 
         self.last_entry = None
         self.consecutive_fails = 0
@@ -41,11 +45,11 @@ class Feedpoller:
         self.on_entry = on_entry
         self.on_error = on_error
 
-        parsed = self.read(feed['url'])
+        parsed = self.read(feed["url"])
         if parsed.bozo == 0:
             self._set_last(parsed.entries)
-            if self.feed['title'] == "":
-                self.feed['title'] = str_utils.sanitize_string(parsed.feed.title)
+            if self.feed["title"] == "":
+                self.feed["title"] = str_utils.sanitize_string(parsed.feed.title)
             on_created(self.feed)
         else:
             self.modified = ""
@@ -60,14 +64,14 @@ class Feedpoller:
 
     def update(self):
         self.update_count += 1
-        if self.update_count < self.feed['frequency']:
+        if self.update_count < self.feed["frequency"]:
             return
 
         self.update_count = 0
         self.update_now()
 
     def update_now(self):
-        parsed = self.read(self.feed['url'], self.modified, self.etag)
+        parsed = self.read(self.feed["url"], self.modified, self.etag)
         if parsed.bozo == 1:
             self.consecutive_fails += 1
             if self.consecutive_fails % 10 == 0:
@@ -107,36 +111,46 @@ class Feedretriever(plugin.Plugin):
         self.settings = json.loads(settings)
 
         logging.info("Feedretriever.started %s", self.settings)
-        for feed in self.settings['feeds']:
+        for feed in self.settings["feeds"]:
             self.add_feed(feed, new=False)
 
     def add_feed(self, feed, new=True):
         def on_created(feed):
-            self.privmsg(feed['server'], feed['channel'], "Added feed: " + feed['title'])
-            self.settings['feeds'].append(feed)
+            self.privmsg(
+                feed["server"], feed["channel"], "Added feed: " + feed["title"]
+            )
+            self.settings["feeds"].append(feed)
             self._save_settings(json.dumps(self.settings))
 
         def on_entry(feed, entry):
-            self.privmsg(feed['server'], feed['channel'], FeedItemToString(entry.title, entry.link, feed['title']))
+            self.privmsg(
+                feed["server"],
+                feed["channel"],
+                FeedItemToString(entry.title, entry.link, feed["title"]),
+            )
 
         def on_error(feed, message):
-            self.privmsg(feed['server'], feed['channel'], feed['title'] + ": " + message)
+            self.privmsg(
+                feed["server"], feed["channel"], feed["title"] + ": " + message
+            )
 
         try:
             poller = Feedpoller(
                 feed,
                 on_created=on_created if new else lambda *a, **kw: None,
                 on_entry=on_entry,
-                on_error=on_error
+                on_error=on_error,
             )
             self.feeds.append(poller)
         except Exception as e:
             logging.info("Failed to add feed: %r", e)
-            self.privmsg(feed['server'], feed['channel'], "Failed to add: " + feed['url'])
+            self.privmsg(
+                feed["server"], feed["channel"], "Failed to add: " + feed["url"]
+            )
 
     def remove_feed(self, feed):
         self.feeds.remove(feed)
-        self.settings['feeds'].remove(feed.feed)
+        self.settings["feeds"].remove(feed.feed)
         self._save_settings(json.dumps(self.settings))
 
     def on_pubmsg(self, server, user, channel, message):
@@ -152,26 +166,52 @@ class Feedretriever(plugin.Plugin):
             except ValueError:
                 frequency = DEFAULT_FETCH_TIME
 
-            feed = {'url': url, 'title': title, 'server': server, 'channel': channel, 'frequency': frequency}
+            feed = {
+                "url": url,
+                "title": title,
+                "server": server,
+                "channel": channel,
+                "frequency": frequency,
+            }
             self.add_feed(feed)
 
         elif message.startswith("!removefeed"):
-            feeds = list(filter(lambda f: f.feed['server'] == server and f.feed['channel'] == channel, self.feeds))
+            feeds = list(
+                filter(
+                    lambda f: f.feed["server"] == server
+                    and f.feed["channel"] == channel,
+                    self.feeds,
+                )
+            )
             feeds_to_remove = []
             for i in message.split(" "):
                 i = int(i) if i.isdecimal() else -1
                 if i >= 0 and i < len(feeds):
                     feeds_to_remove.append(i)
             for i in sorted(feeds_to_remove, reverse=True):
-                self.privmsg(server, channel, REMOVING_FEED_MESSAGE.format(i, feeds[i].feed['title']))
+                self.privmsg(
+                    server,
+                    channel,
+                    REMOVING_FEED_MESSAGE.format(i, feeds[i].feed["title"]),
+                )
                 self.remove_feed(feeds[i])
                 logging.info("Removed feed: %d", i)
         elif message.startswith("!listfeed"):
-            feeds = list(filter(lambda f: f.feed['server'] == server and f.feed['channel'] == channel, self.feeds))
+            feeds = list(
+                filter(
+                    lambda f: f.feed["server"] == server
+                    and f.feed["channel"] == channel,
+                    self.feeds,
+                )
+            )
             if len(feeds) == 0:
                 self.privmsg(server, channel, NO_FEED_MESSAGE)
             for i, feed in enumerate(feeds):
-                self.privmsg(server, channel, LIST_FEED_ITEM_MESSAGE.format(i, feed.feed['title']))
+                self.privmsg(
+                    server,
+                    channel,
+                    LIST_FEED_ITEM_MESSAGE.format(i, feed.feed["title"]),
+                )
 
     def update(self):
         for feed in self.feeds:
