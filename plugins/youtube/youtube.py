@@ -12,13 +12,14 @@ import plugin
 
 class Youtube(plugin.Plugin):
 
-    URL_REGEX = re.compile(r'https?:\/\/.*youtu.*(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})')
+    URL_REGEX = re.compile(r"https?:\/\/.*youtu.*(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})")
 
     DURATION_REGEX = re.compile(
-        r'P(?:(?P<days>\d+.?\d*)D){0,1}' \
-        r'T(?:(?P<hours>\d+.?\d*)H){0,1}' \
-        r'(?:(?P<minutes>\d+.?\d*)M){0,1}' \
-        r'(?:(?P<seconds>\d+.?\d*)S){0,1}')
+        r"P(?:(?P<days>\d+.?\d*)D){0,1}"
+        r"T(?:(?P<hours>\d+.?\d*)H){0,1}"
+        r"(?:(?P<minutes>\d+.?\d*)M){0,1}"
+        r"(?:(?P<seconds>\d+.?\d*)S){0,1}"
+    )
 
     @staticmethod
     def durationToTimeDelta(duration):
@@ -26,10 +27,10 @@ class Youtube(plugin.Plugin):
         v = m.groupdict()
         logging.info("Youtube.durationToTimeDelta %s", v)
         td = datetime.timedelta(
-            days = int(v['days']) if v['days'] is not None else 0,
-            hours = int(v['hours']) if v['hours'] is not None else 0,
-            minutes = int(v['minutes']) if v['minutes'] is not None else 0,
-            seconds = int(v['seconds']) if v['seconds'] is not None else 0,
+            days=int(v["days"]) if v["days"] is not None else 0,
+            hours=int(v["hours"]) if v["hours"] is not None else 0,
+            minutes=int(v["minutes"]) if v["minutes"] is not None else 0,
+            seconds=int(v["seconds"]) if v["seconds"] is not None else 0,
         )
         logging.info("Youtube.durationToTimeDelta %s", str(td))
         return str(td)
@@ -45,25 +46,38 @@ class Youtube(plugin.Plugin):
     def process(self, id, server, channel):
         logging.info("Youtube.process id %s", id)
         response = requests.get(
-            'https://www.googleapis.com/youtube/v3/videos',
-            params={'id': id, "part": "id,snippet,contentDetails,statistics", "key": self.settings['key']},
+            "https://www.googleapis.com/youtube/v3/videos",
+            params={
+                "id": id,
+                "part": "id,snippet,contentDetails,statistics",
+                "key": self.settings["key"],
+            },
         )
         logging.info("Youtube.process response %s", response)
         json = response.json()
-        data = json['items'][0]
+        data = json["items"][0]
         logging.info("Youtube.process json %s", data)
 
-        title = data['snippet']['title']
-        channelTitle = data['snippet']['channelTitle']
-        duration = Youtube.durationToTimeDelta(data['contentDetails']['duration'])
-        views = int(data['statistics']['viewCount'])
+        title = data["snippet"]["title"]
+        channelTitle = data["snippet"]["channelTitle"]
+        duration = Youtube.durationToTimeDelta(data["contentDetails"]["duration"])
+        views = int(data["statistics"]["viewCount"])
 
-        logging.info("Youtube.process msg %s", "{} - {} [{}] ({:n} views)".format(channelTitle, title, duration, views))
+        logging.info(
+            "Youtube.process msg %s",
+            "{} - {} [{}] ({:n} views)".format(channelTitle, title, duration, views),
+        )
 
-        self.privmsg(server, channel, "{} - {} [{}] ({:n} views)".format(channelTitle, title, duration, views))
+        self.privmsg(
+            server,
+            channel,
+            "{} - {} [{}] ({:n} views)".format(channelTitle, title, duration, views),
+        )
 
     def on_pubmsg(self, server, user, channel, message):
-        logging.info("Youtube.process response %r", re.findall(Youtube.URL_REGEX, message))
+        logging.info(
+            "Youtube.process response %r", re.findall(Youtube.URL_REGEX, message)
+        )
         for id in re.findall(Youtube.URL_REGEX, message):
             logging.info("Youtube.on_pubmsg %s", id)
             try:

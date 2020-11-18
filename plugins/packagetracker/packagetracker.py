@@ -9,7 +9,7 @@ import plugin
 import plugins.packagetracker.provider_postnord
 import plugins.packagetracker.provider_schenker
 
-__author__ = 'tigge'
+__author__ = "tigge"
 
 
 class PackageTracker(plugin.Plugin):
@@ -26,7 +26,9 @@ class PackageTracker(plugin.Plugin):
         logging.info("PackageTracker.started %s", settings)
         self.settings = json.loads(settings)
 
-        plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(self.settings["postnord"]["apikey"])
+        plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(
+            self.settings["postnord"]["apikey"]
+        )
 
     def update(self):
         self.ticks += 1
@@ -51,23 +53,37 @@ class PackageTracker(plugin.Plugin):
             else:
                 self.privmsg(server, channel, "Package not found...")
         elif message.startswith("!listpackages"):
-            self.privmsg(server, channel, "Listing {0} packages...".format(len(self.packages)))
+            self.privmsg(
+                server, channel, "Listing {0} packages...".format(len(self.packages))
+            )
             for package in self.packages:
                 self.privmsg(server, channel, str(package.id))
 
     def add_package_id(self, package_id, server, user, channel):
         package = None
-        if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(package_id):
-            package = plugins.packagetracker.provider_postnord.PostnordPackage(package_id)
-        if plugins.packagetracker.provider_schenker.SchenkerPackage.is_package(package_id):
-            package = plugins.packagetracker.provider_schenker.SchenkerPackage(package_id)
+        if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(
+            package_id
+        ):
+            package = plugins.packagetracker.provider_postnord.PostnordPackage(
+                package_id
+            )
+        if plugins.packagetracker.provider_schenker.SchenkerPackage.is_package(
+            package_id
+        ):
+            package = plugins.packagetracker.provider_schenker.SchenkerPackage(
+                package_id
+            )
 
         if package is not None:
             package.server = server
             package.channel = channel
-            package.user = user.split('!', 1)[0]
+            package.user = user.split("!", 1)[0]
             self.add_package(package)
-            self.privmsg(server, channel, "Package ({}, {}) added...".format(package.get_type(), package.id))
+            self.privmsg(
+                server,
+                channel,
+                "Package ({}, {}) added...".format(package.get_type(), package.id),
+            )
         else:
             self.privmsg(server, channel, "Package not found in any provider...")
 
@@ -85,9 +101,13 @@ class PackageTracker(plugin.Plugin):
         self.packages.remove(package)
 
     def on_event(self, package, event):
-        self.privmsg(package.server, package.channel,
-                     "{0}: {1} - {2:%Y-%m-%d %H:%M}: {3}".format(package.user, package.id, event.datetime,
-                                                                 event.description))
+        self.privmsg(
+            package.server,
+            package.channel,
+            "{0}: {1} - {2:%Y-%m-%d %H:%M}: {3}".format(
+                package.user, package.id, event.datetime, event.description
+            ),
+        )
 
 
 if __name__ == "__main__":

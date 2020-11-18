@@ -12,7 +12,7 @@ class Twitter(plugin.Plugin):
 
     MAX_LINE_COUNT = 16
 
-    URL_REGEX = re.compile(r'https?:\/\/twitter.com\/([A-Za-z0-9_]+)\/status\/([0-9]+)')
+    URL_REGEX = re.compile(r"https?:\/\/twitter.com\/([A-Za-z0-9_]+)\/status\/([0-9]+)")
 
     def __init__(self):
         plugin.Plugin.__init__(self, "twitter")
@@ -25,14 +25,14 @@ class Twitter(plugin.Plugin):
     def process(self, id, server, channel):
         logging.info("Twitter.process id %s", id)
         response = requests.get(
-            'https://api.twitter.com/1.1/statuses/show.json', 
-            params={'id': id, "tweet_mode": "extended"},
-            headers={'Authorization': 'Bearer {}'.format(self.settings['bearer'])}
+            "https://api.twitter.com/1.1/statuses/show.json",
+            params={"id": id, "tweet_mode": "extended"},
+            headers={"Authorization": "Bearer {}".format(self.settings["bearer"])},
         )
         logging.info("Twitter.process response %s", response)
         data = response.json()
         logging.info("Twitter.process json %s", data)
-        for line in data['full_text'].splitlines():
+        for line in data["full_text"].splitlines():
             self.privmsg(server, channel, line)
 
     def on_pubmsg(self, server, user, channel, message):

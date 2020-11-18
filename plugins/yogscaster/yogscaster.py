@@ -9,9 +9,14 @@ import plugin
 
 class Yogscaster(plugin.Plugin):
 
-    ARTICLE_REGEX = re.compile(r'<article id="latest"[^>]*>(.*)</article>', re.IGNORECASE | re.DOTALL)
-    LI_REGEX = re.compile(r'<li><figure data-code="([^"]*)" title="([^"]*)" class="([^"]*)">.*</li>', re.IGNORECASE | re.DOTALL)
-    WHITESPACE_REGEX = re.compile(r'\s+')
+    ARTICLE_REGEX = re.compile(
+        r'<article id="latest"[^>]*>(.*)</article>', re.IGNORECASE | re.DOTALL
+    )
+    LI_REGEX = re.compile(
+        r'<li><figure data-code="([^"]*)" title="([^"]*)" class="([^"]*)">.*</li>',
+        re.IGNORECASE | re.DOTALL,
+    )
+    WHITESPACE_REGEX = re.compile(r"\s+")
     SITE_URL = "http://www.yogscast.com"
 
     def __init__(self):
@@ -31,9 +36,9 @@ class Yogscaster(plugin.Plugin):
         article = Yogscaster.ARTICLE_REGEX.search(text).group(0)
         item = Yogscaster.LI_REGEX.search(article)
         video = dict()
-        video["link"] = Yogscaster.SITE_URL + '/video/' + item.group(1)
+        video["link"] = Yogscaster.SITE_URL + "/video/" + item.group(1)
         video["title"] = item.group(2)
-        video["author"] = item.group(3).split(' ')[1]
+        video["author"] = item.group(3).split(" ")[1]
         return video
 
     def echo(self, message):
@@ -50,10 +55,17 @@ class Yogscaster(plugin.Plugin):
         if self.count % self.update_freq == 0:
             logging.info("Yogscaster.update")
             latest = Yogscaster.poll_site()
-            if self.latest != latest["title"] and latest["author"] in self.settings["whitelist"]:
+            if (
+                self.latest != latest["title"]
+                and latest["author"] in self.settings["whitelist"]
+            ):
                 logging.info("Latest: ", latest)
                 self.latest = latest["title"]
-                message = "%s: %s %s" % (latest["author"], latest["link"], latest["title"])
+                message = "%s: %s %s" % (
+                    latest["author"],
+                    latest["link"],
+                    latest["title"],
+                )
                 self.echo(message)
 
 

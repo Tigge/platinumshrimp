@@ -23,4 +23,3 @@ class Package:
 
     def update(self):
         pass
-

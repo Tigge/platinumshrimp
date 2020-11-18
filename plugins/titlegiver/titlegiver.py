@@ -11,12 +11,14 @@ from utils import url_parser, auto_requests
 
 class Titlegiver(plugin.Plugin):
 
-    TITLE_REGEX = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
-    WHITESPACE_REGEX = re.compile(r'\s+')
+    TITLE_REGEX = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+    WHITESPACE_REGEX = re.compile(r"\s+")
 
     MAX_CONTENT_LENGTH = 64 * 1024
-    USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/43.0.2357.37 Safari/537.36")
+    USER_AGENT = (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/43.0.2357.37 Safari/537.36"
+    )
     MAX_LINE_COUNT = 16
 
     def __init__(self):
@@ -25,8 +27,12 @@ class Titlegiver(plugin.Plugin):
     @staticmethod
     def get_title_from_url(url):
         # Fetch page (no need to verfiy SSL certs for titles)
-        response = auto_requests.get(url, verify=False, headers={"User-Agent": Titlegiver.USER_AGENT, "Accept-Language": "en_US"})
-        content = response.text[:Titlegiver.MAX_CONTENT_LENGTH]
+        response = auto_requests.get(
+            url,
+            verify=False,
+            headers={"User-Agent": Titlegiver.USER_AGENT, "Accept-Language": "en_US"},
+        )
+        content = response.text[: Titlegiver.MAX_CONTENT_LENGTH]
 
         # Avoid leaving dangling redirects when we've got the content
         response.connection.close()
@@ -36,7 +42,9 @@ class Titlegiver(plugin.Plugin):
     @staticmethod
     def find_title_in_content(text):
         try:
-            title = Titlegiver.WHITESPACE_REGEX.sub(" ", Titlegiver.TITLE_REGEX.search(text).group(1))
+            title = Titlegiver.WHITESPACE_REGEX.sub(
+                " ", Titlegiver.TITLE_REGEX.search(text).group(1)
+            )
             return Titlegiver.unescape_entities(title)
         except:
             logging.exception("Regexp or unescape failed")
@@ -56,7 +64,7 @@ class Titlegiver(plugin.Plugin):
                 pass  # Fall through to default return
             return match.group(0)
 
-        return re.sub(r'&([#a-zA-Z0-9]+);', replace_entity, text)
+        return re.sub(r"&([#a-zA-Z0-9]+);", replace_entity, text)
 
     @staticmethod
     # Split a given string and remove empty lines
@@ -69,7 +77,7 @@ class Titlegiver(plugin.Plugin):
     def process(self, url, server, channel):
 
         parts = urllib.parse.urlparse(url)
-        if parts.netloc in self.settings['blacklist']:
+        if parts.netloc in self.settings["blacklist"]:
             logging.info("Blacklisted %s", url)
             return
 

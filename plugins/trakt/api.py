@@ -24,9 +24,11 @@ class Trakt(object):
         headers = {
             "Content-Type": "application/json",
             "trakt-api-version": "2",
-            "trakt-api-key": self.key
+            "trakt-api-key": self.key,
         }
-        response = requests.get(Trakt.API_URL + url, headers=headers, verify=False, params=params)
+        response = requests.get(
+            Trakt.API_URL + url, headers=headers, verify=False, params=params
+        )
 
         if response.status_code not in [200, 201, 204]:
             if response.status_code == 400:
@@ -67,17 +69,27 @@ class Trakt(object):
                     return
                 yield item
 
-            if "X-Pagination-Page" not in response.headers or "X-Pagination-Page-Count" not in response.headers:
+            if (
+                "X-Pagination-Page" not in response.headers
+                or "X-Pagination-Page-Count" not in response.headers
+            ):
                 return
-            if response.headers["X-Pagination-Page"] >= response.headers["X-Pagination-Page-Count"]:
+            if (
+                response.headers["X-Pagination-Page"]
+                >= response.headers["X-Pagination-Page-Count"]
+            ):
                 return
             params["page"] = int(response.headers["X-Pagination-Page"]) + 1
 
     def users_history(self, user, typ, accept_function=None, extended="min"):
-        return self._get_all(Trakt.API_USERS_HISTORY.format(user, typ), accept_function, extended)
+        return self._get_all(
+            Trakt.API_USERS_HISTORY.format(user, typ), accept_function, extended
+        )
 
     def users_ratings(self, user, typ, accept_function=None, extended="min"):
-        return self._get_all(Trakt.API_USERS_RATINGS.format(user, typ), accept_function, extended)
+        return self._get_all(
+            Trakt.API_USERS_RATINGS.format(user, typ), accept_function, extended
+        )
 
     def seasons_summary(self, show, extended="min"):
         return self._get_all(Trakt.API_SEASONS_SUMMARY.format(show), extended=extended)
