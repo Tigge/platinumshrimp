@@ -1,5 +1,7 @@
+import asyncio
 import ssl
 import sys
+import signal
 import os
 import json
 import time
@@ -8,29 +10,32 @@ import tempfile
 from utils import settings
 
 import zmq
-import irc.client
+import zmq.asyncio
+import irc.client_aio
 import jaraco.stream
 
 
 class PluginInterface:
-    def __init__(self, name, bot):
+    def __init__(self, name, bot, pid):
 
         logging.info("PluginInterface.__init__ %s", "ipc://ipc_plugin_" + name)
         self.name = name
         self.bot = bot
+        self.pid = pid
         socket_path = os.path.join(self.bot.temp_folder, "ipc_plugin_" + name)
 
-        context = zmq.Context()
+        context = zmq.asyncio.Context()
 
         self._socket_plugin = context.socket(zmq.PAIR)
         self._socket_plugin.bind("ipc://" + os.path.abspath(socket_path))
 
-        self._poller = zmq.Poller()
+        self._poller = zmq.asyncio.Poller()
         self._poller.register(self._socket_plugin, zmq.POLLIN)
 
         self.bot.plugin_started(self)
 
     def _recieve(self, data):
+        print(data)
         logging.info("PluginInterface._recieve %s", data)
         if data["function"] == "_save_settings":
             new_plugin_settings = json.loads(data["params"][0])
@@ -96,15 +101,13 @@ class PluginInterface:
     def _call(self, function, *args):
         self._socket_plugin.send_json({"function": function, "params": args})
 
-    def process_once(self, timeout=0):
-        try:
-            socks = dict(self._poller.poll(timeout=timeout))
-        except KeyboardInterrupt:
-            return
+    async def run(self):
+        while True:
+            socks = dict(await self._poller.poll())
 
-        if self._socket_plugin in socks:
-            logging.info("PluginInterface.update %s", self._socket_plugin)
-            self._recieve(self._socket_plugin.recv_json())
+            if self._socket_plugin in socks:
+                logging.info("PluginInterface.update %s", self._socket_plugin)
+                self._recieve(await self._socket_plugin.recv_json())
 
     def __getattr__(self, name):
         logging.info("PluginInterface.__getattr__ %s", name)
@@ -130,39 +133,10 @@ class Bot:
         self.servers = dict()
         self.temp_folder = temp_folder
 
-        self.reactor = irc.client.Reactor()
-        self.reactor.add_global_handler("all_events", self._dispatcher, -10)
-
-        # Load plugins
-        if "plugins" in self.settings:
-            for plugin_name, plugin_settings in self.settings["plugins"].items():
-                self.load_plugin(plugin_name, plugin_settings)
-
-        # Connect to servers
-        servers = self.settings["servers"]
-        for server_name, server_settings in servers.items():
-            logging.info("Connecting to %r %r", server_name, server_settings)
-            s = self.reactor.server()
-            self.servers[server_name] = s
-            s.name = server_name
-            s.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
-            use_ssl = "ssl" in server_settings and server_settings["ssl"]
-            factory = (
-                irc.connection.Factory(wrapper=ssl.wrap_socket)
-                if use_ssl
-                else irc.connection.Factory()
-            )
-            s.connect(
-                server_settings["host"],
-                server_settings["port"],
-                nickname=self.settings["nickname"],
-                ircname=self.settings["realname"],
-                username=self.settings["username"],
-                connect_factory=factory,
-            )
-
-    def reconnect(self, connection):
-        if not connection.is_connected():
+    async def reconnect(self, connection):
+        while not connection.is_connected():
+            logging.error("Waiting 30 seconds to reconnect")
+            await asyncio.sleep(30)
             connection.reconnect()
 
     def _dispatcher(self, connection, event):
@@ -170,7 +144,7 @@ class Bot:
             return
 
         if event.type == "disconnect":
-            self.reactor.scheduler.execute_after(30, lambda: self.reconnect(connection))
+            asyncio.create_task(self.reconnect(connection))
 
         for plugin in self.plugins:
             plugin._call(
@@ -196,13 +170,13 @@ class Bot:
             )
             environment = os.environ
             environment.update(PYTHONPATH=os.getcwd())
-            os.spawnvpe(
+            pid = os.spawnvpe(
                 os.P_NOWAIT,
                 sys.executable,
                 args=[sys.executable, file_name, "--socket_path", self.temp_folder],
                 env=environment,
             )
-            self.plugins.append(PluginInterface(name, self))
+            self.plugins.append(PluginInterface(name, self, pid))
 
     def plugin_started(self, plugin):
         logging.info("Bot.plugin_started %s, %s", plugin, self.settings)
@@ -210,21 +184,67 @@ class Bot:
         for plugin_name, plugin_settings in self.settings["plugins"].items():
             if plugin_name == plugin.name:
                 plugin.started(json.dumps(plugin_settings))
-                self.reactor.scheduler.execute_every(1.0, plugin.update)
+                self.loop.create_task(self.plugin_update(plugin))
+                self.loop.create_task(plugin.run())
+                # self.reactor.scheduler.execute_every(1.0, plugin.update)
                 logging.debug("Bot.plugin_started, settings %r", plugin_settings)
                 break
 
-    def run(self):
+    async def plugin_update(self, plugin):
         while True:
-            self.reactor.process_once(timeout=0.1)
+            plugin.update()
+            await asyncio.sleep(1)
 
-            for plugin in self.plugins:
-                plugin.process_once(timeout=0)
+    def run(self):
 
-            time.sleep(0)  # yield
+        self.loop = asyncio.get_event_loop()
+        self.reactor = irc.client_aio.AioReactor(loop=self.loop)
+        self.reactor.add_global_handler("all_events", self._dispatcher, -10)
+
+        # Load plugins
+        if "plugins" in self.settings:
+            for plugin_name, plugin_settings in self.settings["plugins"].items():
+                self.load_plugin(plugin_name, plugin_settings)
+
+        # Connect to servers
+        servers = self.settings["servers"]
+        for server_name, server_settings in servers.items():
+            logging.info("Connecting to %r %r", server_name, server_settings)
+            server = self.reactor.server()
+            self.servers[server_name] = server
+            server.name = server_name
+            server.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
+            use_ssl = "ssl" in server_settings and server_settings["ssl"]
+            factory = irc.connection.AioFactory(ssl=use_ssl)
+            self.loop.run_until_complete(
+                server.connect(
+                    server_settings["host"],
+                    server_settings["port"],
+                    nickname=self.settings["nickname"],
+                    ircname=self.settings["realname"],
+                    username=self.settings["username"],
+                    connect_factory=factory,
+                )
+            )
+
+        try:
+            self.reactor.process_forever()
+        except:
+            pass
+
+        # Request termination of plugins
+        for plugin in self.plugins:
+            os.kill(plugin.pid, signal.SIGTERM)
+
+        self.loop.close()
+        sys.exit(1)
 
 
-if __name__ == "__main__":
+def main():
     with tempfile.TemporaryDirectory(prefix="platinumshrimp_") as temp_folder:
         bot = Bot(temp_folder)
         bot.run()
+
+
+if __name__ == "__main__":
+    main()
