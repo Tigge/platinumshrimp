@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "platinumshrimp"
+version = "0.1.0"
+description = ""
+license = "MIT"
+authors = ["Gustav Tiger <gustav@tiger.name>"]
+
+readme = "README.md"
+
+homepage = "https://github.com/Tigge/platinumshrimp"
+repository = "https://github.com/Tigge/platinumshrimp.git"
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Communications :: Chat :: Internet Relay Chat",
+]
+
+packages = [
+    { include = "**/*.py" },
+]
+
+[tool.poetry.scripts]
+platinumshrimp = "bot:main"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+python-dateutil = "^2.8.1"
+requests = "^2.25.0"
+feedparser = "^6.0.2"
+irc = "^19.0.1"
+pyzmq = "^20.0.0"
+
+[tool.poetry.dev-dependencies]
+requests-mock = "^1.8.0"
+black = "^20.8b1"
+rope = "^0.18.0"
+coverage = "^5.3"
+
+[build-system]
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.masonry.api"
