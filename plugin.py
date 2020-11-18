@@ -1,9 +1,12 @@
+import asyncio
 import logging
 import locale
 import threading
 import zmq
+import zmq.asyncio
 import tempfile
 import argparse
+import sys
 
 __author__ = "tigge"
 
@@ -22,7 +25,7 @@ class Plugin:
         locale.setlocale(locale.LC_ALL, "")
         logging.basicConfig(filename=name + ".log", level=logging.DEBUG)
 
-        context = zmq.Context()
+        context = zmq.asyncio.Context()
 
         args, _ = plugin_argparser.parse_known_args()
         self.socket_base_path = args.socket_path
@@ -37,7 +40,7 @@ class Plugin:
             "ipc://" + self.socket_base_path + "/ipc_plugin_" + name + "_workers"
         )
 
-        self._poller = zmq.Poller()
+        self._poller = zmq.asyncio.Poller()
         self._poller.register(self._socket_bot, zmq.POLLIN)
         self._poller.register(self._socket_workers, zmq.POLLIN)
 
@@ -92,24 +95,32 @@ class Plugin:
         thread = threading.Thread(target=starter)
         thread.start()
 
-    def _run(self):
+    async def _run(self):
         while True:
-            try:
-                socks = dict(self._poller.poll())
-            except KeyboardInterrupt:
-                break
+            socks = dict(await self._poller.poll())
 
             if self._socket_bot in socks:
-                self._recieve(self._socket_bot.recv_json())
+                self._recieve(await self._socket_bot.recv_json())
 
             if self._socket_workers in socks:
-                self._socket_bot.send(self._socket_workers.recv())
+                self._socket_bot.send(await self._socket_workers.recv())
 
     @classmethod
     def run(cls):
+
+        loop = asyncio.get_event_loop()
+
         instance = cls()
         logging.info("Plugin.run %s, %s", cls, instance)
-        instance._run()
+
+        loop.create_task(instance._run())
+        try:
+            loop.run_forever()
+        except:
+            logging.exception("Plugin.run aborted")
+
+        loop.close()
+        sys.exit(1)
 
     def __getattr__(self, name):
         # List covers available commands to be sent to the IRC server
