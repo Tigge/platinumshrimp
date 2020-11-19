@@ -59,8 +59,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
 
+        ip = "localhost:{}".format(self.server.server_port).encode("ascii")
+
         with open(dir + "/" + urllib.parse.unquote(self.path), "br") as fp:
-            self.wfile.write(fp.read())
+            self.wfile.write(fp.read().replace("$ADDRESS".encode("ascii"), ip))
 
     def do_GET(self):
 
@@ -81,10 +83,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
 class TitlegiverTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.http_server = http.server.HTTPServer(("", 8880), Handler)
+        cls.http_server = http.server.HTTPServer(("", 0), Handler)
         cls.http_server_thread = threading.Thread(target=cls.http_server.serve_forever)
         cls.http_server_thread.start()
-        cls.URL = "http://localhost:8880"
+        cls.URL = "http://localhost:{}".format(cls.http_server.server_port)
 
     @classmethod
     def tearDownClass(cls):
