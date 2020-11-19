@@ -1,32 +1,36 @@
 platinumshrimp
 =================================================
 
-[![Travis CI Build Status](https://travis-ci.com/Tigge/platinumshrimp.svg?branch=master)](https://travis-ci.com/Tigge/platinumshrimp)
+[![Build status](https://github.com/Tigge/platinumshrimp/workflows/Build/badge.svg)](https://github.com/Tigge/platinumshrimp/actions?query=workflow%3ABuild)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Packaging: poetry](https://img.shields.io/badge/packaging-poetry-%23299BD7)](https://python-poetry.org/)
 
 
 Get the code:
 
- - git clone https://github.com/Tigge/platinumshrimp.git
+ - `git clone https://github.com/Tigge/platinumshrimp.git`
+
+Install poetry:
+
+ - `curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -`
 
 Install dependencies in Debian/Ubuntu:
 
  - `sudo apt-get install python3-pip libzmq3-dev`
- - `sudo pip3 install requests requests-mock feedparser python-dateutil pyzmq irc`
+ - `poetry update`
 
 Install dependencies in Fedora:
 
  - `sudo dnf install python3-devel python3-pip zeromq-devel`
- - `sudo pip-python3 install requests requests-mock feedparser python-dateutil pyzmq irc six`
+ - `poetry update`
 
 Run plugins unit tests:
 
- - `python3 -m unittest discover -v`
+ - `poetry run python -m unittest discover -v`
 
 Run:
 
- - `python3 bot.py`
+ - `poetry run python bot.py`
 
 Clean up:
 
