@@ -9,12 +9,14 @@ pyvenv.cfg
 
 # Packaging
 *.egg-info/
+dist/
 
 # Backups
 *~
 
-# PyCharm
+# Editors
 .idea/
+.vscode/
 
 # Platinumshrimp files
 *.log
