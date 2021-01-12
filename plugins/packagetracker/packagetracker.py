@@ -8,6 +8,8 @@ import sys
 import plugin
 import plugins.packagetracker.provider_postnord
 import plugins.packagetracker.provider_schenker
+import plugins.packagetracker.provider_budbee
+import plugins.packagetracker.provider_dhl
 
 __author__ = "tigge"
 
@@ -28,6 +30,10 @@ class PackageTracker(plugin.Plugin):
 
         plugins.packagetracker.provider_postnord.PostnordPackage.set_apikey(
             self.settings["postnord"]["apikey"]
+        )
+
+        plugins.packagetracker.provider_dhl.DHLPackage.set_apikey(
+            self.settings["dhl"]["apikey"]
         )
 
     def update(self):
@@ -73,6 +79,10 @@ class PackageTracker(plugin.Plugin):
             package = plugins.packagetracker.provider_schenker.SchenkerPackage(
                 package_id
             )
+        if plugins.packagetracker.provider_budbee.BudbeePackage.is_package(package_id):
+            package = plugins.packagetracker.provider_budbee.BudbeePackage(package_id)
+        if plugins.packagetracker.provider_dhl.DHLPackage.is_package(package_id):
+            package = plugins.packagetracker.provider_dhl.DHLPackage(package_id)
 
         if package is not None:
             package.server = server
@@ -91,6 +101,7 @@ class PackageTracker(plugin.Plugin):
         logging.info("PackageTracker.add_package '%s'", package.id)
         package.on_event = lambda event: self.on_event(package, event)
         self.packages.append(package)
+        # self._thread(self.update_package, package)
 
     def update_package(self, package):
         logging.info("PackageTracker.update_package '%s'", package.id)
