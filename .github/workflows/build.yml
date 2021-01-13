@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install coveralls
-          coveralls
+          coveralls --service=github
 
       - name: Build
         run: |
