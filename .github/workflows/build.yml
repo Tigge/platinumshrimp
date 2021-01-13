@@ -35,11 +35,9 @@ jobs:
           poetry run coverage run --source=. -m unittest discover -v
 
       - name: Coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip install coveralls
-          coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: |
