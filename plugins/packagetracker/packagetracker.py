@@ -10,6 +10,7 @@ import plugins.packagetracker.provider_postnord
 import plugins.packagetracker.provider_schenker
 import plugins.packagetracker.provider_budbee
 import plugins.packagetracker.provider_dhl
+import plugins.packagetracker.provider_bring
 
 __author__ = "tigge"
 
@@ -83,6 +84,8 @@ class PackageTracker(plugin.Plugin):
             package = plugins.packagetracker.provider_budbee.BudbeePackage(package_id)
         if plugins.packagetracker.provider_dhl.DHLPackage.is_package(package_id):
             package = plugins.packagetracker.provider_dhl.DHLPackage(package_id)
+        if plugins.packagetracker.provider_bring.BringPackage.is_package(package_id):
+            package = plugins.packagetracker.provider_bring.BringPackage(package_id)
 
         if package is not None:
             package.server = server
