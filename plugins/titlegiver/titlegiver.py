@@ -1,4 +1,3 @@
-import html
 import re
 import sys
 import logging
@@ -6,7 +5,7 @@ import urllib
 import json
 
 import plugin
-from utils import url_parser, auto_requests
+from utils import url_parser, auto_requests, str_utils
 
 
 class Titlegiver(plugin.Plugin):
@@ -45,26 +44,10 @@ class Titlegiver(plugin.Plugin):
             title = Titlegiver.WHITESPACE_REGEX.sub(
                 " ", Titlegiver.TITLE_REGEX.search(text).group(1)
             )
-            return Titlegiver.unescape_entities(title)
+            return str_utils.unescape_entities(title)
         except:
             logging.exception("Regexp or unescape failed")
             return None
-
-    @staticmethod
-    def unescape_entities(text):
-        def replace_entity(match):
-            try:
-                if match.group(1) in html.entities.name2codepoint:
-                    return chr(html.entities.name2codepoint[match.group(1)])
-                elif match.group(1).lower().startswith("#x"):
-                    return chr(int(match.group(1)[2:], 16))
-                elif match.group(1).startswith("#"):
-                    return chr(int(match.group(1)[1:]))
-            except (ValueError, KeyError):
-                pass  # Fall through to default return
-            return match.group(0)
-
-        return re.sub(r"&([#a-zA-Z0-9]+);", replace_entity, text)
 
     @staticmethod
     # Split a given string and remove empty lines

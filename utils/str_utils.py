@@ -1,3 +1,6 @@
+import re
+import html
+
 # The regular string.split() only takes a max number of splits,
 # but it won't unpack if there aren't enough values.
 # This function ensures that we always get the wanted
@@ -16,3 +19,20 @@ def split(s, sep, count):
 # Sanitize a string by removing all new lines and extra spaces
 def sanitize_string(s):
     return " ".join(s.split()).strip()
+
+
+# Unescape HTML/XML entities
+def unescape_entities(text):
+    def replace_entity(match):
+        try:
+            if match.group(1) in html.entities.name2codepoint:
+                return chr(html.entities.name2codepoint[match.group(1)])
+            elif match.group(1).lower().startswith("#x"):
+                return chr(int(match.group(1)[2:], 16))
+            elif match.group(1).startswith("#"):
+                return chr(int(match.group(1)[1:]))
+        except (ValueError, KeyError):
+            pass  # Fall through to default return
+        return match.group(0)
+
+    return re.sub(r"&([#a-zA-Z0-9]+);", replace_entity, text)

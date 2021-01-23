@@ -7,6 +7,8 @@ import requests
 
 import plugin
 
+from utils import str_utils
+
 
 class Twitter(plugin.Plugin):
 
@@ -27,14 +29,17 @@ class Twitter(plugin.Plugin):
     def process(self, id, server, channel):
         logging.info("Twitter.process id %s", id)
         response = requests.get(
-            "https://api.twitter.com/1.1/statuses/show.json",
-            params={"id": id, "tweet_mode": "extended"},
+            f"https://api.twitter.com/2/tweets/{id}",
+            params={
+                "expansions": "author_id",
+                "tweet.fields": "created_at,public_metrics",
+            },
             headers={"Authorization": "Bearer {}".format(self.settings["bearer"])},
         )
         logging.info("Twitter.process response %s", response)
         data = response.json()
         logging.info("Twitter.process json %s", data)
-        for line in data["full_text"].splitlines():
+        for line in str_utils.unescape_entities(data["data"]["text"]).splitlines():
             self.privmsg(server, channel, line)
 
     def on_pubmsg(self, server, user, channel, message):
