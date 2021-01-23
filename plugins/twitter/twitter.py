@@ -12,7 +12,9 @@ class Twitter(plugin.Plugin):
 
     MAX_LINE_COUNT = 16
 
-    URL_REGEX = re.compile(r"https?:\/\/twitter.com\/([A-Za-z0-9_]+)\/status\/([0-9]+)")
+    URL_REGEX = re.compile(
+        r"(?:(?:https?\:)?//)?((?:www|mobile)[\.])?twitter.com/([a-zA-Z0-9_]{1,15})/status/([0-9]+)"
+    )
 
     def __init__(self):
         plugin.Plugin.__init__(self, "twitter")
@@ -36,7 +38,7 @@ class Twitter(plugin.Plugin):
             self.privmsg(server, channel, line)
 
     def on_pubmsg(self, server, user, channel, message):
-        for (_, id) in re.findall(Twitter.URL_REGEX, message):
+        for (_, _, id) in re.findall(Twitter.URL_REGEX, message):
             logging.info("Twitter.on_pubmsg %s", id)
             try:
                 self._thread(self.process, id, server, channel)
