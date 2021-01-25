@@ -4,10 +4,15 @@ import sys
 import logging
 import json
 import requests
+import datetime
+import dateutil
+import dateutil.parser
 
 import plugin
 
 from utils import str_utils
+from utils import date_utils
+from utils import number_utils
 
 
 class Twitter(plugin.Plugin):
@@ -39,8 +44,24 @@ class Twitter(plugin.Plugin):
         logging.info("Twitter.process response %s", response)
         data = response.json()
         logging.info("Twitter.process json %s", data)
+
         for line in str_utils.unescape_entities(data["data"]["text"]).splitlines():
-            self.privmsg(server, channel, line)
+            message = line if line != "" else " "
+            self.privmsg(server, channel, message)
+
+        user = data["includes"]["users"][0]
+        author = f'@{user["username"]} ({user["name"]})'
+
+        date = dateutil.parser.parse(data["data"]["created_at"])
+        date_diff = date_utils.format(
+            date, datetime.datetime.now(datetime.timezone.utc)
+        )
+
+        metrics = data["data"]["public_metrics"]
+        stats = f'🗩 {number_utils.format(metrics["reply_count"])} • 🗘 {number_utils.format(metrics["retweet_count"])} • ♥ {number_utils.format(metrics["like_count"])}'
+
+        self.privmsg(server, channel, " ")
+        self.privmsg(server, channel, f"- {author} • {date_diff} • {stats}")
 
     def on_pubmsg(self, server, user, channel, message):
         for (_, _, id) in re.findall(Twitter.URL_REGEX, message):
