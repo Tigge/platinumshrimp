@@ -9,6 +9,8 @@ import locale
 
 import plugin
 
+from utils import number_utils
+
 
 class Youtube(plugin.Plugin):
 
@@ -59,19 +61,18 @@ class Youtube(plugin.Plugin):
         logging.info("Youtube.process json %s", data)
 
         title = data["snippet"]["title"]
-        channelTitle = data["snippet"]["channelTitle"]
         duration = Youtube.durationToTimeDelta(data["contentDetails"]["duration"])
         views = int(data["statistics"]["viewCount"])
 
         logging.info(
             "Youtube.process msg %s",
-            "{} - {} [{}] ({:n} views)".format(channelTitle, title, duration, views),
+            "{} [{}] ({} views)".format(title, duration, number_utils.format(views)),
         )
 
         self.privmsg(
             server,
             channel,
-            "{} - {} [{}] ({:n} views)".format(channelTitle, title, duration, views),
+            "{} [{}] ({} views)".format(title, duration, number_utils.format(views)),
         )
 
     def on_pubmsg(self, server, user, channel, message):
