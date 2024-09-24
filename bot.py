@@ -203,14 +203,18 @@ class Bot:
 
     def run(self):
 
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         self.reactor = irc.client_aio.AioReactor(loop=self.loop)
         self.reactor.add_global_handler("all_events", self._dispatcher, -10)
 
         # Load plugins
-        if "plugins" in self.settings:
-            for plugin_name, plugin_settings in self.settings["plugins"].items():
-                self.load_plugin(plugin_name, plugin_settings)
+        async def load_plugins():
+            if "plugins" in self.settings:
+                for plugin_name, plugin_settings in self.settings["plugins"].items():
+                    self.load_plugin(plugin_name, plugin_settings)
+
+        self.loop.run_until_complete(load_plugins())
 
         # Connect to servers
         servers = self.settings["servers"]
@@ -221,7 +225,10 @@ class Bot:
             server.name = server_name
             server.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
             use_ssl = "ssl" in server_settings and server_settings["ssl"]
-            factory = irc.connection.AioFactory(ssl=use_ssl)
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            factory = irc.connection.AioFactory(ssl=ssl_context if use_ssl else None)
             self.loop.run_until_complete(
                 server.connect(
                     server_settings["host"],

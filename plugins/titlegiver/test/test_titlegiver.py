@@ -99,69 +99,69 @@ class TitlegiverTestCase(unittest.TestCase):
         result = Titlegiver.get_title_from_url(
             self.URL + "/redirect?count=10&url={0}".format(url)
         )
-        self.assertEqual(result, u"Simple")
+        self.assertEqual(result, "Simple")
 
     def test_meta_redirect(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/meta_redirect")
-        self.assertEqual(result, u"Simple")
+        self.assertEqual(result, "Simple")
 
     def test_meta_redirect_in_noscript(self):
         result = Titlegiver.get_title_from_url(
             self.URL + "/pages/meta_redirect_in_noscript"
         )
-        self.assertEqual(result, u"Title without refreshing")
+        self.assertEqual(result, "Title without refreshing")
 
     def test_specialchars(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/specialchar")
         self.assertEqual(
             result,
-            u"Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_",
+            "Title with special characters §½!\"@#£¤$%&/{([)]=}+?\`´'^~*'<>|,;.:-_",
         )
 
     def test_linebreaks(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/linebreaks")
-        self.assertEqual(result, u"Title with line breaks and carriage returns")
+        self.assertEqual(result, "Title with line breaks and carriage returns")
 
     def test_attributes(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/attributes")
-        self.assertEqual(result, u'Title with attribute id="pageTitle"')
+        self.assertEqual(result, 'Title with attribute id="pageTitle"')
 
     def test_entities(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/entities")
         self.assertEqual(
             result,
-            u"Title with entities. "
-            u'XML: "& '
-            u"HTML: <Å©†♥ "
-            u"Int/hex: Hello "
-            u"Invalid: &#x23k;&#123456789;&fail;",
+            "Title with entities. "
+            'XML: "& '
+            "HTML: <Å©†♥ "
+            "Int/hex: Hello "
+            "Invalid: &#x23k;&#123456789;&fail;",
         )
 
     def test_nonascii(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/nönàscii")
-        self.assertEqual(result, u"Page with nön-àscii path")
+        self.assertEqual(result, "Page with nön-àscii path")
 
     def test_encoding_bom(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/encoding_bom")
-        self.assertEqual(result, u"Gådzölla - ゴジラ")
+        self.assertEqual(result, "Gådzölla - ゴジラ")
 
     def test_encoding_xmldecl(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/encoding_xmldecl")
-        self.assertEqual(result, u"Samoraj - 武家")
+        self.assertEqual(result, "Samoraj - 武家")
 
     def test_encoding_meta_charset(self):
         result = Titlegiver.get_title_from_url(
             self.URL + "/pages/encoding_meta_charset"
         )
-        self.assertEqual(result, u"Россия-Матушка")
+        self.assertEqual(result, "Россия-Матушка")
 
     def test_encoding_meta_httpequiv(self):
         result = Titlegiver.get_title_from_url(
             self.URL + "/pages/encoding_meta_httpequiv"
         )
-        self.assertEqual(result, u"올드보이")
+        self.assertEqual(result, "올드보이")
 
     def test_split_strip_and_slice(self):
         title = Titlegiver.get_title_from_url(self.URL + "/pages/linebreaks_with_cr")
         result = Titlegiver.split_strip_and_slice(title, 2)
-        self.assertEqual(result, [u"Line1", "Line2"])
+        self.assertEqual(result, ["Line1", "Line2"])
