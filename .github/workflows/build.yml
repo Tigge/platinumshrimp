@@ -38,7 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pip install coveralls
+          pip3 install --upgrade coveralls
           coveralls --service=github
 
       - name: Build
