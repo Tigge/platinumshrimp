@@ -20,15 +20,15 @@ HELP_MESSAGE = (
     "feed will be used instead."
 )
 
-REMOVING_FEED_MESSAGE = u"Removing: #{} - {}"
-LIST_FEED_ITEM_MESSAGE = u"#{}: {}"
-NO_FEED_MESSAGE = u"No feeds"
+REMOVING_FEED_MESSAGE = "Removing: #{} - {}"
+LIST_FEED_ITEM_MESSAGE = "#{}: {}"
+NO_FEED_MESSAGE = "No feeds"
 
 DEFAULT_FETCH_TIME = 10 * 60
 
 
 def FeedItemToString(title, link, feed_title=""):
-    return str_utils.sanitize_string(u"{}: {} <{}>".format(feed_title, title, link))
+    return str_utils.sanitize_string("{}: {} <{}>".format(feed_title, title, link))
 
 
 # Simple polling class, fetches the feed in a regular interval and passes

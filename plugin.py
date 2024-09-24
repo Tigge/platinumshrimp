@@ -22,6 +22,7 @@ plugin_argparser.add_argument(
 
 class Plugin:
     def __init__(self, name):
+
         locale.setlocale(locale.LC_ALL, "")
         logging.basicConfig(filename=name + ".log", level=logging.DEBUG)
 
@@ -108,7 +109,8 @@ class Plugin:
     @classmethod
     def run(cls):
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
         instance = cls()
         logging.info("Plugin.run %s, %s", cls, instance)

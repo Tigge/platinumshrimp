@@ -8,6 +8,7 @@ from plugins.packagetracker.provider import Package
 
 __author__ = "reeen"
 
+
 # Bring API https://developer.bring.com/api/tracking/
 class BringPackage(Package):
     API_URL = "https://tracking.bring.com/api/v2/tracking.json"

@@ -64,7 +64,7 @@ class Twitter(plugin.Plugin):
         self.privmsg(server, channel, f"- {author} • {date_diff} • {stats}")
 
     def on_pubmsg(self, server, user, channel, message):
-        for (_, _, id) in re.findall(Twitter.URL_REGEX, message):
+        for _, _, id in re.findall(Twitter.URL_REGEX, message):
             logging.info("Twitter.on_pubmsg %s", id)
             try:
                 self._thread(self.process, id, server, channel)

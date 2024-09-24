@@ -160,9 +160,9 @@ class Trakt(plugin.Plugin):
 
             season_number = activity["episode"]["season"]
             episode_number = activity["episode"]["number"]
-            result[key]["seasons"][season_number]["episodes"][
-                episode_number
-            ] = activity["episode"]
+            result[key]["seasons"][season_number]["episodes"][episode_number] = (
+                activity["episode"]
+            )
 
         # Filter seasons without episodes
         for key in result:

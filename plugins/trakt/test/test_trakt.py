@@ -225,9 +225,9 @@ class UpdateTestCase(unittest.TestCase):
 
     def test_no_new_episodes(self):
         mock_fetch, mock_echo, _ = self.setupMocks(
-            lambda url, typ, func: [ACTIVITY_PRESET_EPISODE_1]
-            if typ == "episodes"
-            else [],
+            lambda url, typ, func: (
+                [ACTIVITY_PRESET_EPISODE_1] if typ == "episodes" else []
+            ),
             lambda _: [],
         )
         self.trakt.users["adam"]["last_sync_episodes"] = api.Trakt.get_date(
