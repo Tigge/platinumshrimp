@@ -1,8 +1,9 @@
-import cgi
 import codecs
 import html.parser
 import re
 import requests
+
+from email.message import Message
 
 
 def encoding_from_bom(string):
@@ -24,7 +25,9 @@ def find_encoding(response):
 
     # 2. Content-Type
     if "content-type" in response.headers:
-        content_type, params = cgi.parse_header(response.headers.get("content-type"))
+        message = Message()
+        message["content-type"] = response.headers.get("content-type", "")
+        params = dict(message.get_params())
         if "charset" in params:
             return params["charset"].strip("'\"")
 
@@ -73,7 +76,9 @@ def get(url, *args, **kwargs):
     nr_redirects = 0
     while True:
         response = requests.get(url, *args, **kwargs)
-        content_type, params = cgi.parse_header(response.headers.get("content-type"))
+        message = Message()
+        message["content-type"] = response.headers.get("content-type", "")
+        content_type = message.get_content_type()
         if content_type != "text/html":
             return ""
         response.encoding = find_encoding(response)
