@@ -10,18 +10,17 @@ Get the code:
 
  - `git clone https://github.com/Tigge/platinumshrimp.git`
 
-Install poetry:
-
- - `curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -`
-
 Install dependencies in Debian/Ubuntu:
 
  - `sudo apt-get install python3-pip libzmq3-dev`
- - `poetry update`
 
 Install dependencies in Fedora:
 
  - `sudo dnf install python3-devel python3-pip zeromq-devel`
+
+Install poetry:
+
+ - `curl -sSL https://install.python-poetry.org/ | python -`
  - `poetry update`
 
 Run plugins unit tests:
