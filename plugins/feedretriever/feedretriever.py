@@ -111,6 +111,12 @@ class Feedpoller:
         self._set_last(parsed.entries)
         self.consecutive_fails = 0
 
+    def reset_latest(self):
+        parsed = self.read(self.feed["url"], self.modified, self.etag)
+        if len(parsed.entries) > 0:
+            parsed.entries.pop(0)
+        self._set_last(parsed.entries)
+
     def _set_last(self, entries):
         if len(entries) > 0:
             self.last_entry = entries[0]
@@ -227,6 +233,17 @@ class Feedretriever(plugin.Plugin):
             for i in feeds_to_update:
                 feed = feeds[i]
                 logging.info("Force updating feed: %s", feed.feed["title"])
+                feed.force_update()
+
+        elif message.startswith("!printlatest"):
+            feeds = self.get_feeds(server, channel)
+            feeds_to_update = GetFeedIndexArrayFromCommand(
+                message, len(feeds), select_all=True
+            )
+            for i in feeds_to_update:
+                feed = feeds[i]
+                logging.info("Printing latest for feed: %s", feed.feed["title"])
+                feed.reset_latest()
                 feed.force_update()
 
     def update(self):
