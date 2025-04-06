@@ -75,6 +75,9 @@ class Feedpoller:
             self.etag = parsed.get("etag", None)
         return parsed
 
+    def force_update(self):
+        self.update_count = self.feed["frequency"]
+
     def update(self):
         self.update_count += 1
         if self.update_count < self.feed["frequency"]:
@@ -216,6 +219,15 @@ class Feedretriever(plugin.Plugin):
                     channel,
                     LIST_FEED_ITEM_MESSAGE.format(i, feed.feed["title"]),
                 )
+        elif message.startswith("!forceupdate"):
+            feeds = self.get_feeds(server, channel)
+            feeds_to_update = GetFeedIndexArrayFromCommand(
+                message, len(feeds), select_all=True
+            )
+            for i in feeds_to_update:
+                feed = feeds[i]
+                logging.info("Force updating feed: %s", feed.feed["title"])
+                feed.force_update()
 
     def update(self):
         for feed in self.feeds:
