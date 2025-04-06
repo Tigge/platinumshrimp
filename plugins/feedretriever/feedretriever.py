@@ -111,6 +111,8 @@ class Feedretriever(plugin.Plugin):
         self.settings = json.loads(settings)
 
         logging.info("Feedretriever.started %s", self.settings)
+        if "feeds" not in self.settings:
+            self.settings["feeds"] = []
         for feed in self.settings["feeds"]:
             self.add_feed(feed, new=False)
 
