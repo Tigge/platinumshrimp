@@ -56,6 +56,8 @@ class Titlegiver(plugin.Plugin):
 
     def started(self, settings):
         self.settings = json.loads(settings)
+        if "blacklist" not in self.settings:
+            self.settings["blacklist"] = []
 
     def process(self, url, server, channel):
 
