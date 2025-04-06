@@ -31,6 +31,19 @@ def FeedItemToString(title, link, feed_title=""):
     return str_utils.sanitize_string("{}: {} <{}>".format(feed_title, title, link))
 
 
+def GetFeedIndexArrayFromCommand(message, feed_size, select_all=False):
+    feeds = []
+    # If no feed is specified, we might want to return all of them:
+    if select_all and not " " in message:
+        feeds = list(range(feed_size))
+    # Otherwise, only return the specified ones:
+    for i in message.split(" "):
+        i = int(i) if i.isdecimal() else -1
+        if i >= 0 and i < feed_size:
+            feeds.append(i)
+    return feeds
+
+
 # Simple polling class, fetches the feed in a regular interval and passes
 # the information on to the Feed object
 class Feedpoller:
@@ -155,8 +168,14 @@ class Feedretriever(plugin.Plugin):
         self.settings["feeds"].remove(feed.feed)
         self._save_settings(json.dumps(self.settings))
 
-    def on_pubmsg(self, server, user, channel, message):
+    def get_feeds(self, server, channel):
+        return list(
+            filter(
+                lambda f: f.feed["server"] == server and f.feed["channel"] == channel,
+            )
+        )
 
+    def on_pubmsg(self, server, user, channel, message):
         if message.startswith("!feed") or message.startswith("!addfeed"):
             _, url, frequency, title = str_utils.split(message, " ", 4)
             if url == "":
@@ -176,20 +195,9 @@ class Feedretriever(plugin.Plugin):
                 "frequency": frequency,
             }
             self.add_feed(feed)
-
         elif message.startswith("!removefeed"):
-            feeds = list(
-                filter(
-                    lambda f: f.feed["server"] == server
-                    and f.feed["channel"] == channel,
-                    self.feeds,
-                )
-            )
-            feeds_to_remove = []
-            for i in message.split(" "):
-                i = int(i) if i.isdecimal() else -1
-                if i >= 0 and i < len(feeds):
-                    feeds_to_remove.append(i)
+            feeds = self.get_feeds(server, channel)
+            feeds_to_remove = GetFeedIndexArrayFromCommand(message, len(feeds))
             for i in sorted(feeds_to_remove, reverse=True):
                 self.privmsg(
                     server,
@@ -199,13 +207,7 @@ class Feedretriever(plugin.Plugin):
                 self.remove_feed(feeds[i])
                 logging.info("Removed feed: %d", i)
         elif message.startswith("!listfeed"):
-            feeds = list(
-                filter(
-                    lambda f: f.feed["server"] == server
-                    and f.feed["channel"] == channel,
-                    self.feeds,
-                )
-            )
+            feeds = self.get_feeds(server, channel)
             if len(feeds) == 0:
                 self.privmsg(server, channel, NO_FEED_MESSAGE)
             for i, feed in enumerate(feeds):
