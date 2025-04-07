@@ -38,12 +38,18 @@ jobs:
         run: |
           poetry run coverage run --source=. -m unittest discover -v
 
-      - name: Coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip3 install --upgrade coveralls
-          coveralls --service=github
+      # Temporarily disable Coveralls due to a 500 Server Error.
+      # First occurrence on April 6, 2025, after a Coveralls server update.
+      # Error message: https://github.com/Tigge/platinumshrimp/actions/runs/14297694029/job/40070978557
+      #
+      # Once this is fixed, please revert this commit.
+      #
+      #- name: Coveralls
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  run: |
+      #    pip3 install --upgrade coveralls
+      #    coveralls --service=github
 
       - name: Build
         run: |
