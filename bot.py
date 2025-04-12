@@ -93,9 +93,7 @@ class PluginInterface:
             except (irc.client.InvalidCharacters, irc.client.MessageTooLong):
                 logging.exception("Failed to call function from plugin %r", data)
         else:
-            logging.error(
-                "Undefined function %s called with %r", data["function"], data["params"]
-            )
+            logging.error("Undefined function %s called with %r", data["function"], data["params"])
 
     def _call(self, function, *args):
         self._socket_plugin.send_json({"function": function, "params": args})
@@ -154,11 +152,7 @@ class Bot:
 
         for plugin in self.plugins:
             plugin._call(
-                "on_" + event.type,
-                connection.name,
-                event.source,
-                event.target,
-                *event.arguments
+                "on_" + event.type, connection.name, event.source, event.target, *event.arguments
             )
 
     def load_plugin(self, name, settings):

@@ -103,9 +103,7 @@ class FormatTestCase(unittest.TestCase):
         cls.dir = os.path.join("..", os.path.dirname(__file__))
 
     def test_watch_episode(self):
-        with open(
-            os.path.join(self.dir, "format", "test_format_watch_episode.json")
-        ) as f:
+        with open(os.path.join(self.dir, "format", "test_format_watch_episode.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(
@@ -115,9 +113,7 @@ class FormatTestCase(unittest.TestCase):
             )
 
     def test_scrobble_episode(self):
-        with open(
-            os.path.join(self.dir, "format", "test_format_scrobble_episode.json")
-        ) as f:
+        with open(os.path.join(self.dir, "format", "test_format_scrobble_episode.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(
@@ -127,9 +123,7 @@ class FormatTestCase(unittest.TestCase):
             )
 
     def test_watch_movie(self):
-        with open(
-            os.path.join(self.dir, "format", "test_format_watch_movie.json")
-        ) as f:
+        with open(os.path.join(self.dir, "format", "test_format_watch_movie.json")) as f:
             activity = json.load(f)
             message = Trakt.format_activity(activity, "User", activity["action"])
             self.assertEqual(
@@ -204,9 +198,7 @@ class UpdateTestCase(unittest.TestCase):
 
         summary = {"action": "WOOT", "series": [{"data": "dummy"}]}
         summary_return = lambda _: [summary]
-        mock_fetch, mock_echo, _ = self.setupMocks(
-            mock_fetch_new_activities, summary_return
-        )
+        mock_fetch, mock_echo, _ = self.setupMocks(mock_fetch_new_activities, summary_return)
 
         self.trakt.trakt.users_history = summary_return
 
@@ -225,9 +217,7 @@ class UpdateTestCase(unittest.TestCase):
 
     def test_no_new_episodes(self):
         mock_fetch, mock_echo, _ = self.setupMocks(
-            lambda url, typ, func: (
-                [ACTIVITY_PRESET_EPISODE_1] if typ == "episodes" else []
-            ),
+            lambda url, typ, func: ([ACTIVITY_PRESET_EPISODE_1] if typ == "episodes" else []),
             lambda _: [],
         )
         self.trakt.users["adam"]["last_sync_episodes"] = api.Trakt.get_date(
@@ -250,12 +240,8 @@ class UpdateTestCase(unittest.TestCase):
         mock_requests.get(
             "/users/adam/history/episodes", text=json.dumps([ACTIVITY_PRESET_EPISODE_1])
         )
-        mock_requests.get(
-            "/users/adam/history/movies", text=json.dumps([ACTIVITY_PRESET_MOVIE_1])
-        )
-        mock_requests.get(
-            "/shows/4/seasons", text=json.dumps([ACTIVITY_PRESET_SERIES_1])
-        )
+        mock_requests.get("/users/adam/history/movies", text=json.dumps([ACTIVITY_PRESET_MOVIE_1]))
+        mock_requests.get("/shows/4/seasons", text=json.dumps([ACTIVITY_PRESET_SERIES_1]))
         mock_requests.get("/users/adam/ratings/movies", text="[]")
         self.trakt.echo = Mock()
 
@@ -336,12 +322,8 @@ class SummaryTestCase(unittest.TestCase):
             )
 
     def test_single_season(self):
-        with open(
-            os.path.join(self.dir, "summaries", "single_season_episodes.json")
-        ) as fe:
-            with open(
-                os.path.join(self.dir, "summaries", "single_season_show.json")
-            ) as fs:
+        with open(os.path.join(self.dir, "summaries", "single_season_episodes.json")) as fe:
+            with open(os.path.join(self.dir, "summaries", "single_season_show.json")) as fs:
                 self.trakt.trakt.seasons_summary = Mock(return_value=json.load(fs))
                 result = self.trakt.create_activity_summary(json.load(fe))
                 self.assertTrue(

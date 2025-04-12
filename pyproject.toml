@@ -41,3 +41,6 @@ coverage = "^7.6.1"
 [build-system]
 requires = ["poetry>=1.8.3"]
 build-backend = "poetry.masonry.api"
+
+[tool.black]
+line-length = 100

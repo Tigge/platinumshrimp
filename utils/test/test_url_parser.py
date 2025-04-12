@@ -10,9 +10,7 @@ class TestStrUtils(unittest.TestCase):
             find_urls("http://ko.wikipedia.org/wiki/위키백과:대문"),
             ["http://ko.wikipedia.org/wiki/위키백과:대문"],
         )
-        self.assertEqual(
-            find_urls("http://d%C3%BCsseldorf.de"), ["http://d%C3%BCsseldorf.de"]
-        )
+        self.assertEqual(find_urls("http://d%C3%BCsseldorf.de"), ["http://d%C3%BCsseldorf.de"])
         self.assertEqual(
             find_urls("http://en.wikipedia.org/wiki/ɸ"),
             ["http://en.wikipedia.org/wiki/ɸ"],
@@ -20,9 +18,7 @@ class TestStrUtils(unittest.TestCase):
 
     def test_multiple_urls(self):
         self.assertEqual(
-            find_urls(
-                "Text with http://mydomain.com and http://testdomain.com and more"
-            ),
+            find_urls("Text with http://mydomain.com and http://testdomain.com and more"),
             ["http://mydomain.com", "http://testdomain.com"],
         )
 
@@ -37,14 +33,10 @@ class TestStrUtils(unittest.TestCase):
 
     def test_with_no_protocol(self):
         self.assertEqual(find_urls("mydomain.com"), ["http://mydomain.com"])
-        self.assertEqual(
-            find_urls("mydomain.com/is_awesome"), ["http://mydomain.com/is_awesome"]
-        )
+        self.assertEqual(find_urls("mydomain.com/is_awesome"), ["http://mydomain.com/is_awesome"])
 
     def test_auth(self):
-        self.assertEqual(
-            find_urls("https://user:pass@url.com"), ["https://user:pass@url.com"]
-        )
+        self.assertEqual(find_urls("https://user:pass@url.com"), ["https://user:pass@url.com"])
 
     def test_with_path(self):
         self.assertEqual(

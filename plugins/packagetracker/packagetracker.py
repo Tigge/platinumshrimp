@@ -33,9 +33,7 @@ class PackageTracker(plugin.Plugin):
             self.settings["postnord"]["apikey"]
         )
 
-        plugins.packagetracker.provider_dhl.DHLPackage.set_apikey(
-            self.settings["dhl"]["apikey"]
-        )
+        plugins.packagetracker.provider_dhl.DHLPackage.set_apikey(self.settings["dhl"]["apikey"])
 
     def update(self):
         self.ticks += 1
@@ -60,26 +58,16 @@ class PackageTracker(plugin.Plugin):
             else:
                 self.privmsg(server, channel, "Package not found...")
         elif message.startswith("!listpackages"):
-            self.privmsg(
-                server, channel, "Listing {0} packages...".format(len(self.packages))
-            )
+            self.privmsg(server, channel, "Listing {0} packages...".format(len(self.packages)))
             for package in self.packages:
                 self.privmsg(server, channel, str(package.id))
 
     def add_package_id(self, package_id, server, user, channel):
         package = None
-        if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(
-            package_id
-        ):
-            package = plugins.packagetracker.provider_postnord.PostnordPackage(
-                package_id
-            )
-        if plugins.packagetracker.provider_schenker.SchenkerPackage.is_package(
-            package_id
-        ):
-            package = plugins.packagetracker.provider_schenker.SchenkerPackage(
-                package_id
-            )
+        if plugins.packagetracker.provider_postnord.PostnordPackage.is_package(package_id):
+            package = plugins.packagetracker.provider_postnord.PostnordPackage(package_id)
+        if plugins.packagetracker.provider_schenker.SchenkerPackage.is_package(package_id):
+            package = plugins.packagetracker.provider_schenker.SchenkerPackage(package_id)
         if plugins.packagetracker.provider_budbee.BudbeePackage.is_package(package_id):
             package = plugins.packagetracker.provider_budbee.BudbeePackage(package_id)
         if plugins.packagetracker.provider_dhl.DHLPackage.is_package(package_id):

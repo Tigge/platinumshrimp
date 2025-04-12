@@ -14,9 +14,7 @@ class Autojoiner(plugin.Plugin):
         self.settings = json.loads(settings)
 
     def on_welcome(self, server, source, target, message):
-        logging.info(
-            "Welcome to '%s' - '%s', '%s', '%s'", server, source, target, message
-        )
+        logging.info("Welcome to '%s' - '%s', '%s', '%s'", server, source, target, message)
         self.username = target
         if server in self.settings:
             for channel in self.settings[server]:
@@ -26,9 +24,7 @@ class Autojoiner(plugin.Plugin):
         if target != self.username:
             return
 
-        logging.info(
-            "Invited '%s' to '%s' on '%s' by '%s", target, channel, server, source
-        )
+        logging.info("Invited '%s' to '%s' on '%s' by '%s", target, channel, server, source)
         channels = self.settings.get(server, [])
         channels.append(channel)
         self.settings[server] = channels
