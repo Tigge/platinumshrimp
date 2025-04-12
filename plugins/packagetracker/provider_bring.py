@@ -66,9 +66,7 @@ class BringPackage(Package):
         try:
             self.consignor = data["consignmentSet"][0]["senderName"]
             self.consignee = data["consignmentSet"][0]["recipientAddress"]["postalCode"]
-            self.consignee += (
-                " " + data["consignmentSet"][0]["recipientAddress"]["city"]
-            )
+            self.consignee += " " + data["consignmentSet"][0]["recipientAddress"]["city"]
 
             last_updated = self.last_updated
 

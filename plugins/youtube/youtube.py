@@ -76,9 +76,7 @@ class Youtube(plugin.Plugin):
         )
 
     def on_pubmsg(self, server, user, channel, message):
-        logging.info(
-            "Youtube.process response %r", re.findall(Youtube.URL_REGEX, message)
-        )
+        logging.info("Youtube.process response %r", re.findall(Youtube.URL_REGEX, message))
         for id in re.findall(Youtube.URL_REGEX, message):
             logging.info("Youtube.on_pubmsg %s", id)
             try:

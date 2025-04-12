@@ -18,9 +18,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         count = int(self.url_queries["count"][0])
         url = self.url_queries["url"][0]
         if count > 1:
-            url = "redirect?count={0}&url={1}".format(
-                count - 1, self.url_queries["url"][0]
-            )
+            url = "redirect?count={0}&url={1}".format(count - 1, self.url_queries["url"][0])
 
         self.send_response(301)
         self.send_header("Location", url)
@@ -29,9 +27,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(
             "<html><head><title>Redirect</title></head><body>See {0}</body></html>".format(
                 url
-            ).encode(
-                "utf-8"
-            )
+            ).encode("utf-8")
         )
 
     def page(self):
@@ -39,9 +35,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(
-            "<html><head><title>Simple</title></head><body>Simple</body></html>".encode(
-                "utf-8"
-            )
+            "<html><head><title>Simple</title></head><body>Simple</body></html>".encode("utf-8")
         )
 
     def pages(self):
@@ -96,9 +90,7 @@ class TitlegiverTestCase(unittest.TestCase):
 
     def test_redirect(self):
         url = self.URL + "/page"
-        result = Titlegiver.get_title_from_url(
-            self.URL + "/redirect?count=10&url={0}".format(url)
-        )
+        result = Titlegiver.get_title_from_url(self.URL + "/redirect?count=10&url={0}".format(url))
         self.assertEqual(result, "Simple")
 
     def test_meta_redirect(self):
@@ -106,9 +98,7 @@ class TitlegiverTestCase(unittest.TestCase):
         self.assertEqual(result, "Simple")
 
     def test_meta_redirect_in_noscript(self):
-        result = Titlegiver.get_title_from_url(
-            self.URL + "/pages/meta_redirect_in_noscript"
-        )
+        result = Titlegiver.get_title_from_url(self.URL + "/pages/meta_redirect_in_noscript")
         self.assertEqual(result, "Title without refreshing")
 
     def test_specialchars(self):
@@ -150,15 +140,11 @@ class TitlegiverTestCase(unittest.TestCase):
         self.assertEqual(result, "Samoraj - 武家")
 
     def test_encoding_meta_charset(self):
-        result = Titlegiver.get_title_from_url(
-            self.URL + "/pages/encoding_meta_charset"
-        )
+        result = Titlegiver.get_title_from_url(self.URL + "/pages/encoding_meta_charset")
         self.assertEqual(result, "Россия-Матушка")
 
     def test_encoding_meta_httpequiv(self):
-        result = Titlegiver.get_title_from_url(
-            self.URL + "/pages/encoding_meta_httpequiv"
-        )
+        result = Titlegiver.get_title_from_url(self.URL + "/pages/encoding_meta_httpequiv")
         self.assertEqual(result, "올드보이")
 
     def test_split_strip_and_slice(self):

@@ -92,21 +92,15 @@ class PostnordPackage(Package):
                     self.consignor += ", " + PostnordPackage.format_address(
                         shipment["consignor"]["address"]
                     )
-                self.consignee = PostnordPackage.format_address(
-                    shipment["consignee"]["address"]
-                )
+                self.consignee = PostnordPackage.format_address(shipment["consignee"]["address"])
 
             if "totalWeight" in shipment:
                 self.weight = (
-                    shipment["totalWeight"]["value"]
-                    + " "
-                    + shipment["totalWeight"]["unit"]
+                    shipment["totalWeight"]["value"] + " " + shipment["totalWeight"]["unit"]
                 )
             if "totalVolume" in shipment:
                 self.volume = (
-                    shipment["totalVolume"]["value"]
-                    + " "
-                    + shipment["totalVolume"]["unit"]
+                    shipment["totalVolume"]["value"] + " " + shipment["totalVolume"]["unit"]
                 )
 
             if (
@@ -115,9 +109,7 @@ class PostnordPackage(Package):
                 and "body" in shipment["statusText"]
             ):
                 self.status = (
-                    shipment["statusText"]["header"]
-                    + ": "
-                    + shipment["statusText"]["body"]
+                    shipment["statusText"]["header"] + ": " + shipment["statusText"]["body"]
                 )
 
             last_updated = self.last_updated

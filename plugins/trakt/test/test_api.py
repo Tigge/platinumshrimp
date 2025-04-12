@@ -22,9 +22,7 @@ class GetTestCase(unittest.TestCase):
 
     @requests_mock.mock()
     def test_get_error_json(self, mock_requests):
-        mock_requests.get(
-            Trakt.API_URL, text='{"movie_id": 123abc"}'
-        )  # NOTE: missing quote
+        mock_requests.get(Trakt.API_URL, text='{"movie_id": 123abc"}')  # NOTE: missing quote
         res = self.trakt._to_json(self.trakt._get(""))
         self.assertEqual(res, [])
 
@@ -90,9 +88,7 @@ class GetAllTestCase(unittest.TestCase):
         )
 
         items_all = list(self.trakt._get_all("/FAKEURL"))
-        self.assertEqual(
-            items_all, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], msg="Got wrong items back."
-        )
+        self.assertEqual(items_all, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], msg="Got wrong items back.")
 
     @requests_mock.mock()
     def test_pages_filter(self, mock_requests):
@@ -108,6 +104,4 @@ class GetAllTestCase(unittest.TestCase):
         )
 
         items_all = list(self.trakt._get_all("/FAKEURL", lambda a: a < 9))
-        self.assertEqual(
-            items_all, [1, 2, 3, 4, 5, 6, 7, 8], msg="Got wrong items back."
-        )
+        self.assertEqual(items_all, [1, 2, 3, 4, 5, 6, 7, 8], msg="Got wrong items back.")

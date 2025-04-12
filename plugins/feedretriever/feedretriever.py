@@ -140,23 +140,19 @@ class Feedretriever(plugin.Plugin):
 
     def add_feed(self, feed, new=True):
         def on_created(feed):
-            self.privmsg(
-                feed["server"], feed["channel"], "Added feed: " + feed["title"]
-            )
+            self.privmsg(feed["server"], feed["channel"], "Added feed: " + feed["title"])
             self.settings["feeds"].append(feed)
             self._save_settings(json.dumps(self.settings))
 
         def on_entry(feed, entry):
-            self.privmsg(
+            self.safe_privmsg(
                 feed["server"],
                 feed["channel"],
                 FeedItemToString(entry.title, entry.link, feed["title"]),
             )
 
         def on_error(feed, message):
-            self.privmsg(
-                feed["server"], feed["channel"], feed["title"] + ": " + message
-            )
+            self.privmsg(feed["server"], feed["channel"], feed["title"] + ": " + message)
 
         try:
             poller = Feedpoller(
@@ -168,9 +164,7 @@ class Feedretriever(plugin.Plugin):
             self.feeds.append(poller)
         except Exception as e:
             logging.info("Failed to add feed: %r", e)
-            self.privmsg(
-                feed["server"], feed["channel"], "Failed to add: " + feed["url"]
-            )
+            self.privmsg(feed["server"], feed["channel"], "Failed to add: " + feed["url"])
 
     def remove_feed(self, feed):
         self.feeds.remove(feed)
@@ -227,9 +221,7 @@ class Feedretriever(plugin.Plugin):
                 )
         elif message.startswith("!forceupdate"):
             feeds = self.get_feeds(server, channel)
-            feeds_to_update = GetFeedIndexArrayFromCommand(
-                message, len(feeds), select_all=True
-            )
+            feeds_to_update = GetFeedIndexArrayFromCommand(message, len(feeds), select_all=True)
             for i in feeds_to_update:
                 feed = feeds[i]
                 logging.info("Force updating feed: %s", feed.feed["title"])
@@ -237,9 +229,7 @@ class Feedretriever(plugin.Plugin):
 
         elif message.startswith("!printlatest"):
             feeds = self.get_feeds(server, channel)
-            feeds_to_update = GetFeedIndexArrayFromCommand(
-                message, len(feeds), select_all=True
-            )
+            feeds_to_update = GetFeedIndexArrayFromCommand(message, len(feeds), select_all=True)
             for i in feeds_to_update:
                 feed = feeds[i]
                 logging.info("Printing latest for feed: %s", feed.feed["title"])
