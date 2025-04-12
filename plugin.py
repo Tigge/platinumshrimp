@@ -7,6 +7,9 @@ import zmq.asyncio
 import tempfile
 import argparse
 import sys
+import textwrap
+
+from utils import str_utils
 
 __author__ = "tigge"
 
@@ -177,3 +180,13 @@ class Plugin:
             raise AttributeError(
                 "Unsupported internal function call to function: " + name
             )
+
+    def safe_privmsg(self, server, target, message):
+        # Even though the standard should be "up to 512" characters, various clients and servers
+        # impose a much stricter limit.  Let's use 400 as a "safe" upper bound.
+        max_length = 400 - len(f"PRIVMSG {target} ")
+        for unescaped_line in str_utils.unescape_entities(message).splitlines():
+            wrapped = textwrap.wrap(unescaped_line, width=max_length,
+                                    fix_sentence_endings=True)
+            for safe_line in wrapped:
+                self.privmsg, server, target, safe_line
