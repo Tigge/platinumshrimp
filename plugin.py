@@ -35,9 +35,7 @@ class Plugin:
         self.socket_base_path = args.socket_path
 
         self._socket_bot = context.socket(zmq.PAIR)
-        self._socket_bot.connect(
-            "ipc://" + self.socket_base_path + "/ipc_plugin_" + name
-        )
+        self._socket_bot.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + name)
 
         self._socket_workers = context.socket(zmq.PULL)
         self._socket_workers.bind(
@@ -70,9 +68,7 @@ class Plugin:
                 func(*data["params"])
 
         else:
-            logging.warning(
-                "Unsupported call to plugin function with name " + func_name
-            )
+            logging.warning("Unsupported call to plugin function with name " + func_name)
 
     def _call(self, function, *args):
         logging.info("Plugin.call %s", self.threading_data.__dict__)
@@ -85,13 +81,7 @@ class Plugin:
         def starter():
             context = zmq.Context()
             sock = context.socket(zmq.PUSH)
-            sock.connect(
-                "ipc://"
-                + self.socket_base_path
-                + "/ipc_plugin_"
-                + self.name
-                + "_workers"
-            )
+            sock.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + self.name + "_workers")
             self.threading_data.call_socket = sock
 
             function(*args, **kwargs)
@@ -177,16 +167,13 @@ class Plugin:
 
             return call
         else:
-            raise AttributeError(
-                "Unsupported internal function call to function: " + name
-            )
+            raise AttributeError("Unsupported internal function call to function: " + name)
 
     def safe_privmsg(self, server, target, message):
         # Even though the standard should be "up to 512" characters, various clients and servers
         # impose a much stricter limit.  Let's use 400 as a "safe" upper bound.
         max_length = 400 - len(f"PRIVMSG {target} ")
         for unescaped_line in str_utils.unescape_entities(message).splitlines():
-            wrapped = textwrap.wrap(unescaped_line, width=max_length,
-                                    fix_sentence_endings=True)
+            wrapped = textwrap.wrap(unescaped_line, width=max_length, fix_sentence_endings=True)
             for safe_line in wrapped:
                 self.privmsg, server, target, safe_line

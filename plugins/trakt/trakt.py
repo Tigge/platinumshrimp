@@ -40,9 +40,7 @@ class Trakt(plugin.Plugin):
 
     def echo(self, message):
         logging.info("Trakt.echo %s", message)
-        self.privmsg(
-            self.settings["server"], self.settings["channel"], "Trakt: " + message
-        )
+        self.privmsg(self.settings["server"], self.settings["channel"], "Trakt: " + message)
 
     def update(self):
         # logging.info("Trakt.update")
@@ -71,9 +69,7 @@ class Trakt(plugin.Plugin):
                     ratings = {}
                     user_ratings = self.trakt.users_ratings(username, "movies")
                     for user_rating in user_ratings:
-                        ratings[user_rating["movie"]["ids"]["trakt"]] = user_rating[
-                            "rating"
-                        ]
+                        ratings[user_rating["movie"]["ids"]["trakt"]] = user_rating["rating"]
 
                 # Update last sync
                 for activity in activities:
@@ -85,29 +81,20 @@ class Trakt(plugin.Plugin):
                 if typ == "episodes":
                     activity_summary = self.create_activity_summary(activities)
                     for activity in activity_summary:
-                        message = Trakt.format_activity(
-                            activity, username, activity["action"]
-                        )
+                        message = Trakt.format_activity(activity, username, activity["action"])
                         if message is not None:
                             self.echo(message)
                 else:
                     for activity in activities:
-                        message = Trakt.format_activity(
-                            activity, username, activity["action"]
-                        )
-                        if (
-                            "movie" in activity
-                            and activity["movie"]["ids"]["trakt"] in ratings
-                        ):
+                        message = Trakt.format_activity(activity, username, activity["action"])
+                        if "movie" in activity and activity["movie"]["ids"]["trakt"] in ratings:
                             message += " (rated it {})".format(
                                 ratings[activity["movie"]["ids"]["trakt"]]
                             )
                         self.echo(message)
 
             except Exception as e:
-                logging.exception(
-                    "Unhandled exception when fetching for %s of type %s", user, typ
-                )
+                logging.exception("Unhandled exception when fetching for %s of type %s", user, typ)
 
     def fetch_new_activities(self, user, typ, is_new_item):
         return list(self.trakt.users_history(user, typ, is_new_item))
@@ -160,16 +147,12 @@ class Trakt(plugin.Plugin):
 
             season_number = activity["episode"]["season"]
             episode_number = activity["episode"]["number"]
-            result[key]["seasons"][season_number]["episodes"][episode_number] = (
-                activity["episode"]
-            )
+            result[key]["seasons"][season_number]["episodes"][episode_number] = activity["episode"]
 
         # Filter seasons without episodes
         for key in result:
             result[key]["seasons"] = {
-                k: v
-                for k, v in result[key]["seasons"].items()
-                if len(v["episodes"]) > 0
+                k: v for k, v in result[key]["seasons"].items() if len(v["episodes"]) > 0
             }
 
         return [value for (key, value) in result.items()]
@@ -197,22 +180,16 @@ class Trakt(plugin.Plugin):
     @staticmethod
     def format_url(item):
         if "movie" in item:
-            return "/search/trakt/{0}?id_type=movie".format(
-                item["movie"]["ids"]["trakt"]
-            )
+            return "/search/trakt/{0}?id_type=movie".format(item["movie"]["ids"]["trakt"])
         elif "seasons" in item and len(item["seasons"]) == 1:
             season = list(item["seasons"].values())[0]
             if len(season["episodes"]) == 1:
                 episode = list(season["episodes"].values())[0]
-                return "/search/trakt/{0}?id_type=episode".format(
-                    episode["ids"]["trakt"]
-                )
+                return "/search/trakt/{0}?id_type=episode".format(episode["ids"]["trakt"])
             else:
                 return "/search/trakt/{0}?id_type=season".format(season["ids"]["trakt"])
         elif "episode" in item:
-            return "/search/trakt/{0}?id_type=episode".format(
-                item["episode"]["ids"]["trakt"]
-            )
+            return "/search/trakt/{0}?id_type=episode".format(item["episode"]["ids"]["trakt"])
         elif "show" in item:
             return "/search/trakt/{0}?id_type=show".format(item["show"]["ids"]["trakt"])
 
@@ -255,9 +232,7 @@ class Trakt(plugin.Plugin):
                         )
                     )
                 else:
-                    strings.append(
-                        "S{:02d}E{:02d}".format(season["number"], episode_range[0])
-                    )
+                    strings.append("S{:02d}E{:02d}".format(season["number"], episode_range[0]))
 
         if episode_count[0] == 1:
             return Trakt.format_episode(summary["show"], episode_count[1])
@@ -269,9 +244,7 @@ class Trakt(plugin.Plugin):
 
     @staticmethod
     def format_episode(show, episode):
-        return "'{0[title]}', S{1[season]:02d}E{1[number]:02d} '{1[title]}'".format(
-            show, episode
-        )
+        return "'{0[title]}', S{1[season]:02d}E{1[number]:02d} '{1[title]}'".format(show, episode)
 
     @staticmethod
     def format_action(action):

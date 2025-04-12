@@ -49,9 +49,7 @@ class PostnordTestCase(unittest.TestCase):
 
         self.assertEqual(package3.id, "FAKE_ID2")
         self.assertEqual(package3.consignee, "41327 GÖTEBORG, Sweden")
-        self.assertEqual(
-            package3.consignor, "Posten Logistik AB / IMPORT, 10500 STOCKHOLM"
-        )
+        self.assertEqual(package3.consignor, "Posten Logistik AB / IMPORT, 10500 STOCKHOLM")
 
     @requests_mock.mock()
     def test_is_package(self, mock_requests):

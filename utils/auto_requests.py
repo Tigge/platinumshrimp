@@ -56,15 +56,11 @@ def find_encoding(response):
                     "http-equiv" in attributes
                     and attributes["http-equiv"].lower() == "content-type"
                 ):
-                    match = re.search(
-                        r"^.*?charset=([a-zA-Z0-9-_]+)$", attributes["content"]
-                    )
+                    match = re.search(r"^.*?charset=([a-zA-Z0-9-_]+)$", attributes["content"])
                     self.charset = match.group(1) if match is not None else None
 
     parser = MyHTMLParser()
-    parser.feed(
-        response.content[:1024].decode("ascii", "ignore")
-    )  # As per HTML5 standard
+    parser.feed(response.content[:1024].decode("ascii", "ignore"))  # As per HTML5 standard
     return parser.charset
 
 
