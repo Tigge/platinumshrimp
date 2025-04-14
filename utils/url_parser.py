@@ -28,10 +28,7 @@ def find_urls(text):
                 if word.startswith(opening):
                     word = word[len(opening) :]
                 # Remove parentheses at the end only if they're balanced.
-                if (
-                    word.endswith(closing)
-                    and word.count(closing) == word.count(opening) + 1
-                ):
+                if word.endswith(closing) and word.count(closing) == word.count(opening) + 1:
                     word = word[: -len(closing)]
             # Get the url:
             if simple_url_re.match(word):

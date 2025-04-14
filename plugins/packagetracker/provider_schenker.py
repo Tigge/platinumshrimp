@@ -42,9 +42,7 @@ class SchenkerPackage(Package):
 
     @classmethod
     def _get_data(cls, package_id):
-        response = requests.get(
-            SchenkerPackage._get_url(package_id), allow_redirects=False
-        )
+        response = requests.get(SchenkerPackage._get_url(package_id), allow_redirects=False)
         if response.status_code == 200:
             return etree.fromstring(response.content)
         else:
@@ -56,9 +54,7 @@ class SchenkerPackage(Package):
             parcel = res.find("body/parcel")
             self.service = "Schenker"
             self.consignor = parcel.find("customername").text
-            self.consignee = (
-                parcel.find("receiverzipcode").text + parcel.find("receivercity").text
-            )
+            self.consignee = parcel.find("receiverzipcode").text + parcel.find("receivercity").text
             self.totalWeight = parcel.find("actualweight").text
             last_updated = self.last_updated
 

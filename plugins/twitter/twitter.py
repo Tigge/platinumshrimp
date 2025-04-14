@@ -53,9 +53,7 @@ class Twitter(plugin.Plugin):
         author = f'@{user["username"]} ({user["name"]})'
 
         date = dateutil.parser.parse(data["data"]["created_at"])
-        date_diff = date_utils.format(
-            date, datetime.datetime.now(datetime.timezone.utc)
-        )
+        date_diff = date_utils.format(date, datetime.datetime.now(datetime.timezone.utc))
 
         metrics = data["data"]["public_metrics"]
         stats = f'🗩 {number_utils.format(metrics["reply_count"])} • 🗘 {number_utils.format(metrics["retweet_count"])} • ♥ {number_utils.format(metrics["like_count"])}'

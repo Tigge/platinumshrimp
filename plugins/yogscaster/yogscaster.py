@@ -55,10 +55,7 @@ class Yogscaster(plugin.Plugin):
         if self.count % self.update_freq == 0:
             logging.info("Yogscaster.update")
             latest = Yogscaster.poll_site()
-            if (
-                self.latest != latest["title"]
-                and latest["author"] in self.settings["whitelist"]
-            ):
+            if self.latest != latest["title"] and latest["author"] in self.settings["whitelist"]:
                 logging.info("Latest: ", latest)
                 self.latest = latest["title"]
                 message = "%s: %s %s" % (

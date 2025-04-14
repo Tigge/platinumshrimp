@@ -26,9 +26,7 @@ class DHLPackage(Package):
     def create_event(event):
         e = DHLPackage.Event()
         e.datetime = dateutil.parser.parse(event["timestamp"])
-        e.description = (
-            f"{event['location']['address']['addressLocality']}: {event['description']}"
-        )
+        e.description = f"{event['location']['address']['addressLocality']}: {event['description']}"
         return e
 
     @classmethod
@@ -65,9 +63,7 @@ class DHLPackage(Package):
             for dhl_shipment in data["shipments"]:
 
                 self.consignor = dhl_shipment["origin"]["address"]["addressLocality"]
-                self.consignee = dhl_shipment["destination"]["address"][
-                    "addressLocality"
-                ]
+                self.consignee = dhl_shipment["destination"]["address"]["addressLocality"]
 
                 last_updated = self.last_updated
 
