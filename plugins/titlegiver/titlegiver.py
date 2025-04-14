@@ -1,3 +1,20 @@
+# Sample configuration:
+#
+# "titlegiver": {
+#   "yt-key": "youtube-API-key",
+#   "blacklist": [
+#     "www.youtube.com",
+#     "youtube.com",
+#     "youtu.be",
+#     "xcancel.com",
+#     "x.com"
+#   ]
+# },
+#
+# All settings are optional, but without the YouTube API key, you will not get titles from YouTube.
+#
+
+
 import re
 import sys
 import logging
@@ -5,7 +22,7 @@ import urllib
 import json
 
 import plugin
-from utils import url_parser, auto_requests, str_utils
+from utils import url_parser, auto_requests, str_utils, youtube, number_utils
 
 
 class Titlegiver(plugin.Plugin):
@@ -57,10 +74,16 @@ class Titlegiver(plugin.Plugin):
     def started(self, settings):
         self.settings = json.loads(settings)
         if "blacklist" not in self.settings:
-            self.settings["blacklist"] = []
+            self.settings["blacklist"] = [
+                "www.youtube.com",
+                "youtube.com",
+                "youtu.be",
+                "xcancel.com",
+                "x.com",
+            ]
+            self._save_settings(json.dumps(self.settings))
 
-    def process(self, url, server, channel):
-
+    def process_url(self, url, server, channel):
         parts = urllib.parse.urlparse(url)
         if parts.netloc in self.settings["blacklist"]:
             logging.info("Blacklisted %s", url)
@@ -70,12 +93,18 @@ class Titlegiver(plugin.Plugin):
         for line in Titlegiver.split_strip_and_slice(title, Titlegiver.MAX_LINE_COUNT):
             self.privmsg(server, channel, line)
 
+    def process_youtube(self, id, server, channel):
+        if "yt-key" not in self.settings:
+            return
+        yt = youtube.YouTube(self.settings["yt-key"], id)
+        response = "{} [{}] ({} views)".format(yt.title, yt.duration, number_utils.format(yt.views))
+        self.privmsg(server, channel, response)
+
     def on_pubmsg(self, server, user, channel, message):
         for url in url_parser.find_urls(message):
-            try:
-                self._thread(self.process, url, server, channel)
-            except:
-                logging.exception("Unable to find title for: %s", url)
+            self._thread(self.process_url, url, server, channel)
+        for id in youtube.YouTube.find_all_ids(message):
+            self._thread(self.process_youtube, id, server, channel)
 
 
 if __name__ == "__main__":
