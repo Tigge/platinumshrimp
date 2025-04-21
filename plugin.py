@@ -176,4 +176,4 @@ class Plugin:
         for unescaped_line in str_utils.unescape_entities(message).splitlines():
             wrapped = textwrap.wrap(unescaped_line, width=max_length, fix_sentence_endings=True)
             for safe_line in wrapped:
-                self.privmsg, server, target, safe_line
+                self.privmsg(server, target, safe_line)
