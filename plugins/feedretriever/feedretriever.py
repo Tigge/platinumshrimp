@@ -175,6 +175,7 @@ class Feedretriever(plugin.Plugin):
         return list(
             filter(
                 lambda f: f.feed["server"] == server and f.feed["channel"] == channel,
+                self.feeds,
             )
         )
 
