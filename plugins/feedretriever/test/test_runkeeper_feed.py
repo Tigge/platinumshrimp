@@ -3,7 +3,7 @@ import os
 import unittest
 import unittest.mock
 
-from plugins.feedretriever.feedretriever import Feedpoller
+from plugins.feedretriever.feedpoller import FeedPoller
 
 
 def noop(*a, **kw):
@@ -21,7 +21,7 @@ class FeedRetriverTest(unittest.TestCase):
     @unittest.mock.patch("feedparser.parse")
     def test_runkeeper_feed(self, read):
         read.return_value = feedparse(os.path.join(self.dir, "runkeeper_rss_0-entries.xml"))
-        Feedpoller(
+        FeedPoller(
             {"url": "MOCK_URL", "title": "Runkeeper Feed"},
             on_created=noop,
             on_entry=noop,
@@ -31,7 +31,7 @@ class FeedRetriverTest(unittest.TestCase):
     @unittest.mock.patch("feedparser.parse")
     def test_runkeeper_no_update(self, read):
         read.return_value = feedparse(os.path.join(self.dir, "runkeeper_rss_0-entries.xml"))
-        poller = Feedpoller(
+        poller = FeedPoller(
             {"url": "MOCK_URL", "title": "Runkeeper Feed"},
             on_created=noop,
             on_entry=self.fail,
@@ -47,7 +47,7 @@ class FeedRetriverTest(unittest.TestCase):
             self.updated = True
 
         read.return_value = feedparse(os.path.join(self.dir, "runkeeper_rss_0-entries.xml"))
-        poller = Feedpoller(
+        poller = FeedPoller(
             {"url": "MOCK_URL", "title": "Test"},
             on_created=noop,
             on_entry=on_entry,
@@ -75,7 +75,7 @@ class FeedRetriverTest(unittest.TestCase):
             self.on_entry(feed, entry)
 
         read.return_value = feedparse(os.path.join(self.dir, "runkeeper_rss_0-entries.xml"))
-        poller = Feedpoller(
+        poller = FeedPoller(
             {"url": "MOCK_URL", "title": "Test"},
             on_created=noop,
             on_entry=on_entry,
