@@ -3,6 +3,8 @@ import logging
 
 from utils import str_utils
 
+from plugins.feedretriever.pollerfactory import PollerFactory, PollerBase
+
 FAIL_MESSAGE = (
     "Unable to download or parse feed.  Remove unused feeds using "
     "the !listfeed and !removefeed commands."
@@ -11,7 +13,8 @@ FAIL_MESSAGE = (
 
 # Simple polling class, fetches the feed in a regular interval and passes
 # the information on to the Feed object
-class Feedpoller:
+@PollerFactory.register("*")
+class FeedPoller(PollerBase):
     def __init__(self, feed, on_created, on_entry, on_error):
         self.feed = feed
         self.feed["title"] = str_utils.sanitize_string(self.feed["title"])
