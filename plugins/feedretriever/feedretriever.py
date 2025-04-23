@@ -1,11 +1,11 @@
 import json
 import logging
 import sys
-import re
 
 import plugin
 from utils import str_utils, auto_requests
-from plugins.feedretriever.feedpoller import Feedpoller
+from plugins.feedretriever.pollerfactory import PollerFactory
+import plugins.feedretriever.feedpoller
 import plugins.feedretriever.cnnpoller
 
 
@@ -75,16 +75,8 @@ class Feedretriever(plugin.Plugin):
             self.privmsg(feed["server"], feed["channel"], feed["title"] + ": " + message)
 
         try:
-            if feed["url"] == plugins.feedretriever.cnnpoller.CNN_URL:
-                poller = plugins.feedretriever.cnnpoller.CNNpoller(
-                    feed,
-                    on_created=on_created if new else lambda *a, **kw: None,
-                    on_entry=on_entry,
-                    on_error=on_error,
-                )
-                self.feeds.append(poller)
-                return
-            poller = Feedpoller(
+            poller = PollerFactory.create_poller(
+                feed["url"],
                 feed,
                 on_created=on_created if new else lambda *a, **kw: None,
                 on_entry=on_entry,

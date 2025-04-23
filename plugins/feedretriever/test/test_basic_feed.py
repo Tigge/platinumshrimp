@@ -3,7 +3,7 @@ import unittest
 import unittest.mock
 import feedparser
 
-from plugins.feedretriever.feedretriever import Feedpoller
+from plugins.feedretriever.feedpoller import FeedPoller
 
 
 def noop(*a, **kw):
@@ -21,7 +21,7 @@ class FeedRetriverTest(unittest.TestCase):
     @unittest.mock.patch("feedparser.parse")
     def test_basic_feed(self, read):
         read.return_value = feedparse(os.path.join(self.dir, "basic_rss_0-entries.xml"))
-        Feedpoller(
+        FeedPoller(
             {"url": "MOCK_URL", "title": "MOCK_TITLE"},
             on_created=noop,
             on_entry=noop,
@@ -31,7 +31,7 @@ class FeedRetriverTest(unittest.TestCase):
     @unittest.mock.patch("feedparser.parse")
     def test_no_update(self, read):
         read.return_value = feedparse(os.path.join(self.dir, "basic_rss_0-entries.xml"))
-        feed = Feedpoller(
+        feed = FeedPoller(
             {"url": "MOCK_URL", "title": "MOCK_TITLE"},
             on_created=noop,
             on_entry=self.fail,
@@ -48,7 +48,7 @@ class FeedRetriverTest(unittest.TestCase):
             self.assertEqual(entry.link, "http://www.example.com")
             self.updated = True
 
-        feed = Feedpoller(
+        feed = FeedPoller(
             {"url": "MOCK_URL", "title": "Test"},
             on_created=noop,
             on_entry=on_entry,
