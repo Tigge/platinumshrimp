@@ -2,9 +2,10 @@ import feedparser
 import json
 import logging
 import sys
+import re
 
 import plugin
-from utils import str_utils
+from utils import str_utils, auto_requests
 
 FAIL_MESSAGE = (
     "Unable to download or parse feed.  Remove unused feeds using "
@@ -52,6 +53,8 @@ class Feedpoller:
         self.feed["title"] = str_utils.sanitize_string(self.feed["title"])
 
         self.last_entry = None
+        self.modified = None
+        self.etag = None
         self.consecutive_fails = 0
         self.update_count = 0
         self.on_created = on_created
@@ -122,6 +125,33 @@ class Feedpoller:
             self.last_entry = entries[0]
 
 
+CNN_URL = "https://lite.cnn.com/"
+
+
+# This basically, with a bit of trickery, turns the CNN_URL into a feed.
+class CNNpoller(Feedpoller):
+    def read(self, url, modified=None, etag=None):
+        logging.info("CNNpoller.read")
+        response = auto_requests.get(url)
+        pattern = r'<li.*?(<a href="(.*?)">\s*(.*?)\s*</a>).*?</li>'
+        matches = re.findall(pattern, response.text, re.DOTALL)
+        response.connection.close()
+        entries_ = []
+        for _, link_, title_ in matches:
+
+            class CNNEntry(list):
+                link = url + link_
+                title = title_
+
+            entries_.append(CNNEntry())
+
+        class CNNFeed:
+            bozo = 0
+            entries = entries_
+
+        return CNNFeed()
+
+
 # Aggregator class for adding and handling feeds
 class Feedretriever(plugin.Plugin):
     def __init__(self):
@@ -155,6 +185,15 @@ class Feedretriever(plugin.Plugin):
             self.privmsg(feed["server"], feed["channel"], feed["title"] + ": " + message)
 
         try:
+            if feed["url"] == CNN_URL:
+                poller = CNNpoller(
+                    feed,
+                    on_created=on_created if new else lambda *a, **kw: None,
+                    on_entry=on_entry,
+                    on_error=on_error,
+                )
+                self.feeds.append(poller)
+                return
             poller = Feedpoller(
                 feed,
                 on_created=on_created if new else lambda *a, **kw: None,
