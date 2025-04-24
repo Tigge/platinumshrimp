@@ -5,6 +5,8 @@ on:
     branches: ['main']
   pull_request:
     branches: ['main']
+  schedule:
+    - cron: '15 9 12 * *' # At 09:15 on the 12th of each month
 
 jobs:
   lint:
