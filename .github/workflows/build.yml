@@ -7,6 +7,13 @@ on:
     branches: ['main']
 
 jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 'Dependency Review'
+        uses: actions/dependency-review-action@v4
+
   lint:
     runs-on: ubuntu-latest
     steps:
