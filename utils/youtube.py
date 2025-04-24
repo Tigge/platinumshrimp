@@ -30,7 +30,7 @@ class YouTube:
 
     @staticmethod
     def find_all_ids(message):
-        url_regex = re.compile(r"https?:\/\/.*youtu.*(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})")
+        url_regex = re.compile(r"https?:\/\/.*youtu.*(?:\/|%3D|v=|vi=)([0-9A-Za-z-_]{11})")
         return re.findall(url_regex, message)
 
     def __init__(self, key, id):
