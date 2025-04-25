@@ -10,6 +10,9 @@ FAIL_MESSAGE = (
     "the !listfeed and !removefeed commands."
 )
 
+# Spam control, don't print more than 10 new messages:
+MAX_NEW_MESSAGES = 7
+
 
 # Simple polling class, fetches the feed in a regular interval and passes
 # the information on to the Feed object
@@ -64,7 +67,7 @@ class FeedPoller(PollerBase):
                 self.on_error(self.feed, FAIL_MESSAGE)
             return
 
-        for entry in parsed.entries:
+        for index, entry in enumerate(parsed.entries):
             # TODO: Check id, link, etc
             # Maybe save the entire data.entries and remove all duplicate when
             # a new update happens?
@@ -72,9 +75,10 @@ class FeedPoller(PollerBase):
                 if "published_parsed" in entry:
                     if entry.published_parsed <= self.last_entry.published_parsed:
                         break
-                else:
-                    if entry.title == self.last_entry.title:
-                        break
+                elif entry.title == self.last_entry.title:
+                    break
+                elif index >= MAX_NEW_MESSAGES:
+                    break
 
             self.on_entry(self.feed, entry)
 
