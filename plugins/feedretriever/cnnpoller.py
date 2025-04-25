@@ -28,7 +28,10 @@ class CNNPoller(FeedPoller):
             entries_.append(CNNEntry())
 
         class CNNFeed:
-            bozo = 0
             entries = entries_
+            if len(entries) == 0:
+                bozo = 1
+            else:
+                bozo = 0
 
         return CNNFeed()
