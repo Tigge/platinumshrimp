@@ -26,9 +26,11 @@ NO_FEED_MESSAGE = "No feeds"
 
 DEFAULT_FETCH_TIME = 10 * 60
 
+DEFAULT_FORMAT = "{feed_name}: {title} <{link}>"
 
-def FeedItemToString(title, link, feed_title=""):
-    return str_utils.sanitize_string("{}: {} <{}>".format(feed_title, title, link))
+
+def FeedItemToString(form, title, link, feed_name=""):
+    return str_utils.sanitize_string(form.format(feed_name=feed_name, title=title, link=link))
 
 
 def GetFeedIndexArrayFromCommand(message, feed_size, select_all=False):
@@ -145,10 +147,13 @@ class Feedretriever(plugin.Plugin):
             self._save_settings(json.dumps(self.settings))
 
         def on_entry(feed, entry):
+            form = DEFAULT_FORMAT
+            if "format" in feed:
+                form = feed["format"]
             self.safe_privmsg(
                 feed["server"],
                 feed["channel"],
-                FeedItemToString(entry.title, entry.link, feed["title"]),
+                FeedItemToString(form, entry.title, entry.link, feed["title"]),
             )
 
         def on_error(feed, message):
@@ -197,6 +202,7 @@ class Feedretriever(plugin.Plugin):
                 "server": server,
                 "channel": channel,
                 "frequency": frequency,
+                "format": DEFAULT_FORMAT,
             }
             self.add_feed(feed)
         elif message.startswith("!removefeed"):
