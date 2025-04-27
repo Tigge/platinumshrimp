@@ -85,7 +85,8 @@ class Feedretriever(plugin.Plugin):
             self.feeds.append(poller)
         except Exception as e:
             logging.info("Failed to add feed: %r", e)
-            self.privmsg(feed["server"], feed["channel"], "Failed to add: " + feed["url"])
+            if new:  # only send error message on new feeds as we'll otherwise risk a deadlock
+                self.privmsg(feed["server"], feed["channel"], "Failed to add: " + feed["url"])
 
     def remove_feed(self, feed):
         self.feeds.remove(feed)
