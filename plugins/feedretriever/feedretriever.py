@@ -1,15 +1,13 @@
-import feedparser
 import json
 import logging
 import sys
 
 import plugin
-from utils import str_utils
+from utils import str_utils, auto_requests
+from plugins.feedretriever.pollerfactory import PollerFactory
+import plugins.feedretriever.feedpoller
+import plugins.feedretriever.cnnpoller
 
-FAIL_MESSAGE = (
-    "Unable to download or parse feed.  Remove unused feeds using "
-    "the !listfeed and !removefeed commands."
-)
 
 HELP_MESSAGE = (
     "!addfeed url [fetch time [custom title]] where:\n"
@@ -42,84 +40,6 @@ def GetFeedIndexArrayFromCommand(message, feed_size, select_all=False):
         if i >= 0 and i < feed_size:
             feeds.append(i)
     return feeds
-
-
-# Simple polling class, fetches the feed in a regular interval and passes
-# the information on to the Feed object
-class Feedpoller:
-    def __init__(self, feed, on_created, on_entry, on_error):
-        self.feed = feed
-        self.feed["title"] = str_utils.sanitize_string(self.feed["title"])
-
-        self.last_entry = None
-        self.consecutive_fails = 0
-        self.update_count = 0
-        self.on_created = on_created
-        self.on_entry = on_entry
-        self.on_error = on_error
-
-        parsed = self.read(feed["url"])
-        if parsed.bozo == 0:
-            self._set_last(parsed.entries)
-            if self.feed["title"] == "":
-                self.feed["title"] = str_utils.sanitize_string(parsed.feed.title)
-            on_created(self.feed)
-        else:
-            self.modified = ""
-            raise Exception("Could not parse feed")
-
-    def read(self, url, modified=None, etag=None):
-        parsed = feedparser.parse(url, modified=modified, etag=etag)
-        if parsed.bozo == 0:
-            self.modified = parsed.get("modified", None)
-            self.etag = parsed.get("etag", None)
-        return parsed
-
-    def force_update(self):
-        self.update_count = self.feed["frequency"]
-
-    def update(self):
-        self.update_count += 1
-        if self.update_count < self.feed["frequency"]:
-            return
-
-        self.update_count = 0
-        self.update_now()
-
-    def update_now(self):
-        parsed = self.read(self.feed["url"], self.modified, self.etag)
-        if parsed.bozo == 1:
-            self.consecutive_fails += 1
-            if self.consecutive_fails % 10 == 0:
-                self.on_error(self.feed, FAIL_MESSAGE)
-            return
-
-        for entry in parsed.entries:
-            # TODO: Check id, link, etc
-            # Maybe save the entire data.entries and remove all duplicate when
-            # a new update happens?
-            if self.last_entry is not None:
-                if "published_parsed" in entry:
-                    if entry.published_parsed <= self.last_entry.published_parsed:
-                        break
-                else:
-                    if entry.title == self.last_entry.title:
-                        break
-
-            self.on_entry(self.feed, entry)
-
-        self._set_last(parsed.entries)
-        self.consecutive_fails = 0
-
-    def reset_latest(self):
-        parsed = self.read(self.feed["url"], self.modified, self.etag)
-        if len(parsed.entries) > 0:
-            parsed.entries.pop(0)
-        self._set_last(parsed.entries)
-
-    def _set_last(self, entries):
-        if len(entries) > 0:
-            self.last_entry = entries[0]
 
 
 # Aggregator class for adding and handling feeds
@@ -155,7 +75,8 @@ class Feedretriever(plugin.Plugin):
             self.privmsg(feed["server"], feed["channel"], feed["title"] + ": " + message)
 
         try:
-            poller = Feedpoller(
+            poller = PollerFactory.create_poller(
+                feed["url"],
                 feed,
                 on_created=on_created if new else lambda *a, **kw: None,
                 on_entry=on_entry,
