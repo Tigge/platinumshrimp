@@ -6,7 +6,30 @@ from plugins.feedretriever.pollerfactory import PollerFactory
 
 from utils import auto_requests
 
-CNN_URL = "https://lite.cnn.com/"
+CNN_URL = "https://lite.cnn.com"
+CNN_DEFAULT_TITLE = "CNN"
+
+
+class CNNEntry:
+    def __init__(self, link, title):
+        self.link = link
+        self.title = title
+
+    def __contains__(self, _):
+        return False
+
+
+class CNNFeedMeta:
+    def __init__(self):
+        # FeedPoller only use this title if the title is not set when the feed is created
+        self.title = CNN_DEFAULT_TITLE
+
+
+class CNNFeed:
+    def __init__(self, entries):
+        self.entries = entries
+        self.bozo = 1 if not entries else 0
+        self.feed = CNNFeedMeta()
 
 
 # This basically, with a bit of trickery, turns the CNN_URL into a feed.
@@ -18,20 +41,4 @@ class CNNPoller(FeedPoller):
         pattern = r'<li.*?(<a href="(.*?)">\s*(.*?)\s*</a>).*?</li>'
         matches = re.findall(pattern, response.text, re.DOTALL)
         response.connection.close()
-        entries_ = []
-        for _, link_, title_ in matches:
-
-            class CNNEntry(list):
-                link = url + link_
-                title = title_
-
-            entries_.append(CNNEntry())
-
-        class CNNFeed:
-            entries = entries_
-            if len(entries) == 0:
-                bozo = 1
-            else:
-                bozo = 0
-
-        return CNNFeed()
+        return CNNFeed([CNNEntry(url + link, title) for _, link, title in matches])
