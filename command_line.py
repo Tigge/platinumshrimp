@@ -7,7 +7,7 @@ from threading import Thread
 import logging
 from utils import settings
 
-__author__ = "reggnaa"
+__author__ = "reggna"
 
 
 # CLI to control the bots functionality.
