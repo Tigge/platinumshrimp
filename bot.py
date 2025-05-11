@@ -14,6 +14,8 @@ import zmq.asyncio
 import irc.client_aio
 import jaraco.stream
 
+from command_line import CommandLine
+
 
 class PluginInterface:
     def __init__(self, name, bot, pid):
@@ -246,6 +248,9 @@ class Bot:
                 )
             )
 
+        command_line = CommandLine(self)
+        command_line.start()
+
         try:
             self.reactor.process_forever()
         except:
@@ -256,6 +261,7 @@ class Bot:
             os.kill(plugin.pid, signal.SIGTERM)
 
         self.loop.close()
+        command_line.wait_until_done()
         sys.exit(1)
 
 
