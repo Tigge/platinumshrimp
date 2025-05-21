@@ -15,6 +15,9 @@ class CNNEntry:
         self.link = link
         self.title = title
 
+    def __contains__(self, _):
+        return False
+
 
 class CNNFeedMeta:
     def __init__(self):
