@@ -22,8 +22,7 @@ class Predicter(plugin.Plugin):
             self.settings["scheduled_messages"] = []
             self._save_settings(json.dumps(self.settings))
 
-    def process_predict(self, server, user, channel, full_message):
-        user_name = user.split("!", 1)[0]
+    def process_predict(self, server, user_name, channel, full_message):
         logging.info(f"Predicter.process_predict {user_name}: {full_message}")
         target_channel, message = "", ""
         try:
@@ -81,8 +80,9 @@ class Predicter(plugin.Plugin):
         self.privmsg(server, user_name, f"Message scheduled for {target_dt} to {target_channel}")
 
     def on_privmsg(self, server, user, channel, message):
+        user_name = user.split("!", 1)[0]
         if message.startswith("!predict "):
-            self._thread(self.process_predict, server, user, channel, message[9:])
+            self._thread(self.process_predict, server, user_name, channel, message[9:])
         elif message.startswith("!help"):
             self.safe_privmsg(server, user_name, HELP_MESSAGE)
 
