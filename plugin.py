@@ -48,12 +48,8 @@ class Plugin:
 
         self.name = name
 
-        logging.info(
-            "Plugin.init %s, %s",
-            threading.current_thread().ident,
-            "ipc://ipc_plugin_" + name,
-        )
-
+        self.main_thread_ident = threading.current_thread().ident
+        logging.info(f"Plugin.init {self.main_thread_ident}, ipc://ipc_plugin_{name}")
         self.threading_data = threading.local()
         self.threading_data.call_socket = self._socket_bot
 
@@ -170,6 +166,10 @@ class Plugin:
             raise AttributeError("Unsupported internal function call to function: " + name)
 
     def safe_privmsg(self, server, target, message):
+        if threading.current_thread().ident == self.main_thread_ident:
+            logging.info("Plugin.safe_privmsg on main thread, pushing to new thread")
+            self._thread(self.safe_privmsg, server, target, message)
+            return
         # Even though the standard should be "up to 512" characters, various clients and servers
         # impose a much stricter limit.  Let's use 400 as a "safe" upper bound.
         max_length = 400 - len(f"PRIVMSG {target} ")
