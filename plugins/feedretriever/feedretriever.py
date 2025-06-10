@@ -7,6 +7,7 @@ from utils import str_utils, auto_requests
 from plugins.feedretriever.pollerfactory import PollerFactory
 import plugins.feedretriever.feedpoller
 import plugins.feedretriever.cnnpoller
+import plugins.feedretriever.omnipoller
 
 
 HELP_MESSAGE = (
