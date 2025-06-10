@@ -14,6 +14,8 @@ import zmq.asyncio
 import irc.client_aio
 import jaraco.stream
 
+from command_line import CommandLine
+
 
 class PluginInterface:
     def __init__(self, name, bot, pid):
@@ -150,6 +152,17 @@ class Bot:
         if event.type == "disconnect":
             asyncio.create_task(self.reconnect(connection))
 
+        # Track currently active channels
+        if event.type == "join" and event.source.nick == connection.nickname:
+            connection.channels.add(event.target)
+        elif event.type == "part" and event.source.nick == connection.nickname:
+            connection.channels.discard(event.target)
+        elif event.type == "kick" and event.arguments[0] == connection.nickname:
+            connection.channels.discard(event.target)
+        elif event.type == "quit":
+            # Technically not needed but on quit, clear all channels
+            connection.channels.clear()
+
         for plugin in self.plugins:
             plugin._call(
                 "on_" + event.type, connection.name, event.source, event.target, *event.arguments
@@ -216,6 +229,7 @@ class Bot:
             logging.info("Connecting to %r %r", server_name, server_settings)
             server = self.reactor.server()
             self.servers[server_name] = server
+            server.channels = set()
             server.name = server_name
             server.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
             use_ssl = "ssl" in server_settings and server_settings["ssl"]
@@ -234,6 +248,9 @@ class Bot:
                 )
             )
 
+        command_line = CommandLine(self)
+        command_line.start()
+
         try:
             self.reactor.process_forever()
         except:
@@ -244,6 +261,7 @@ class Bot:
             os.kill(plugin.pid, signal.SIGTERM)
 
         self.loop.close()
+        command_line.wait_until_done()
         sys.exit(1)
 
 
