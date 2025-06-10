@@ -96,8 +96,10 @@ class TestBot(unittest.TestCase):
     @patch("os.spawnvpe", return_value=1234)
     @patch("os.kill")  # temporary until we have graceful shutdowns of plugins
     @patch("bot.irc.connection.AioFactory")
+    @patch("bot.CommandLine")
     def test_run(
         self,
+        mock_command_line,
         mock_factory,
         mock_kill,
         mock_spawnvpe,
