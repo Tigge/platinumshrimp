@@ -176,4 +176,7 @@ class Plugin:
         for unescaped_line in str_utils.unescape_entities(message).splitlines():
             wrapped = textwrap.wrap(unescaped_line, width=max_length, fix_sentence_endings=True)
             for safe_line in wrapped:
-                self.privmsg(server, target, safe_line)
+                try:
+                    self.privmsg(server, target, safe_line)
+                except Exception as e:
+                    logging.warning(f"Unable to send message {message} to {target} on {server}")
