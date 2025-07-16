@@ -165,6 +165,11 @@ class CommandLine(cmd.Cmd):
     def emptyline(self):
         pass
 
+    # Let's exit the bot on EOF (aka ctrl+d)
+    def do_EOF(self, _):
+        print("")  # Just to make a new line
+        return self.do_exit(_)
+
     def start(self):
         self.thread = Thread(target=self.cmdloop)
         self.thread.start()
