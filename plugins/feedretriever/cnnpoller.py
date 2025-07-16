@@ -40,5 +40,4 @@ class CNNPoller(FeedPoller):
         response = auto_requests.get(url)
         pattern = r'<li.*?(<a href="(.*?)">\s*(.*?)\s*</a>).*?</li>'
         matches = re.findall(pattern, response.text, re.DOTALL)
-        response.connection.close()
         return CNNFeed([CNNEntry(url + link, title) for _, link, title in matches])

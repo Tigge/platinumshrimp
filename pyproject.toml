@@ -33,6 +33,7 @@ irc = "^20.5.0"
 pyzmq = "^26.2.0"
 openai = "^1.72.0"
 youtube-transcript-api = "^1.0.3"
+httpx = {version = "^0.28.1", extras = ["http2"]}
 
 [tool.poetry.dev-dependencies]
 requests-mock = "^1.12.1"

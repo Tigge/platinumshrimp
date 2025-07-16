@@ -1,7 +1,7 @@
 import codecs
 import html.parser
+import httpx
 import re
-import requests
 
 from email.message import Message
 
@@ -70,18 +70,34 @@ def get(url, *args, **kwargs):
     no_script_re = re.compile(r"<noscript.*?<\/noscript>", re.IGNORECASE)
     redirect_re = re.compile(r'<meta[^>]*?url=(.*?)["\']', re.IGNORECASE)
     nr_redirects = 0
-    while True:
-        response = requests.get(url, *args, **kwargs)
-        message = Message()
-        message["content-type"] = response.headers.get("content-type", "")
-        content_type = message.get_content_type()
-        if content_type != "text/html":
-            return ""
-        response.encoding = find_encoding(response)
-        text = no_script_re.sub("", response.text)
-        match = redirect_re.search(text)
-        if not match or nr_redirects > 10:
-            return response
-        # TODO: Maybe use urlparse.urljoin instead?
-        url = match.groups()[0].strip()
-        nr_redirects += 1
+
+    headers = kwargs.pop("headers", {})
+    default_headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/140.0",
+        "Accept-Language": "en-US",
+        "Sec-GPC": "1",
+        "Accept-Encoding": "gzip, deflate",  # Might consider adding br here to handle Brotli
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    final_headers = {**default_headers, **headers}  # Combine defaults with given headers
+    final_verify = kwargs.get("verify", True)
+
+    with httpx.Client(http2=True, headers=final_headers, verify=final_verify) as client:
+        while True:
+            response = client.get(url, follow_redirects=True)
+            content_type = response.headers.get("content-type", "")
+            # Should we consider removing this?
+            if not content_type.startswith("text/html"):
+                return ""
+
+            encoding = find_encoding(response)
+            response.encoding = encoding or response.encoding or "utf-8"
+            text = no_script_re.sub("", response.text)
+            match = redirect_re.search(text)
+
+            if not match or nr_redirects > 10:
+                return response
+
+            url = match.groups()[0].strip()
+            nr_redirects += 1
+    # All dangling connections are closed here, so we don't need to close anything anywhere else
