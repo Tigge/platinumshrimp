@@ -52,5 +52,4 @@ class OmniPoller(FeedPoller):
             except Exception as e:
                 logging.error("Omnipoller.read parsing error: " + article)
                 logging.error(traceback.format_exc())
-        response.connection.close()
         return OmniFeed(entries)
