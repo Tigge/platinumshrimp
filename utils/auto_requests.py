@@ -3,6 +3,7 @@ import html.parser
 import httpx
 import re
 
+from datetime import datetime
 from email.message import Message
 
 
@@ -72,8 +73,10 @@ def get(url, *args, **kwargs):
     nr_redirects = 0
 
     headers = kwargs.pop("headers", {})
+    # Rough calculation of the latest firefox version, released every 4 weeks
+    ff_version = 140 + ((datetime.today() - datetime(2025, 7, 7)).days // 28)
     default_headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/140.0",
+        "User-Agent": f"Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/{ff_version}.0",
         "Accept-Language": "en-US",
         "Sec-GPC": "1",
         "Accept-Encoding": "gzip, deflate",  # Might consider adding br here to handle Brotli
