@@ -161,6 +161,10 @@ class CommandLine(cmd.Cmd):
             server = self.bot.servers[args[1]]
             return [c + " " for c in getattr(server, "channels", set()) if c.startswith(args[2])]
 
+    # Override the emptyline function to avoid the default of repeating the last command
+    def emptyline(self):
+        pass
+
     def start(self):
         self.thread = Thread(target=self.cmdloop)
         self.thread.start()
