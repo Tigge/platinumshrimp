@@ -142,6 +142,25 @@ class CommandLine(cmd.Cmd):
         except Exception as e:
             print(f"Error unloading plugin '{name}': {e}")
 
+    # A lot of commands share auto complete so let's override the default instead of individuals
+    def completedefault(self, text, line, start_index, end_index):
+        args = line.split(" ")
+
+        if args[0] in ["unload_plugin", "reload_plugin"] and self.bot.plugins:
+            return [plugin.name for plugin in self.bot.plugins if plugin.name.startswith(text)]
+
+        # Exit early for commands with no auto-complete
+        if not args[0] in ["send_message", "list_channels", "part_channel", "join_channel"]:
+            return
+
+        if len(args) < 3:  # Complete server names
+            return [s + " " for s in self.bot.servers if s.startswith(text)]
+        elif len(args) == 3:  # Complete channel names
+            if args[1] not in self.bot.servers:
+                return
+            server = self.bot.servers[args[1]]
+            return [c + " " for c in getattr(server, "channels", set()) if c.startswith(args[2])]
+
     def start(self):
         self.thread = Thread(target=self.cmdloop)
         self.thread.start()
