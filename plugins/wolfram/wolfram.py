@@ -4,31 +4,46 @@ import html
 import json
 import requests
 import urllib.parse
+import xml.etree.ElementTree as ET
 
 import plugin
 from utils import str_utils
 
-RESULT_POD_START = "<pod title='Result"
-DECIMAL_APPROXIMATION_POD_START = "<pod title='Decimal approximation'"
-RESULT_SUB_POD = "<plaintext>"
 API_URL = "http://api.wolframalpha.com/v2/query?appid={key}&input={query}&format=plaintext"
 
 
 def get_answer(query, key):
     query = urllib.parse.quote(query)
-    result = requests.get(API_URL.format(key=key, query=query)).text
-    if RESULT_POD_START not in result:
-        if DECIMAL_APPROXIMATION_POD_START not in result:
-            return
-        else:
-            result = result[result.index(DECIMAL_APPROXIMATION_POD_START) :]
-    else:
-        result = result[result.index(RESULT_POD_START) :]
-    if not RESULT_SUB_POD in result:
-        return
-    result = result[result.index(RESULT_SUB_POD) + len(RESULT_SUB_POD) :]
-    result = result[: result.index("<")]
-    return str_utils.sanitize_string(result)
+    url = API_URL.format(key=key, query=query)
+    try:
+        response = requests.get(url)
+        if not response.ok:
+            return None
+        root = ET.fromstring(response.content)
+    except Exception:
+        logging.exception("Unable to query or parse Wolfram response")
+        return None
+
+    if root.attrib.get("success") != "true":
+        return None
+
+    # Priority 1: primary pods
+    for pod in root.findall("pod"):
+        if pod.attrib.get("primary") == "true":
+            plaintext = pod.find(".//plaintext")
+            if plaintext is not None and plaintext.text:
+                return str_utils.sanitize_string(plaintext.text)
+
+    # Priority 2: pods with specific titles
+    target_titles = ["Result", "Value", "Decimal approximation"]
+    for title in target_titles:
+        for pod in root.findall("pod"):
+            if pod.attrib.get("title") == title:
+                plaintext = pod.find(".//plaintext")
+                if plaintext is not None and plaintext.text:
+                    return str_utils.sanitize_string(plaintext.text)
+
+    return None
 
 
 class Wolfram(plugin.Plugin):
@@ -46,8 +61,12 @@ class Wolfram(plugin.Plugin):
         if message.startswith(self.trigger):
             try:
                 query = message[len(self.trigger) + 1 :]
-                result = html.unescape(get_answer(query, self.key))
-                self.privmsg(server, channel, result)
+                if not query:
+                    return
+                answer = get_answer(query, self.key)
+                if answer:
+                    result = html.unescape(answer)
+                    self.privmsg(server, channel, result)
             except:
                 logging.exception("Unable to query")
 
