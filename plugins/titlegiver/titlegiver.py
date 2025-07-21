@@ -43,9 +43,10 @@ class Titlegiver(plugin.Plugin):
             url,
             verify=False,
         )
-        content = response.text[: Titlegiver.MAX_CONTENT_LENGTH]
+        content = response.text[: Titlegiver.MAX_CONTENT_LENGTH] if response else ""
 
-        return Titlegiver.find_title_in_content(content).strip()
+        title = Titlegiver.find_title_in_content(content)
+        return title.strip() if title else None
 
     @staticmethod
     def find_title_in_content(text):
@@ -82,6 +83,8 @@ class Titlegiver(plugin.Plugin):
             return
 
         title = Titlegiver.get_title_from_url(url)
+        if not title:
+            return
         for line in Titlegiver.split_strip_and_slice(title, Titlegiver.MAX_LINE_COUNT):
             self.privmsg(server, channel, line)
 
