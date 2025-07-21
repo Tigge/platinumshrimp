@@ -8,8 +8,8 @@ import urllib.parse
 import plugin
 from utils import str_utils
 
-RESULT_POD_START = "<pod title='Result"
-DECIMAL_APPROXIMATION_POD_START = "<pod title='Decimal approximation'"
+RESULT_POD_START = '<pod title="Result'
+DECIMAL_APPROXIMATION_POD_START = '<pod title="Decimal approximation"'
 RESULT_SUB_POD = "<plaintext>"
 API_URL = "http://api.wolframalpha.com/v2/query?appid={key}&input={query}&format=plaintext"
 
