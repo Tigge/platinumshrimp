@@ -86,7 +86,7 @@ class Titlegiver(plugin.Plugin):
         if not title:
             return
         for line in Titlegiver.split_strip_and_slice(title, Titlegiver.MAX_LINE_COUNT):
-            self.privmsg(server, channel, line)
+            self.safe_privmsg(server, channel, line)
 
     def process_youtube(self, id, server, channel):
         if "yt-key" not in self.settings:
