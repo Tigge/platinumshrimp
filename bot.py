@@ -119,7 +119,11 @@ class PluginInterface:
 
 class Bot:
     def __init__(self, temp_folder):
-        logging.basicConfig(filename="Bot.log", level=logging.DEBUG)
+        logging.basicConfig(
+            filename="Bot.log",
+            level=logging.DEBUG,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
 
         self.settings = settings.load_settings()
         if not settings.validate_settings(self.settings):

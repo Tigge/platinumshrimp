@@ -27,7 +27,11 @@ class Plugin:
     def __init__(self, name):
 
         locale.setlocale(locale.LC_ALL, "")
-        logging.basicConfig(filename=name + ".log", level=logging.DEBUG)
+        logging.basicConfig(
+            filename=name + ".log",
+            level=logging.DEBUG,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
 
         context = zmq.asyncio.Context()
 
