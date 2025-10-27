@@ -14,6 +14,7 @@ class DummyPlugin(Plugin):
         self.privmsg = MagicMock()
         self.threading_data = threading.local()
         self.threading_data.call_socket = MagicMock()
+        self.main_thread_ident = "main_thread"
 
 
 class TestPlugin(unittest.TestCase):
@@ -39,7 +40,8 @@ class TestPlugin(unittest.TestCase):
     # Test that safe_privmsg will unescape, wrap, and send each line using privmsg
     @patch("plugin.textwrap.wrap", return_value=["line1", "line2"])
     @patch("plugin.str_utils.unescape_entities", return_value="msg1\nmsg2")
-    def test_safe_privmsg_sends_wrapped_lines(self, mock_unescape, mock_wrap):
+    @patch("threading.current_thread", return_value=MagicMock(ident="plugin_thread"))
+    def test_safe_privmsg_sends_wrapped_lines(self, mock_unescape, mock_wrap, mock_threading):
         self.plugin.safe_privmsg("server", "#chan", "Test &amp; msg")
         self.plugin.privmsg.assert_has_calls(
             [
