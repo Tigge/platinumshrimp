@@ -51,13 +51,15 @@ class Titlegiver(plugin.Plugin):
     @staticmethod
     def find_title_in_content(text):
         try:
-            title = Titlegiver.WHITESPACE_REGEX.sub(
-                " ", Titlegiver.TITLE_REGEX.search(text).group(1)
-            )
-            return str_utils.unescape_entities(title)
+            title = Titlegiver.TITLE_REGEX.search(text)
+            if title:
+                clean_title = Titlegiver.WHITESPACE_REGEX.sub(" ", title.group(1))
+                return str_utils.unescape_entities(clean_title)
+            else:
+                logging.info("No title found")
+                logging.debug(text)
         except:
             logging.exception("Regexp or unescape failed")
-            return None
 
     @staticmethod
     # Split a given string and remove empty lines
