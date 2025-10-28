@@ -123,7 +123,7 @@ class Bot:
     def __init__(self, temp_folder):
         logging.basicConfig(
             filename="Bot.log",
-            level=logging.DEBUG,
+            level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s",
         )
 
