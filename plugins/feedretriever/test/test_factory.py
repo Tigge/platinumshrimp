@@ -2,7 +2,6 @@ import unittest
 
 from plugins.feedretriever.pollerfactory import PollerFactory
 
-
 POLLER1_NAME = "name_1"
 POLLER2_NAME = "name_2"
 CATCH_ALL = "*"

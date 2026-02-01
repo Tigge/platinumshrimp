@@ -2,7 +2,6 @@ import json
 import logging
 from os import path
 
-
 DEFAULT_SETTINGS_FILE = "settings.json"
 DEFAULT_SETTINGS = {
     "nickname": "platinumshrimp",
