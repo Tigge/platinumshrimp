@@ -65,7 +65,7 @@ def find_encoding(response):
     return parser.charset
 
 
-def get(url, *args, **kwargs):
+def _request(method, url, *args, **kwargs):
     # TODO: Should we redirect on all refreshs, or only the ones with zero timeout?
     # TODO: Should we check for http-equiv="refresh"?
     no_script_re = re.compile(r"<noscript.*?<\/noscript>", re.IGNORECASE)
@@ -87,7 +87,14 @@ def get(url, *args, **kwargs):
 
     with httpx.Client(http2=True, headers=final_headers, verify=final_verify) as client:
         while True:
-            response = client.get(url, follow_redirects=True)
+            if method == "get":
+                response = client.get(url, follow_redirects=True)
+            elif method == "post":
+                content = kwargs.get("content", "")
+                response = client.post(url, follow_redirects=True, content=content)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
             content_type = response.headers.get("content-type", "")
             # Should we consider removing this?
             if not content_type.startswith("text/html"):
@@ -104,3 +111,11 @@ def get(url, *args, **kwargs):
             url = match.groups()[0].strip()
             nr_redirects += 1
     # All dangling connections are closed here, so we don't need to close anything anywhere else
+
+
+def get(url, *args, **kwargs):
+    return _request("get", url, *args, **kwargs)
+
+
+def post(url, *args, **kwargs):
+    return _request("post", url, *args, **kwargs)
