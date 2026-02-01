@@ -95,11 +95,6 @@ def _request(method, url, *args, **kwargs):
             else:
                 raise ValueError(f"Unsupported method: {method}")
 
-            content_type = response.headers.get("content-type", "")
-            # Should we consider removing this?
-            if not content_type.startswith("text/html"):
-                return ""
-
             encoding = find_encoding(response)
             response.encoding = encoding or response.encoding or "utf-8"
             text = no_script_re.sub("", response.text)
