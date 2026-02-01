@@ -9,7 +9,6 @@ from dateutil import relativedelta
 from plugins.trakt.trakt import Trakt
 from plugins.trakt import api
 
-
 """ Presets copied from Trakt's API  """
 
 ACTIVITY_PRESET_EPISODE_1 = {

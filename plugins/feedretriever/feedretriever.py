@@ -9,7 +9,6 @@ import plugins.feedretriever.feedpoller
 import plugins.feedretriever.cnnpoller
 import plugins.feedretriever.omnipoller
 
-
 HELP_MESSAGE = (
     "!addfeed url [fetch time [custom title]] where:\n"
     "url - is the url of the atom or rss feed\n"

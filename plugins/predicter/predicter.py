@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 import plugin
 
-
 HELP_MESSAGE = "Usage: !predict #channel [YYYY-MM-DD] [HH:MM] message"
 
 
