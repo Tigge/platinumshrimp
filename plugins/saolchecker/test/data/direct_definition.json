@@ -1,0 +1,22 @@
+{
+  "saol": {
+    "hits": {
+      "hits": [
+        {
+          "_source": {
+            "huvudbetydelser": [
+              {
+                "definition": "En test-definition",
+                "exempel": [
+                  {
+                    "text": "Ett test-exempel"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

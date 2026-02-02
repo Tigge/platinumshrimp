@@ -1,0 +1,15 @@
+{
+  "saol": {
+    "hits": {
+      "hits": [
+        {
+          "_source": {
+            "enbartDigitalaHänvisningar": [
+              "makro-"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
