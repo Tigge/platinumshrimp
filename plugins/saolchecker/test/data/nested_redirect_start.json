@@ -1,0 +1,21 @@
+{
+  "saol": {
+    "hits": {
+      "hits": [
+        {
+          "_source": {
+            "huvudbetydelser": [
+              {
+                "hänvisningar": [
+                  {
+                    "hänvisning": "annat-ord"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

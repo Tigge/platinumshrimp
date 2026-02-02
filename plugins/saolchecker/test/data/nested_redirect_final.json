@@ -1,0 +1,17 @@
+{
+  "saol": {
+    "hits": {
+      "hits": [
+        {
+          "_source": {
+            "huvudbetydelser": [
+              {
+                "definition": "Slutgiltig definition"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
