@@ -3,6 +3,8 @@ import html.parser
 import httpx
 import re
 
+import logging
+
 from datetime import datetime
 from email.message import Message
 
@@ -87,7 +89,11 @@ def get(url, *args, **kwargs):
 
     with httpx.Client(http2=True, headers=final_headers, verify=final_verify) as client:
         while True:
-            response = client.get(url, follow_redirects=True)
+            try:
+                response = client.get(url, follow_redirects=True)
+            except Exception as e:
+                logging.info("Exception: " + type(e).__name__)
+                return ""
             content_type = response.headers.get("content-type", "")
             # Should we consider removing this?
             if not content_type.startswith("text/html"):
