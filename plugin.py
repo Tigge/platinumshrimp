@@ -79,12 +79,15 @@ class Plugin:
         logging.info("Plugin._thread %r", function)
 
         def starter():
-            context = zmq.Context()
+            context = zmq.Context.instance()
             sock = context.socket(zmq.PUSH)
             sock.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + self.name + "_workers")
             self.threading_data.call_socket = sock
 
-            function(*args, **kwargs)
+            try:
+                function(*args, **kwargs)
+            finally:
+                sock.close()
 
         thread = threading.Thread(target=starter)
         thread.start()
