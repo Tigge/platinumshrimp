@@ -31,7 +31,7 @@ requests = "^2.32.3"
 feedparser = "^6.0.11"
 irc = "^20.5.0"
 pyzmq = "^26.2.0"
-openai = "^1.72.0"
+google-generativeai = "^0.8.4"
 youtube-transcript-api = "^1.0.3"
 httpx = {version = "^0.28.1", extras = ["http2"]}
 
