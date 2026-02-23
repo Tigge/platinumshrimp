@@ -172,6 +172,15 @@ class Bot:
                 "on_" + event.type, connection.name, event.source, event.target, *event.arguments
             )
 
+    def _dispatch_sent(self, connection_name, type, target, message):
+        source = self.settings["nickname"]
+        event_type = type
+        if type == "privmsg" and target and target[0] in "&#+!":
+            event_type = "pubmsg"
+
+        for plugin in self.plugins:
+            plugin._call("on_me_" + event_type, connection_name, source, target, message)
+
     def load_plugin(self, name, settings):
         logging.info("Bot.plugin_load %s, %s", name, settings)
         file_name = "plugins/" + name + "/" + name + ".py"
@@ -235,6 +244,22 @@ class Bot:
             self.servers[server_name] = server
             server.channels = set()
             server.name = server_name
+
+            # Monkey-patch to track outgoing messages
+            def patch(obj, func_name, event_type):
+                orig = getattr(obj, func_name)
+
+                def wrapped(target, message):
+                    orig(target, message)
+                    self._dispatch_sent(server_name, event_type, target, message)
+
+                setattr(obj, func_name, wrapped)
+
+            patch(server, "privmsg", "privmsg")
+            patch(server, "notice", "notice")
+            if hasattr(server, "action"):
+                patch(server, "action", "action")
+
             server.buffer_class = jaraco.stream.buffer.LenientDecodingLineBuffer
             use_ssl = "ssl" in server_settings and server_settings["ssl"]
             ssl_context = ssl.create_default_context()
