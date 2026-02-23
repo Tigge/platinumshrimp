@@ -1,22 +1,22 @@
-# Plugin that summarizes given youtube videos using OpenAI.
+# Plugin that summarizes given youtube videos using Gemini.
 #
 # Sample setting:
 #
 # "youtubesummarizer": {
-#   "key": "your-openai-app-key",
+#   "key": "your-gemini-app-key",
 #   "yt-key": "your-youtube-api-key",
 #   "channel": "#youtube",
-#   "model": "gpt-4o-mini",
+#   "model": "gemini-2.5-flash",
 #   "max_tokens": 4096,
 #   "temperature": 0.2
 # }
 #
 # The only required parameter is "key".
 # If "yt-key" is not specified, you could get a bit worse summary as some information
-# will not be passed on to openai.
+# will not be passed on to gemini.
 #
 # Commands:
-# * !gpt yt-summary https://www.youtube.com/watch?v=jNQXAC9IVRw
+# * !gemini yt-summary https://www.youtube.com/watch?v=jNQXAC9IVRw
 
 import logging
 import sys
@@ -24,13 +24,13 @@ import json
 import plugin
 
 from youtube_transcript_api import YouTubeTranscriptApi
-from utils import youtube, openai
+from utils import youtube, gemini
 
 YT_PROMPT = """
             Summarize the content of this YouTube video.  End by giving a highlight link to the
             most important part of the video in the form of https://youtu.be/[id]?t=[timestamp]
             """
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = "gemini-2.5-flash"
 
 
 class youtubesummarizer(plugin.Plugin):
@@ -68,7 +68,7 @@ class youtubesummarizer(plugin.Plugin):
             {"role": "system", "content": YT_PROMPT},
             {"role": "user", "content": trans_str},
         ]
-        result = openai.get_response(
+        result = gemini.get_response(
             self.key, messages, self.model, self.max_tokens, self.temperature
         )
         logging.info(result)
@@ -77,7 +77,7 @@ class youtubesummarizer(plugin.Plugin):
     def on_pubmsg(self, server, user, channel, message):
         if self.channel and channel != self.channel:
             return
-        if message.startswith("!gpt yt-summary"):
+        if message.startswith("!gemini yt-summary"):
             for id in youtube.YouTube.find_all_ids(message):
                 self._thread(self.process_youtube, id, server, channel)
 
