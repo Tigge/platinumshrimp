@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LogStream | SQLite Log Viewer</title>
+  <script src="assets/tailwindcss.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/flatpickr.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+    }
+
+    .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    .has-tooltip:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    input, select {
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+      outline: none;
+      border-color: #0ea5e9;
+    }
+
+    /* Animation for rows */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .log-row {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen selection:bg-brand-500/30">
+
+  <!-- Initial Upload State -->
+  <div id="uploadState" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950 px-4">
+    <div class="max-w-md w-full">
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-brand-500/10 border border-brand-500/20 mb-6">
+          <svg class="w-10 h-10 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+          </svg>
+        </div>
+        <h1 class="text-4xl font-bold tracking-tight text-white mb-3">LogStream</h1>
+        <p class="text-slate-400">Log analysis dashboard. Please select your database to begin.</p>
+      </div>
+
+      <label class="group relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-slate-700 rounded-3xl cursor-pointer bg-slate-900/50 hover:bg-slate-900 hover:border-brand-500/50 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+          <svg class="w-12 h-12 mb-4 text-slate-500 group-hover:text-brand-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          <p class="mb-2 text-sm text-slate-300 font-medium">Click to upload or drag and drop</p>
+          <p class="text-xs text-slate-500">SQLite .db files only</p>
+        </div>
+        <input type="file" id="dbfile" accept=".db" class="hidden" />
+      </label>
+    </div>
+  </div>
+
+  <!-- Main Application State (Hidden by default) -->
+  <div id="appState" class="hidden flex flex-col h-screen overflow-hidden">
+
+    <!-- Header -->
+    <header class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-900/50 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-white shadow-lg shadow-brand-500/20">L</div>
+        <h2 class="text-lg font-semibold tracking-tight">LogStream</h2>
+        <span id="loadedDbName" class="px-2 py-0.5 rounded-full bg-slate-800 text-xs text-slate-400 font-mono">log.db</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="toggleTimezone" onclick="toggleTimezone()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-colors border border-slate-700">
+          UTC Time
+        </button>
+        <button onclick="window.location.reload()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all" title="Reset / Load New Database">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar Filters -->
+      <aside class="w-80 flex flex-col border-r border-slate-800 bg-slate-950 overflow-y-auto custom-scrollbar">
+        <div class="p-6 space-y-6">
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Context</h3>
+
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-slate-400">Server</label>
+              <select id="server" class="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-200"></select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-slate-400">Channel</label>
+              <select id="channel" class="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-200"></select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-slate-400">Event Type</label>
+              <select id="eventType" class="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-200">
+                <option value="__all__">All Events</option>
+                <option value="pubmsg">Public Message</option>
+                <option value="privmsg">Private Message</option>
+                <option value="action">Action (/me)</option>
+                <option value="join">Join</option>
+                <option value="part">Part</option>
+                <option value="quit">Quit</option>
+                <option value="nick">Nick Change</option>
+                <option value="kick">Kick</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Search</h3>
+              <div class="relative has-tooltip">
+                <div class="tooltip absolute bottom-full right-0 mb-2 w-64 p-3 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 text-xs text-slate-300">
+                  <p class="font-bold text-white mb-1">Advanced Operators:</p>
+                  <ul class="space-y-1.5 list-disc pl-3">
+                    <li><code class="text-brand-400">|</code> OR (nick | bob)</li>
+                    <li><code class="text-brand-400">+</code> AND (hi + world)</li>
+                    <li><code class="text-brand-400">""</code> Exact "phrase"</li>
+                    <li><code class="text-brand-400">-</code> Negate -spam</li>
+                    <li><code class="text-brand-400">()</code> Precedence</li>
+                  </ul>
+                </div>
+                <svg class="w-4 h-4 text-slate-500 cursor-help hover:text-brand-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-slate-400">Nickname</label>
+              <input type="text" id="nickname" placeholder="e.g. John*" class="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-200 placeholder:text-slate-600">
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-slate-400">Message Content</label>
+              <input type="text" id="message" placeholder="Search keywords..." class="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-200 placeholder:text-slate-600">
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Timeline</h3>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-slate-500 uppercase">From</label>
+                <input type="text" id="startDate" class="w-full h-9 px-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-slate-500 uppercase">To</label>
+                <input type="text" id="endDate" class="w-full h-9 px-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="setRange('today')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold transition-colors">Today</button>
+              <button onclick="setRange('7d')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold transition-colors">7 Days</button>
+              <button onclick="setRange('30d')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold transition-colors">30 Days</button>
+              <button onclick="setRange('all')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold transition-colors">All Time</button>
+            </div>
+          </div>
+
+          <button onclick="searchLogs()" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98]">
+            Search Logs
+          </button>
+        </div>
+      </aside>
+
+      <!-- Results Area -->
+      <main class="flex-1 flex flex-col bg-slate-900/30 overflow-hidden relative">
+        <!-- Results Header -->
+        <div class="px-6 py-4 flex items-center justify-between bg-slate-950/40 border-b border-slate-800/50 backdrop-blur-md">
+          <div class="flex items-center gap-4">
+            <div id="resultsCount" class="text-xs font-medium text-slate-400">
+              0 results found
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleDateSort()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-300 transition-colors">
+              Sort: <span id="sortLabel" class="text-brand-400">Newest First</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Table Container -->
+        <div class="flex-1 overflow-auto custom-scrollbar" id="resultsContainer">
+          <table class="w-full border-collapse text-sm">
+            <thead class="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-sm shadow-sm">
+              <tr class="text-slate-500 text-left border-b border-slate-800">
+                <th class="py-3 px-6 font-semibold w-48">Timestamp</th>
+                <th class="py-3 px-4 font-semibold w-24">Event</th>
+                <th class="py-3 px-4 font-semibold w-40">User</th>
+                <th class="py-3 px-6 font-semibold">Message</th>
+              </tr>
+            </thead>
+            <tbody id="results" class="divide-y divide-slate-800/50">
+              <!-- Content injected here -->
+            </tbody>
+          </table>
+
+          <!-- Empty State -->
+          <div id="emptyState" class="flex flex-col items-center justify-center h-full py-20 text-slate-600">
+            <svg class="w-16 h-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <p class="text-lg">Run a search to see logs</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden">
+    <div class="flex flex-col items-center">
+      <div class="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin mb-4"></div>
+      <p class="text-brand-500 font-medium tracking-wide">Processing Data...</p>
+    </div>
+  </div>
+
+  <script src="assets/flatpickr.min.js"></script>
+  <script src="assets/sql-wasm.js"></script>
+  <script>
+    let db, useSwedishTime = false;
+    let sortDirection = 'DESC';
+
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const serverSelect = document.getElementById('server');
+    const channelSelect = document.getElementById('channel');
+
+    flatpickr(startDateInput, {
+      enableTime: false,
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "M j, Y",
+      onChange: searchLogs
+    });
+
+    flatpickr(endDateInput, {
+      enableTime: false,
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "M j, Y",
+      onChange: searchLogs
+    });
+
+    function toggleDateSort() {
+      sortDirection = sortDirection === 'DESC' ? 'ASC' : 'DESC';
+      document.getElementById('sortLabel').textContent = sortDirection === 'DESC' ? 'Newest First' : 'Oldest First';
+      searchLogs();
+    }
+
+    function toggleTimezone() {
+      useSwedishTime = !useSwedishTime;
+      document.getElementById('toggleTimezone').textContent =
+        useSwedishTime ? 'Swedish Time' : 'Local Time';
+      searchLogs();
+    }
+
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp * 1000);
+      const options = {
+        year: 'numeric', month: 'short', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      };
+      return useSwedishTime
+        ? date.toLocaleString('sv-SE', { ...options, timeZone: 'Europe/Stockholm' })
+        : date.toLocaleString(undefined, options);
+    }
+
+    function setRange(preset) {
+      const start = new Date();
+      const end = new Date();
+      end.setDate(end.getDate() + 1);
+      switch (preset) {
+        case 'today': start.setHours(0, 0, 0, 0); break;
+        case '7d': start.setDate(start.getDate() - 7); break;
+        case '30d': start.setDate(start.getDate() - 30); break;
+        case 'all':
+          startDateInput._flatpickr.clear();
+          endDateInput._flatpickr.clear();
+          searchLogs();
+          return;
+      }
+      startDateInput._flatpickr.setDate(start);
+      endDateInput._flatpickr.setDate(end);
+      searchLogs();
+    }
+
+    function updateChannels() {
+      const stmt = db.prepare("SELECT DISTINCT channel FROM logs WHERE server = ? ORDER BY channel ASC");
+      stmt.bind([serverSelect.value]);
+      const channels = ['<option value="__all__">All Channels</option>'];
+      while (stmt.step()) {
+        const c = stmt.getAsObject()["channel"];
+        channels.push(`<option value="${c}">${c}</option>`);
+      }
+      stmt.free();
+      channelSelect.innerHTML = channels.join('');
+      searchLogs();
+    }
+
+    function populateServersAndChannels() {
+      const stmt = db.prepare("SELECT DISTINCT server FROM logs ORDER BY server ASC");
+      const servers = [];
+      while (stmt.step()) servers.push(stmt.getAsObject()["server"]);
+      stmt.free();
+      serverSelect.innerHTML = servers.map(s => `<option value="${s}">${s}</option>`).join('');
+      updateChannels();
+    }
+
+    document.getElementById('dbfile').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const SQL = await initSqlJs({ locateFile: f => 'assets/' + f });
+        db = new SQL.Database(new Uint8Array(arrayBuffer));
+
+        document.getElementById('loadedDbName').textContent = file.name;
+        document.getElementById('uploadState').classList.add('hidden');
+        document.getElementById('appState').classList.remove('hidden');
+
+        populateServersAndChannels();
+        searchLogs();
+      } catch (err) {
+        console.error(err);
+        alert("Error loading database: " + err.message);
+      } finally {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      }
+    });
+
+    serverSelect.addEventListener('change', updateChannels);
+    channelSelect.addEventListener('change', searchLogs);
+    document.getElementById('eventType').addEventListener('change', searchLogs);
+
+    // Add debounced search for text inputs
+    let searchTimeout;
+    const debouncedSearch = () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(searchLogs, 300);
+    };
+
+    document.getElementById('nickname').addEventListener('input', debouncedSearch);
+    document.getElementById('message').addEventListener('input', debouncedSearch);
+
+    function escapeQuotes(str) {
+      return str.replace(/'/g, "''");
+    }
+
+    function parseQuery(input) {
+      const tokenize = str => {
+        return str.match(/\(|\)|\+|\||-|"[^"]+"|[^\s+|()"']+/g) || [];
+      };
+
+      const toSql = tokens => {
+        const stack = [];
+        for (let i = 0; i < tokens.length; i++) {
+          const t = tokens[i];
+          if (t === '|') stack.push('OR');
+          else if (t === '+') stack.push('AND');
+          else if (t === '-') stack.push('NOT');
+          else if (t === '(' || t === ')') stack.push(t);
+          else {
+            let term = t;
+            if (t.startsWith('"') && t.endsWith('"')) {
+              term = t.slice(1, -1);
+              stack.push(`LIKE '%${escapeQuotes(term)}%'`);
+            } else {
+              stack.push(`LIKE '%${escapeQuotes(term)}%'`);
+            }
+          }
+        }
+        return stack.join(' ');
+      };
+
+      const tokens = tokenize(input);
+      return toSql(tokens);
+    }
+
+    function buildWhereClauses(fields) {
+      const clauses = [];
+      if (fields.server) clauses.push(`server = '${escapeQuotes(fields.server)}'`);
+      if (fields.channel && fields.channel !== '__all__')
+        clauses.push(`channel = '${escapeQuotes(fields.channel)}'`);
+      if (fields.eventType && fields.eventType !== '__all__')
+        clauses.push(`event_type = '${escapeQuotes(fields.eventType)}'`);
+      if (fields.nickname.trim())
+        clauses.push(`(${parseQuery(fields.nickname).replace(/\bLIKE/g, 'nickname LIKE')})`);
+      if (fields.message.trim())
+        clauses.push(`(${parseQuery(fields.message).replace(/\bLIKE/g, 'message LIKE')})`);
+      clauses.push(`timestamp BETWEEN ${fields.startDate} AND ${fields.endDate}`);
+      return clauses.join(' AND ');
+    }
+
+    function formatMessage(row) {
+      const msg = row.message || '';
+      const escapedMsg = msg.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      switch (row.event_type) {
+        case 'join': return `<span class="text-emerald-500/80">→ joined the channel</span>`;
+        case 'part': return `<span class="text-orange-500/80">← parted: <span class="opacity-70">${escapedMsg}</span></span>`;
+        case 'quit': return `<span class="text-rose-500/80">⇐ quit: <span class="opacity-70">${escapedMsg}</span></span>`;
+        case 'nick': return `<span class="text-sky-400">is now known as <b class="text-sky-300">${escapedMsg}</b></span>`;
+        case 'kick': return `<span class="text-rose-600 font-bold">was kicked: ${escapedMsg}</span>`;
+        case 'action': return `<span class="italic text-purple-400 opacity-90">* ${escapedMsg}</span>`;
+        default: return escapedMsg;
+      }
+    }
+
+    function getEventBadge(type) {
+      const colors = {
+        pubmsg: 'bg-slate-800 text-slate-400',
+        privmsg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        action: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        join: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        part: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+        quit: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+        nick: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+        kick: 'bg-rose-600/20 text-rose-500 border-rose-600/30'
+      };
+      const color = colors[type] || 'bg-slate-800 text-slate-400';
+      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${color}">${type}</span>`;
+    }
+
+    function searchLogs() {
+      if (!db) return;
+      const fields = {
+        server: serverSelect.value,
+        channel: channelSelect.value,
+        eventType: document.getElementById('eventType').value,
+        nickname: document.getElementById('nickname').value,
+        message: document.getElementById('message').value,
+        startDate: startDateInput.value ? Math.floor(new Date(startDateInput.value).getTime() / 1000) : 0,
+        endDate: endDateInput.value ? Math.floor(new Date(endDateInput.value + " 23:59:59").getTime() / 1000) : 2147483647
+      };
+
+      const sql = `SELECT * FROM logs WHERE ${buildWhereClauses(fields)} ORDER BY timestamp ${sortDirection} LIMIT 1000`;
+      const stmt = db.prepare(sql);
+      const tbody = document.getElementById('results');
+      const emptyState = document.getElementById('emptyState');
+
+      tbody.innerHTML = '';
+      let count = 0;
+
+      while (stmt.step()) {
+        count++;
+        const row = stmt.getAsObject();
+        const tr = document.createElement('tr');
+        tr.className = 'log-row hover:bg-slate-800/30 transition-colors group';
+        tr.innerHTML = `
+          <td class="py-3 px-6 whitespace-nowrap text-slate-500 mono text-xs">${formatTimestamp(row.timestamp)}</td>
+          <td class="py-3 px-4">${getEventBadge(row.event_type)}</td>
+          <td class="py-3 px-4 font-semibold text-slate-300">${row.nickname}</td>
+          <td class="py-3 px-6 text-slate-200 leading-relaxed">${formatMessage(row)}</td>`;
+        tbody.appendChild(tr);
+      }
+      stmt.free();
+
+      document.getElementById('resultsCount').textContent = `${count}${count === 1000 ? '+' : ''} results found`;
+
+      if (count === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+    }
+
+  // Handle keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('message').focus();
+    }
+  });
+  </script>
+</body>
+</html>
