@@ -90,6 +90,10 @@
     .log-row {
       animation: fadeIn 0.2s ease-out forwards;
     }
+    .highlight-row {
+      background-color: rgba(14, 165, 233, 0.15) !important;
+      border-left: 3px solid #0ea5e9;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen selection:bg-brand-500/30">
@@ -359,7 +363,7 @@
       searchLogs();
     }
 
-    function updateChannels() {
+    function updateChannels(shouldSearch = true) {
       const stmt = db.prepare("SELECT DISTINCT channel FROM logs WHERE server = ? ORDER BY channel ASC");
       stmt.bind([serverSelect.value]);
       const channels = ['<option value="__all__">All Channels</option>'];
@@ -369,7 +373,7 @@
       }
       stmt.free();
       channelSelect.innerHTML = channels.join('');
-      searchLogs();
+      if (shouldSearch) searchLogs(false);
     }
 
     function populateServersAndChannels() {
@@ -378,7 +382,7 @@
       while (stmt.step()) servers.push(stmt.getAsObject()["server"]);
       stmt.free();
       serverSelect.innerHTML = servers.map(s => `<option value="${s}">${s}</option>`).join('');
-      updateChannels();
+      updateChannels(false);
     }
 
     document.getElementById('dbfile').addEventListener('change', async (event) => {
@@ -397,7 +401,7 @@
         document.getElementById('appState').classList.remove('hidden');
 
         populateServersAndChannels();
-        searchLogs();
+        searchLogs(false);
       } catch (err) {
         console.error(err);
         alert("Error loading database: " + err.message);
@@ -406,15 +410,15 @@
       }
     });
 
-    serverSelect.addEventListener('change', updateChannels);
-    channelSelect.addEventListener('change', searchLogs);
-    document.getElementById('eventType').addEventListener('change', searchLogs);
+    serverSelect.addEventListener('change', () => updateChannels(true));
+    channelSelect.addEventListener('change', () => searchLogs(false));
+    document.getElementById('eventType').addEventListener('change', () => searchLogs(false));
 
     // Add debounced search for text inputs
     let searchTimeout;
     const debouncedSearch = () => {
       clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(searchLogs, 300);
+      searchTimeout = setTimeout(() => searchLogs(false), 300);
     };
 
     document.getElementById('nickname').addEventListener('input', debouncedSearch);
@@ -499,22 +503,39 @@
       return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${color}">${type}</span>`;
     }
 
-    function searchLogs() {
-      if (!db) return;
-      const fields = {
+    function getCurrentState() {
+      return {
         server: serverSelect.value,
         channel: channelSelect.value,
         eventType: document.getElementById('eventType').value,
         nickname: document.getElementById('nickname').value,
         message: document.getElementById('message').value,
         startDate: startDateInput.value ? Math.floor(new Date(startDateInput.value).getTime() / 1000) : 0,
-        endDate: endDateInput.value ? Math.floor(new Date(endDateInput.value + " 23:59:59").getTime() / 1000) : 2147483647
+        endDate: endDateInput.value ? Math.floor(new Date(endDateInput.value + " 23:59:59").getTime() / 1000) : 2147483647,
+        rawStartDate: startDateInput.value,
+        rawEndDate: endDateInput.value,
+        sortDirection,
+        useSwedishTime,
+        scrollPos: document.getElementById('resultsContainer').scrollTop,
+        hash: window.location.hash
       };
+    }
 
-      const showChannel = fields.channel === '__all__' && channelSelect.options.length > 2;
+    function searchLogs(pushState = true) {
+      if (!db) return;
+
+      const state = getCurrentState();
+
+      if (pushState === true) {
+        history.pushState(state, '');
+      } else if (!history.state) {
+        history.replaceState(state, '');
+      }
+
+      const showChannel = state.channel === '__all__' && channelSelect.options.length > 2;
       document.getElementById('channelHeader').classList.toggle('hidden', !showChannel);
 
-      const sql = `SELECT * FROM logs WHERE ${buildWhereClauses(fields)} ORDER BY timestamp ${sortDirection} LIMIT 1000`;
+      const sql = `SELECT * FROM logs WHERE ${buildWhereClauses(state)} ORDER BY timestamp ${sortDirection} LIMIT 1000`;
       const stmt = db.prepare(sql);
       const tbody = document.getElementById('results');
       const emptyState = document.getElementById('emptyState');
@@ -526,7 +547,11 @@
         count++;
         const row = stmt.getAsObject();
         const tr = document.createElement('tr');
-        tr.className = 'log-row hover:bg-slate-800/30 transition-colors group';
+        tr.id = `row-${row.id}`;
+        tr.className = 'log-row hover:bg-slate-800/30 cursor-pointer transition-colors group';
+        tr.onclick = (e) => {
+          if (e.target.tagName !== 'A') viewContext(row);
+        };
         tr.innerHTML = `
           <td class="py-3 px-6 whitespace-nowrap text-slate-500 mono text-xs">${formatTimestamp(row.timestamp)}</td>
           ${showChannel ? `<td class="py-3 px-4 text-slate-400 font-medium text-xs">${row.channel}</td>` : ''}
@@ -544,7 +569,93 @@
       } else {
         emptyState.classList.add('hidden');
       }
+
+      // Handle highlighting and scrolling
+      const hash = window.location.hash;
+      document.querySelectorAll('.highlight-row').forEach(el => el.classList.remove('highlight-row'));
+
+      let targetId = null;
+      if (hash.startsWith('#row-')) {
+        targetId = hash.substring(1);
+      } else if (pushState === false && history.state && history.state.lastClickedId) {
+        targetId = `row-${history.state.lastClickedId}`;
+      }
+
+      if (targetId) {
+        const targetRow = document.getElementById(targetId);
+        if (targetRow) {
+          targetRow.classList.add('highlight-row');
+          targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else if (pushState === false && history.state && history.state.scrollPos !== undefined) {
+        // Restore scroll position when navigating back/forward if no specific row target
+        document.getElementById('resultsContainer').scrollTop = history.state.scrollPos;
+      }
     }
+
+    function viewContext(row) {
+      // 1. Update the CURRENT history entry with the latest UI state (scroll position, etc.)
+      // and remember which row we are about to click on so we can highlight it when coming back
+      const currentState = getCurrentState();
+      currentState.lastClickedId = row.id;
+      history.replaceState(currentState, '');
+
+      // 2. Prepare the NEW state (the context view)
+      serverSelect.value = row.server;
+      updateChannels(false);
+      channelSelect.value = row.channel;
+      document.getElementById('nickname').value = '';
+      document.getElementById('message').value = '';
+      document.getElementById('eventType').value = '__all__';
+
+      const date = new Date(row.timestamp * 1000);
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+
+      startDateInput._flatpickr.setDate(start);
+      endDateInput._flatpickr.setDate(end);
+
+      // 3. Push the new state once with the correct hash URL
+      const nextHash = `#row-${row.id}`;
+      const nextState = getCurrentState();
+      nextState.hash = nextHash;
+
+      history.pushState(nextState, '', nextHash);
+
+      // 4. Perform search (without pushing again)
+      searchLogs(false);
+    }
+
+    window.onpopstate = function(event) {
+      if (event.state) {
+        const state = event.state;
+        serverSelect.value = state.server;
+        updateChannels(false);
+        channelSelect.value = state.channel;
+        document.getElementById('eventType').value = state.eventType;
+        document.getElementById('nickname').value = state.nickname;
+        document.getElementById('message').value = state.message;
+
+        if (state.rawStartDate) startDateInput._flatpickr.setDate(state.rawStartDate);
+        else startDateInput._flatpickr.clear();
+
+        if (state.rawEndDate) endDateInput._flatpickr.setDate(state.rawEndDate);
+        else endDateInput._flatpickr.clear();
+
+        sortDirection = state.sortDirection;
+        useSwedishTime = state.useSwedishTime;
+
+        // Restore hash manually if it changed
+        if (window.location.hash !== state.hash) {
+           // This might trigger hashchange, which is fine
+           window.location.hash = state.hash || '';
+        }
+
+        searchLogs(false);
+      }
+    };
 
   // Handle keyboard shortcuts
   document.addEventListener('keydown', (e) => {
