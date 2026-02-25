@@ -257,6 +257,7 @@
             <thead class="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-sm shadow-sm">
               <tr class="text-slate-500 text-left border-b border-slate-800">
                 <th class="py-3 px-6 font-semibold w-48">Timestamp</th>
+                <th id="channelHeader" class="py-3 px-4 font-semibold w-32 hidden">Channel</th>
                 <th class="py-3 px-4 font-semibold w-24">Event</th>
                 <th class="py-3 px-4 font-semibold w-40">User</th>
                 <th class="py-3 px-6 font-semibold">Message</th>
@@ -510,6 +511,9 @@
         endDate: endDateInput.value ? Math.floor(new Date(endDateInput.value + " 23:59:59").getTime() / 1000) : 2147483647
       };
 
+      const showChannel = fields.channel === '__all__' && channelSelect.options.length > 2;
+      document.getElementById('channelHeader').classList.toggle('hidden', !showChannel);
+
       const sql = `SELECT * FROM logs WHERE ${buildWhereClauses(fields)} ORDER BY timestamp ${sortDirection} LIMIT 1000`;
       const stmt = db.prepare(sql);
       const tbody = document.getElementById('results');
@@ -525,6 +529,7 @@
         tr.className = 'log-row hover:bg-slate-800/30 transition-colors group';
         tr.innerHTML = `
           <td class="py-3 px-6 whitespace-nowrap text-slate-500 mono text-xs">${formatTimestamp(row.timestamp)}</td>
+          ${showChannel ? `<td class="py-3 px-4 text-slate-400 font-medium text-xs">${row.channel}</td>` : ''}
           <td class="py-3 px-4">${getEventBadge(row.event_type)}</td>
           <td class="py-3 px-4 font-semibold text-slate-300">${row.nickname}</td>
           <td class="py-3 px-6 text-slate-200 leading-relaxed">${formatMessage(row)}</td>`;
