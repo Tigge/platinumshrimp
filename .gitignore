@@ -21,3 +21,7 @@ dist/
 # Platinumshrimp files
 *.log
 settings.json
+
+# Dot files and folders, except for .github
+.*
+!.github/
