@@ -31,9 +31,9 @@ requests = "^2.32.3"
 feedparser = "^6.0.11"
 irc = "^20.5.0"
 pyzmq = "^26.2.0"
-google-generativeai = "^0.8.4"
 youtube-transcript-api = "^1.0.3"
 httpx = {version = "^0.28.1", extras = ["http2"]}
+google-genai = "^1.65.0"
 
 [tool.poetry.dev-dependencies]
 requests-mock = "^1.12.1"
