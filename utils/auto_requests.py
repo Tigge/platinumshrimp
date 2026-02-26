@@ -1,7 +1,9 @@
 import codecs
+import html
 import html.parser
 import httpx
 import re
+import urllib.parse
 
 from datetime import datetime
 from email.message import Message
@@ -56,6 +58,7 @@ def find_encoding(response):
                 elif (
                     "http-equiv" in attributes
                     and attributes["http-equiv"].lower() == "content-type"
+                    and "content" in attributes
                 ):
                     match = re.search(r"^.*?charset=([a-zA-Z0-9-_]+)$", attributes["content"])
                     self.charset = match.group(1) if match is not None else None
@@ -67,9 +70,6 @@ def find_encoding(response):
 
 def get(url, *args, **kwargs):
     # TODO: Should we redirect on all refreshs, or only the ones with zero timeout?
-    # TODO: Should we check for http-equiv="refresh"?
-    no_script_re = re.compile(r"<noscript.*?<\/noscript>", re.IGNORECASE)
-    redirect_re = re.compile(r'<meta[^>]*?url=(.*?)["\']', re.IGNORECASE)
     nr_redirects = 0
 
     headers = kwargs.pop("headers", {})
@@ -95,12 +95,21 @@ def get(url, *args, **kwargs):
 
             encoding = find_encoding(response)
             response.encoding = encoding or response.encoding or "utf-8"
-            text = no_script_re.sub("", response.text)
-            match = redirect_re.search(text)
+
+            # Only follow meta redirects if http-equiv="refresh" is present
+            match = None
+            for tag in re.findall(r"<meta[^>]*>", response.text, re.IGNORECASE | re.DOTALL):
+                if re.search(r'http-equiv=["\']refresh["\']', tag, re.IGNORECASE):
+                    # Found a refresh tag, now extract the URL from the content attribute
+                    url_match = re.search(r"url=(.*?)[\"']", tag, re.IGNORECASE)
+                    if url_match:
+                        match = url_match
+                        break
 
             if not match or nr_redirects > 10:
                 return response
 
-            url = match.groups()[0].strip()
+            url = html.unescape(match.groups()[0].strip())
+            url = urllib.parse.urljoin(str(response.url), url)
             nr_redirects += 1
     # All dangling connections are closed here, so we don't need to close anything anywhere else
