@@ -70,6 +70,7 @@ def find_encoding(response):
 
 def get(url, *args, **kwargs):
     # TODO: Should we redirect on all refreshs, or only the ones with zero timeout?
+    no_script_re = re.compile(r"<noscript.*?<\/noscript>", re.IGNORECASE)
     nr_redirects = 0
 
     headers = kwargs.pop("headers", {})
@@ -96,9 +97,16 @@ def get(url, *args, **kwargs):
             encoding = find_encoding(response)
             response.encoding = encoding or response.encoding or "utf-8"
 
+            # Technically, we're not doing this correctly.  We're ignoring meta tags that appear
+            # in noscript tags while, according to the spec, we should still adhear to them (as
+            # we're not executing scripts).  However, I want to remember that we added this a long
+            # time ago as there were some pages breaking if you don't support scripts.  But we don't
+            # care if a page works or not, we just want the data as a regular browser would.
+            text_wo_noscript = no_script_re.sub("", response.text)
+
             # Only follow meta redirects if http-equiv="refresh" is present
             match = None
-            for tag in re.findall(r"<meta[^>]*>", response.text, re.IGNORECASE | re.DOTALL):
+            for tag in re.findall(r"<meta[^>]*>", text_wo_noscript, re.IGNORECASE | re.DOTALL):
                 if re.search(r'http-equiv=["\']refresh["\']', tag, re.IGNORECASE):
                     # Found a refresh tag, now extract the URL from the content attribute
                     url_match = re.search(r"url=(.*?)[\"']", tag, re.IGNORECASE)
