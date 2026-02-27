@@ -29,11 +29,13 @@ class SAOLChecker(plugin.Plugin):
         if not message.startswith(self.trigger):
             return
 
-        query = message[len(self.trigger) + 1:].strip()
+        query = message[len(self.trigger) + 1 :].strip()
         if query:
             self._thread(self.process_query, query, server, channel)
 
-    def process_query(self, query: str, server: str, channel: str) -> None:
+    def process_query(
+        self, query: str, server: str, channel: str, seen_queries: Optional[set] = None
+    ) -> None:
         """
         Orchestrates the process of querying SAOL and printing the results.
 
@@ -41,12 +43,19 @@ class SAOLChecker(plugin.Plugin):
         2. If the response contains redirects, follows them.
         3. If not, prints definitions, examples, and suggestions.
         """
+        if seen_queries is None:
+            seen_queries = {query}
+        elif query in seen_queries:
+            return
+        else:
+            seen_queries.add(query)
+
         response_json = self._make_request(query)
         if not response_json:
             return
 
         # If any redirects are found and processed, we stop here.
-        if self._handle_redirects(query, response_json, server, channel):
+        if self._handle_redirects(query, response_json, server, channel, seen_queries):
             return
 
         # If no redirects, process the content of the response.
@@ -72,10 +81,17 @@ class SAOLChecker(plugin.Plugin):
             logging.exception(f"SAOL request failed: {e}")
         except json.JSONDecodeError as e:
             logging.exception(f"Failed to parse SAOL response: {e}")
-        
+
         return None
 
-    def _handle_redirects(self, query: str, response_json: Dict[str, Any], server: str, channel: str) -> bool:
+    def _handle_redirects(
+        self,
+        query: str,
+        response_json: Dict[str, Any],
+        server: str,
+        channel: str,
+        seen_queries: set,
+    ) -> bool:
         """
         Checks for and handles all types of redirects.
 
@@ -99,6 +115,7 @@ class SAOLChecker(plugin.Plugin):
                     redirected_queries,
                     server,
                     channel,
+                    seen_queries,
                 )
                 return True
 
@@ -113,7 +130,7 @@ class SAOLChecker(plugin.Plugin):
                         redirects_found = True
                         refs = [ref["hänvisning"] for ref in meaning["hänvisningar"]]
                         self._process_redirect_list(
-                            query, refs, redirected_queries, server, channel
+                            query, refs, redirected_queries, server, channel, seen_queries
                         )
 
         return redirects_found
@@ -125,6 +142,7 @@ class SAOLChecker(plugin.Plugin):
         redirected_queries: List[str],
         server: str,
         channel: str,
+        seen_queries: set,
     ) -> None:
         """Helper to process a list of raw redirect strings."""
         for redirect_raw in redirects:
@@ -133,7 +151,7 @@ class SAOLChecker(plugin.Plugin):
             if new_query and new_query not in redirected_queries:
                 redirected_queries.append(new_query)
                 self.privmsg(server, channel, f"'{original_query}' hänvisar till: {new_query}")
-                self.process_query(new_query, server, channel)
+                self.process_query(new_query, server, channel, seen_queries)
 
     def _print_definitions(self, response_json: Dict[str, Any], server: str, channel: str) -> None:
         """Finds and prints the definitions and examples for a word."""
