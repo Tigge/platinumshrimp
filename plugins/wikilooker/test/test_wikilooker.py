@@ -40,6 +40,66 @@ class TestWikiLooker(unittest.TestCase):
         self.plugin.started("{}")
         self.assertEqual(self.plugin.default_lang, "en")
 
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._get_wiki_summary")
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._send_wiki_summary")
+    def test_process_wiki_query_exact_match(self, mock_send, mock_get):
+        mock_get.return_value = {"title": "Test Title", "extract": "Test Extract"}
+        self.plugin.process_wiki_query("query", "en", "server", "#channel")
+        mock_get.assert_called_once_with("query", "en")
+        mock_send.assert_called_once_with(mock_get.return_value, "en", "server", "#channel")
+
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._get_wiki_summary")
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._opensearch")
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._send_wiki_summary")
+    def test_process_wiki_query_single_suggestion(self, mock_send, mock_search, mock_get):
+        expected_suggestion = {"title": "Suggestion", "extract": "Summary"}
+        mock_get.side_effect = [None, expected_suggestion]
+        mock_search.return_value = ["Suggestion"]
+        self.plugin.safe_privmsg = MagicMock()
+
+        self.plugin.process_wiki_query("query", "en", "server", "#channel")
+
+        self.plugin.safe_privmsg.assert_called_once_with(
+            "server", "#channel", "Did you mean: Suggestion"
+        )
+        self.assertEqual(mock_get.call_count, 2)
+        mock_send.assert_called_once_with(expected_suggestion, "en", "server", "#channel")
+
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._get_wiki_summary")
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._opensearch")
+    def test_process_wiki_query_multiple_suggestions(self, mock_search, mock_get):
+        mock_get.return_value = None
+        mock_search.return_value = ["Sug1", "Sug2", "Sug3"]
+        self.plugin.safe_privmsg = MagicMock()
+
+        self.plugin.process_wiki_query("query", "en", "server", "#channel")
+
+        self.plugin.safe_privmsg.assert_called_once_with(
+            "server", "#channel", "Could not find 'query'. Did you mean: Sug1, Sug2, Sug3"
+        )
+
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._get_wiki_summary")
+    @patch("plugins.wikilooker.wikilooker.WikiLooker._opensearch")
+    def test_process_wiki_query_no_match(self, mock_search, mock_get):
+        mock_get.return_value = None
+        mock_search.return_value = []
+        self.plugin.safe_privmsg = MagicMock()
+
+        self.plugin.process_wiki_query("query", "en", "server", "#channel")
+
+        self.plugin.safe_privmsg.assert_called_once_with(
+            "server", "#channel", "Could not find a Wikipedia page for 'query'."
+        )
+
+    @patch("utils.auto_requests.get")
+    def test_opensearch_filters_query(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.json.return_value = ["query", ["query", "suggestion"], [], []]
+        mock_get.return_value = mock_response
+
+        suggestions = self.plugin._opensearch("query", "en")
+        self.assertEqual(suggestions, ["suggestion"])
+
 
 if __name__ == "__main__":
     unittest.main()
