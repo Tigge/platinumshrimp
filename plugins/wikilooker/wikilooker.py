@@ -62,26 +62,74 @@ class WikiLooker(plugin.Plugin):
     def process_wiki_query(self, query: str, lang: str, server: str, channel: str) -> None:
         result = self._get_wiki_summary(query, lang)
         if result:
-            summary = result["extract"]
-            title = result["title"]
-
-            # Split summary into sentences and send the first few to avoid spam.
-            sentences = summary.split(". ")
-            # Filter out any empty strings that might result from the split
-            sentences = [s for s in sentences if s]
-
-            output = ". ".join(sentences[:MAX_SUMMARY_SENTENCES]).strip()
-            # Add ellipsis if the summary was truncated
-            if len(sentences) > MAX_SUMMARY_SENTENCES:
-                output += "..."
-
-            # Construct the page URL
-            quoted_title = urllib.parse.quote(title.replace(" ", "_"))
-            url = f"https://{lang}.wikipedia.org/wiki/{quoted_title}"
-
-            self.safe_privmsg(server, channel, f"{output} {url}")
+            self._send_wiki_summary(result, lang, server, channel)
         else:
-            self.safe_privmsg(server, channel, f"Could not find a Wikipedia page for '{query}'.")
+            suggestions = self._opensearch(query, lang)
+            if len(suggestions) == 1:
+                suggestion = suggestions[0]
+                self.safe_privmsg(server, channel, f"Did you mean: {suggestion}")
+                result = self._get_wiki_summary(suggestion, lang)
+                if result:
+                    self._send_wiki_summary(result, lang, server, channel)
+            elif len(suggestions) > 1:
+                self.safe_privmsg(
+                    server,
+                    channel,
+                    f"Could not find '{query}'. Did you mean: " + ", ".join(suggestions),
+                )
+            else:
+                self.safe_privmsg(
+                    server, channel, f"Could not find a Wikipedia page for '{query}'."
+                )
+
+    def _send_wiki_summary(self, result: dict, lang: str, server: str, channel: str) -> None:
+        summary = result["extract"]
+        title = result["title"]
+
+        # Split summary into sentences and send the first few to avoid spam.
+        sentences = summary.split(". ")
+        # Filter out any empty strings that might result from the split
+        sentences = [s for s in sentences if s]
+
+        output = ". ".join(sentences[:MAX_SUMMARY_SENTENCES]).strip()
+        # Add ellipsis if the summary was truncated
+        if len(sentences) > MAX_SUMMARY_SENTENCES:
+            output += "..."
+
+        # Construct the page URL
+        quoted_title = urllib.parse.quote(title.replace(" ", "_"))
+        url = f"https://{lang}.wikipedia.org/wiki/{quoted_title}"
+
+        self.safe_privmsg(server, channel, f"{output} {url}")
+
+    def _opensearch(self, query: str, lang: str) -> list:
+        params = {
+            "action": "opensearch",
+            "search": query,
+            "limit": 7,
+            "namespace": 0,
+            "format": "json",
+        }
+        # Manually encode parameters as auto_requests may not handle the 'params' dict.
+        query_string = urllib.parse.urlencode(params)
+        url = f"{API_URL_TEMPLATE.format(lang=lang)}?{query_string}"
+
+        # Wikipedia's API etiquette requires a custom User-Agent header.
+        headers = {"User-Agent": "PlatinumShrimpBot/1.0 (https://github.com/Tigge/platinumshrimp)"}
+
+        try:
+            response = auto_requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            # Opensearch returns [query, [titles], [descriptions], [urls]]
+            if len(data) >= 2 and isinstance(data[1], list):
+                suggestions = data[1]
+                # Filter out the original query to avoid redundant "did you mean"
+                return [s for s in suggestions if s.lower() != query.lower()]
+        except Exception:
+            logging.exception(f"An error occurred during Opensearch for '{query}'")
+
+        return []
 
     def _get_wiki_summary(self, query: str, lang: str) -> Optional[dict]:
         params = {
