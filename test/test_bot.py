@@ -1,6 +1,7 @@
 import asyncio
 import irc.client_aio
 import signal
+import os
 
 import unittest
 import tempfile
@@ -94,14 +95,12 @@ class TestBot(unittest.TestCase):
     @patch("bot.PluginInterface")
     @patch("irc.client_aio.AioReactor")
     @patch("os.spawnvpe", return_value=1234)
-    @patch("os.kill")  # temporary until we have graceful shutdowns of plugins
     @patch("bot.irc.connection.AioFactory")
     @patch("bot.CommandLine")
     def test_run(
         self,
         mock_command_line,
         mock_factory,
-        mock_kill,
         mock_spawnvpe,
         mock_reactor,
         mock_plugin_interface,
@@ -116,6 +115,8 @@ class TestBot(unittest.TestCase):
 
         plugin_interface_instance = MagicMock()
         plugin_interface_instance.pid = 666
+        plugin_interface_instance.name = "test_plugin"
+        plugin_interface_instance.shutdown_plugin = AsyncMock()
         mock_plugin_interface.return_value = plugin_interface_instance
 
         bot = self.create_bot(mock_settings)
@@ -124,7 +125,7 @@ class TestBot(unittest.TestCase):
                 bot.run()
 
         mock_plugin_interface.assert_called_once()  # Make sure we loaded one pluign
-        mock_kill.assert_called_with(666, signal.SIGTERM)  # Make sure the plugin was destroyed
+        plugin_interface_instance.shutdown_plugin.assert_called_once()  # Make sure the plugin was gracefully shut down
         reactor_instance.server.assert_called_once()  # Make sure we create the server
         server_mock.connect.assert_called_once()  # Make sure we try to connect to the server
         reactor_instance.process_forever.assert_called_once()  # Make sure the reactor runs forever
@@ -144,3 +145,52 @@ class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
         plugin = PluginInterface("testplugin", bot, 123)
         mock_socket.bind.assert_called()
         bot.plugin_started.assert_called_with(plugin)
+
+    @patch("bot.zmq.asyncio.Context")
+    @patch("bot.settings")
+    @patch("bot.os.waitpid")
+    @patch("bot.os.kill")
+    @patch("bot.asyncio.sleep", new_callable=AsyncMock)
+    async def test_shutdown_plugin_clean(
+        self, mock_sleep, mock_kill, mock_waitpid, mock_settings, mock_context
+    ):
+        bot = MagicMock()
+        mock_socket = MagicMock()
+        mock_context.return_value.socket.return_value = mock_socket
+
+        plugin = PluginInterface("testplugin", bot, 123)
+        # Mocking the _call method to avoid sending real zmq messages
+        plugin._call = MagicMock()
+
+        # Simulate process exiting cleanly
+        mock_waitpid.return_value = (123, 0)
+
+        await plugin.shutdown_plugin()
+
+        plugin._call.assert_called_with("shutdown")
+        mock_waitpid.assert_called_with(123, os.WNOHANG)
+        mock_kill.assert_not_called()
+
+    @patch("bot.zmq.asyncio.Context")
+    @patch("bot.settings")
+    @patch("bot.os.waitpid")
+    @patch("bot.os.kill")
+    @patch("bot.asyncio.sleep", new_callable=AsyncMock)
+    async def test_shutdown_plugin_timeout(
+        self, mock_sleep, mock_kill, mock_waitpid, mock_settings, mock_context
+    ):
+        bot = MagicMock()
+        mock_socket = MagicMock()
+        mock_context.return_value.socket.return_value = mock_socket
+
+        plugin = PluginInterface("testplugin", bot, 123)
+        plugin._call = MagicMock()
+
+        # Simulate process not exiting
+        mock_waitpid.return_value = (0, 0)
+
+        await plugin.shutdown_plugin()
+
+        plugin._call.assert_called_with("shutdown")
+        self.assertEqual(mock_waitpid.call_count, 5)
+        mock_kill.assert_called_with(123, signal.SIGTERM)
