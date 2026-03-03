@@ -20,6 +20,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if count > 1:
             url = "redirect?count={0}&url={1}".format(count - 1, self.url_queries["url"][0])
 
+        # Sanitize URL to prevent HTTP response splitting via CR/LF injection.
+        url = url.replace("\r", "").replace("\n", "")
+
         self.send_response(301)
         self.send_header("Location", url)
         self.end_headers()
