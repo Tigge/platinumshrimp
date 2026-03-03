@@ -18,6 +18,11 @@ from command_line import CommandLine
 
 
 class PluginInterface:
+    """
+    Interface for a plugin. This class runs in the main bot process and
+    communicates with the plugin process over IPC.
+    """
+
     def __init__(self, name, bot, pid):
 
         logging.info("PluginInterface.__init__ %s", "ipc://ipc_plugin_" + name)
@@ -109,7 +114,7 @@ class PluginInterface:
                 self._recieve(await self._socket_plugin.recv_json())
 
     def __getattr__(self, name):
-        if name in ["started", "update"]:
+        if name in ["started", "update", "shutdown"]:
 
             def call(*args, **kwarg):
                 self._call(name, *args)
@@ -117,6 +122,23 @@ class PluginInterface:
             return call
         else:
             raise AttributeError(self, name)
+
+    async def shutdown_plugin(self):
+        self.shutdown()
+        for _ in range(5):
+            await asyncio.sleep(0.1)
+            try:
+                pid, status = os.waitpid(self.pid, os.WNOHANG)
+                if pid != 0:
+                    return
+            except ChildProcessError:
+                return
+
+        logging.error("Plugin %s did not shut down cleanly, sending SIGTERM", self.name)
+        print(
+            f"Error: Plugin {self.name} did not shut down cleanly, sending SIGTERM", file=sys.stderr
+        )
+        os.kill(self.pid, signal.SIGTERM)
 
 
 class Bot:
@@ -134,6 +156,14 @@ class Bot:
         self.plugins = list()
         self.servers = dict()
         self.temp_folder = temp_folder
+
+    async def unload_plugin(self, name):
+        plugin = next((p for p in self.plugins if p.name == name), None)
+        if plugin:
+            await plugin.shutdown_plugin()
+            self.plugins.remove(plugin)
+            return True
+        return False
 
     async def reconnect(self, connection):
         while not connection.is_connected():
@@ -261,8 +291,11 @@ class Bot:
             logging.exception("Bot.run aborted")
 
         # Request termination of plugins
-        for plugin in self.plugins:
-            os.kill(plugin.pid, signal.SIGTERM)
+        async def unload_all_plugins():
+            tasks = [self.unload_plugin(plugin.name) for plugin in list(self.plugins)]
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        self.loop.run_until_complete(unload_all_plugins())
 
         self.loop.close()
         command_line.wait_until_done()

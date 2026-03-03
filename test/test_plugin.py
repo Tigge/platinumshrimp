@@ -83,3 +83,11 @@ class TestPlugin(unittest.TestCase):
 
         asyncio.run(run_once())
         self.plugin.on_message.assert_called_once_with("test_param")
+
+    def test_shutdown_stops_loop(self):
+        with patch("asyncio.get_event_loop") as mock_get_loop:
+            mock_loop = MagicMock()
+            mock_get_loop.return_value = mock_loop
+            self.plugin.shutdown = Plugin.shutdown.__get__(self.plugin, DummyPlugin)
+            self.plugin.shutdown()
+            mock_loop.stop.assert_called_once()
