@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/" # "For .github/workflows
+    schedule:
+      interval: "weekly"
+
+
+  # Enable version updates for Poetry/pip
+  - package-ecosystem: "pip"
+    directory: "/" # location of pyproject.toml
+    schedule:
+      interval: "weekly"
+    versioning-strategy: increase-if-necessary
