@@ -24,6 +24,11 @@ plugin_argparser.add_argument(
 
 
 class Plugin:
+    """
+    Base class for plugins. This class runs in its own separate process,
+    spawned by the main bot process.
+    """
+
     def __init__(self, name):
 
         locale.setlocale(locale.LC_ALL, "")
@@ -59,7 +64,7 @@ class Plugin:
 
     def _recieve(self, data):
         func_name = data["function"]
-        if func_name.startswith("on_") or func_name in ["started", "update"]:
+        if func_name.startswith("on_") or func_name in ["started", "update", "shutdown"]:
             try:
                 func = getattr(self, func_name)
             except AttributeError as e:
@@ -69,6 +74,10 @@ class Plugin:
 
         else:
             logging.warning("Unsupported call to plugin function with name " + func_name)
+
+    def shutdown(self):
+        logging.info("Plugin.shutdown")
+        asyncio.get_event_loop().stop()
 
     def _call(self, function, *args):
         logging.info("Plugin.call %s", self.threading_data.__dict__)

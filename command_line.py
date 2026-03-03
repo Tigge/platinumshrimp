@@ -131,14 +131,17 @@ class CommandLine(cmd.Cmd):
     def do_unload_plugin(self, arg):
         """Unload a plugin. Usage: unload_plugin <plugin_name>"""
         name = arg.strip()
-        plugin = next((p for p in self.bot.plugins if p.name == name), None)
-        if not plugin:
-            print(f"Plugin '{name}' not found.")
-            return
+
+        async def _unload():
+            if await self.bot.unload_plugin(name):
+                print(f"Plugin '{name}' unloaded.")
+            else:
+                print(f"Plugin '{name}' not found.")
+
+        # Schedule _unload on the bot's main asyncio loop
+        future = asyncio.run_coroutine_threadsafe(_unload(), self.bot.loop)
         try:
-            os.kill(plugin.pid, signal.SIGTERM)
-            self.bot.plugins.remove(plugin)
-            print(f"Plugin '{name}' unloaded.")
+            future.result()
         except Exception as e:
             print(f"Error unloading plugin '{name}': {e}")
 
