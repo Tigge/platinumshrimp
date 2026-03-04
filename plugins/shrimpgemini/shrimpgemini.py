@@ -32,11 +32,17 @@
 import logging
 import sys
 import json
+import datetime
 import plugin
 
 from utils import gemini
 
-DEFAULT_PROMPT = """You are an IRC bot. Users will post questions that you answer."""
+DEFAULT_PROMPT = (
+    "You are an IRC bot. Users will post questions that you answer. Keep your responses brief and "
+    "as precise as possible.  If you are not sure about an answer, make that clear but don't be "
+    "overly vague.  The user can ask questions in any language and, unless otherwise "
+    "instructed, you will respond in the same langage as the user."
+)
 DEFAULT_MODEL = "gemini-2.5-flash"
 
 
@@ -53,7 +59,7 @@ class shrimpgemini(plugin.Plugin):
         self.system_message = {"role": "system", "content": prompt}
         self.model = s["model"] if "model" in s else DEFAULT_MODEL
         self.max_tokens = int(s["max_tokens"]) if "max_tokens" in s else 512
-        self.temperature = int(s["temperature"]) if "temperature" in s else 0.2
+        self.temperature = float(s["temperature"]) if "temperature" in s else 0.2
         self.history = []
         self.max_history = int(s["max_history"]) if "max_history" in s else 5
         # Max number of seconds of inactivity before cleaning out the message history
@@ -95,7 +101,13 @@ class shrimpgemini(plugin.Plugin):
     def respond_to_message(self, query, server, channel):
         message = {"role": "user", "content": query}
         self.add_to_history(message)
-        messages = [self.system_message] + self.history
+
+        current_time = datetime.datetime.now().astimezone().strftime("%A, %B %d, %Y %H:%M:%S %Z")
+        prompt = self.system_message["content"]
+        full_prompt = f"{prompt}\n\nCurrent date and time: {current_time}"
+        system_message = {"role": "system", "content": full_prompt}
+
+        messages = [system_message] + self.history
         result = gemini.get_response(
             self.key, messages, self.model, self.max_tokens, self.temperature
         )
