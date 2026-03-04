@@ -1,5 +1,5 @@
 name: "Push Notification"
-on: [push, pull_request, create]
+on: [push]
 
 jobs:
   test:
@@ -14,16 +14,6 @@ jobs:
           channel: "#platinumshrimp"
           nickname: github-notifier
           message: |
-            ${{ github.actor }} pushed ${{ github.event.ref }} ${{ github.event.compare }}
-            ${{ join(github.event.commits.*.message) }}
+            ${{ github.actor }} pushed ${{ github.event.ref }}
+            ${{ join(github.event.commits.*.message, '\n') }}
 
-      - name: irc pull request
-        uses: rectalogic/notify-irc@v1
-        if: github.event_name == 'pull_request'
-        with:
-          server: "irc.chalmers.it"
-          port: 9999
-          channel: "#platinumshrimp"
-          nickname: github-notifier
-          message: |
-            ${{ github.actor }} opened PR ${{ github.event.html_url }}
