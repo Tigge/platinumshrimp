@@ -37,7 +37,7 @@ httpx = {version = "^0.28.1", extras = ["http2"]}
 
 [tool.poetry.dev-dependencies]
 requests-mock = "^1.12.1"
-black = "^24.8.0"
+black = "^26.3.1"
 rope = "^1.13.0"
 coverage = "^7.6.1"
 
