@@ -25,3 +25,6 @@ settings.json
 # Dot files and folders, except for .github
 .*
 !.github/
+
+# Temporary while files are being deleted
+plugins/trakt
