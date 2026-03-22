@@ -1,49 +1,52 @@
-[tool.poetry]
+[project]
 name = "platinumshrimp"
 version = "0.1.0"
 description = ""
+authors = [
+    {name = "Gustav Tiger", email = "gustav@tiger.name"},
+    {name = "Henrik Sten", email = "github@reggna.se"}
+]
 license = "MIT"
-authors = ["Gustav Tiger <gustav@tiger.name>"]
-
 readme = "README.md"
-
-homepage = "https://github.com/Tigge/platinumshrimp"
-repository = "https://github.com/Tigge/platinumshrimp.git"
-
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
     "Operating System :: POSIX :: Linux",
     "Topic :: Communications :: Chat :: Internet Relay Chat",
 ]
+requires-python = ">=3.11,<3.15"
+dependencies = [
+    "python-dateutil>=2.9.0",
+    "requests>=2.32.3",
+    "feedparser>=6.0.11",
+    "irc>=20.5.0",
+    "pyzmq>=26.2.0",
+    "youtube-transcript-api>=1.0.3",
+    "httpx[http2]>=0.28.1",
+    "google-genai>=1.65.0",
+]
 
+[project.urls]
+homepage = "https://github.com/Tigge/platinumshrimp"
+repository = "https://github.com/Tigge/platinumshrimp.git"
+
+[project.scripts]
+platinumshrimp = "bot:main"
+
+[tool.poetry]
 packages = [
     { include = "**/*.py" },
 ]
 
-[tool.poetry.scripts]
-platinumshrimp = "bot:main"
-
-[tool.poetry.dependencies]
-python = "^3.11,<3.15"
-python-dateutil = "^2.9.0"
-requests = "^2.32.3"
-feedparser = "^6.0.11"
-irc = "^20.5.0"
-pyzmq = "^26.2.0"
-openai = "^1.72.0"
-youtube-transcript-api = "^1.0.3"
-httpx = {version = "^0.28.1", extras = ["http2"]}
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 requests-mock = "^1.12.1"
 black = "^26.3.1"
 rope = "^1.13.0"
 coverage = "^7.6.1"
 
 [build-system]
-requires = ["poetry>=1.8.3"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 100
