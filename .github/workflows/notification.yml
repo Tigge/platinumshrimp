@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: irc push
-        uses: rectalogic/notify-irc@v1
+        uses: rectalogic/notify-irc@v2
         if: github.event_name == 'push'
         with:
           server: "irc.chalmers.it"
@@ -18,7 +18,7 @@ jobs:
             ${{ join(github.event.commits.*.message) }}
 
       - name: irc pull request
-        uses: rectalogic/notify-irc@v1
+        uses: rectalogic/notify-irc@v2
         if: github.event_name == 'pull_request'
         with:
           server: "irc.chalmers.it"
