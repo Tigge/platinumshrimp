@@ -20,6 +20,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if count > 1:
             url = "redirect?count={0}&url={1}".format(count - 1, self.url_queries["url"][0])
 
+        if "\r" in url or "\n" in url:
+            raise ValueError("CRLF detected in URL: {0}".format(repr(url)))
+
         self.send_response(301)
         self.send_header("Location", url)
         self.end_headers()
@@ -92,6 +95,11 @@ class TitlegiverTestCase(unittest.TestCase):
         url = self.URL + "/page"
         result = Titlegiver.get_title_from_url(self.URL + "/redirect?count=10&url={0}".format(url))
         self.assertEqual(result, "Simple")
+
+    def test_redirect_crlf_injection(self):
+        url = self.URL + "/page\r\nInjected-Header: value"
+        result = Titlegiver.get_title_from_url(self.URL + "/redirect?count=1&url={0}".format(url))
+        self.assertIsNone(result)
 
     def test_meta_redirect(self):
         result = Titlegiver.get_title_from_url(self.URL + "/pages/meta_redirect")
