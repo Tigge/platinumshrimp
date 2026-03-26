@@ -133,14 +133,14 @@ class TestBot(unittest.TestCase):
 
 class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
     # Test PluginInterface initialization and ensure that plugin_started() is called
-    @patch("bot.zmq.asyncio.Context")
+    @patch("bot.zmq.asyncio.Context.instance")
     @patch("bot.settings")
-    def test_plugin_init(self, mock_settings, mock_context):
+    def test_plugin_init(self, mock_settings, mock_instance):
         bot = MagicMock()
         bot.plugin_started = MagicMock()
 
         mock_socket = MagicMock()
-        mock_context.return_value.socket.return_value = mock_socket
+        mock_instance.return_value.socket.return_value = mock_socket
 
         plugin = PluginInterface("testplugin", bot, 123)
         mock_socket.bind.assert_called()

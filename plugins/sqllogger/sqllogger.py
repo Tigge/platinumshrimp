@@ -75,6 +75,12 @@ class SQLLogger(plugin.Plugin):
         self.whitelist = self.settings.get("whitelist", {}).get("servers", {})
         self.blacklist = self.settings.get("blacklist", {}).get("servers", {})
 
+    def close(self):
+        """Close database connection and call parent close."""
+        if hasattr(self, "conn"):
+            self.conn.close()
+        super().close()
+
     def _is_listed(self, listing, server, channel) -> bool:
         """Returns True if server/channel is in the provided whitelist/blacklist."""
         if server in listing:
