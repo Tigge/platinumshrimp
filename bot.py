@@ -31,15 +31,19 @@ class PluginInterface:
         self.pid = pid
         socket_path = os.path.join(self.bot.temp_folder, "ipc_plugin_" + name)
 
-        context = zmq.asyncio.Context()
+        self._context = zmq.asyncio.Context.instance()
 
-        self._socket_plugin = context.socket(zmq.PAIR)
+        self._socket_plugin = self._context.socket(zmq.PAIR)
         self._socket_plugin.bind("ipc://" + os.path.abspath(socket_path))
 
         self._poller = zmq.asyncio.Poller()
         self._poller.register(self._socket_plugin, zmq.POLLIN)
 
         self.bot.plugin_started(self)
+
+    def __del__(self):
+        if hasattr(self, "_socket_plugin"):
+            self._socket_plugin.close()
 
     def _recieve(self, data):
         logging.info("PluginInterface._recieve %s", data)

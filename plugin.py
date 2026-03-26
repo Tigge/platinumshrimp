@@ -38,15 +38,15 @@ class Plugin:
             format="%(asctime)s - %(levelname)s - %(message)s",
         )
 
-        context = zmq.asyncio.Context()
+        self._context = zmq.asyncio.Context.instance()
 
         args, _ = plugin_argparser.parse_known_args()
         self.socket_base_path = args.socket_path
 
-        self._socket_bot = context.socket(zmq.PAIR)
+        self._socket_bot = self._context.socket(zmq.PAIR)
         self._socket_bot.connect("ipc://" + self.socket_base_path + "/ipc_plugin_" + name)
 
-        self._socket_workers = context.socket(zmq.PULL)
+        self._socket_workers = self._context.socket(zmq.PULL)
         self._socket_workers.bind(
             "ipc://" + self.socket_base_path + "/ipc_plugin_" + name + "_workers"
         )
@@ -61,6 +61,17 @@ class Plugin:
         logging.info(f"Plugin.init {self.main_thread_ident}, ipc://ipc_plugin_{name}")
         self.threading_data = threading.local()
         self.threading_data.call_socket = self._socket_bot
+
+    def close(self):
+        """Close ZMQ sockets and context."""
+        if hasattr(self, "_socket_bot"):
+            self._socket_bot.close()
+        if hasattr(self, "_socket_workers"):
+            self._socket_workers.close()
+        # We don't term the shared context here as it's a singleton
+
+    def __del__(self):
+        self.close()
 
     def _recieve(self, data):
         func_name = data["function"]
@@ -125,6 +136,8 @@ class Plugin:
             loop.run_forever()
         except:
             logging.exception("Plugin.run aborted")
+        finally:
+            instance.close()
 
         loop.close()
         sys.exit(1)
