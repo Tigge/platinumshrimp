@@ -108,8 +108,8 @@ Key Plugins
   the bot is invited to.
 - **titlegiver**: Fetches and displays the title of URLs posted in chat.
   Includes rich YouTube metadata support if an API key is provided.
-- **feedretriever**: Tracks RSS feeds (and others) to automatically get
-  updates from various sources.
+- **feedretriever**: Tracks various feeds (like RSS, Reddit, CNN News, &c) to
+  automatically get updates on new posts.
 - **shrimpgemini**: Integration with Google Gemini for interactive AI chat.
   Supports custom prompts, conversation history and context.
 - **youtubesummarizer**: Summarizes YouTube videos using AI based on their
