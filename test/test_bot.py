@@ -41,8 +41,9 @@ class TestBot(unittest.TestCase):
     # Test that the Bot doesn't initialize if a bad settings is given:
     @patch("bot.settings")
     def test_bot_initialization_error(self, mock_settings):
-        with self.assertRaises(SystemExit):
-            bot = self.create_bot(mock_settings, False)
+        with self.assertLogs("root"):
+            with self.assertRaises(SystemExit):
+                bot = self.create_bot(mock_settings, False)
 
     # Test that the Bot.load_plugin method adds a plugin if everything is correct
     @patch("bot.settings")
@@ -64,7 +65,8 @@ class TestBot(unittest.TestCase):
         self, mock_spawn, mock_isfile, mock_plugin_interface, mock_settings
     ):
         bot = self.create_bot(mock_settings)
-        bot.load_plugin("test", {})
+        with self.assertLogs("root"):
+            bot.load_plugin("test", {})
         mock_plugin_interface.assert_not_called()
         self.assertEqual(len(bot.plugins), 0)
 
@@ -86,7 +88,8 @@ class TestBot(unittest.TestCase):
         connection.connect = AsyncMock()
 
         bot = self.create_bot(mock_settings)
-        self.loop.run_until_complete(bot.reconnect(connection))
+        with self.assertLogs("root"):
+            self.loop.run_until_complete(bot.reconnect(connection))
 
         self.assertEqual(connection.connect.call_count, 2)
 
@@ -189,7 +192,8 @@ class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
         # Simulate process not exiting
         mock_waitpid.return_value = (0, 0)
 
-        await plugin.shutdown_plugin()
+        with self.assertLogs("root", level="ERROR"), patch("sys.stderr"):
+            await plugin.shutdown_plugin()
 
         plugin._call.assert_called_with("shutdown")
         self.assertEqual(mock_waitpid.call_count, 5)
