@@ -8,6 +8,7 @@ from plugins.feedretriever.pollerfactory import PollerFactory
 import plugins.feedretriever.feedpoller
 import plugins.feedretriever.cnnpoller
 import plugins.feedretriever.omnipoller
+import plugins.feedretriever.redditpoller
 
 HELP_MESSAGE = (
     "!addfeed url [fetch time [custom title]] where:\n"

@@ -40,9 +40,14 @@ class PollerFactory:
 
     @classmethod
     def create_poller(cls, url, *args, **kwargs):
-        if url not in cls.registry:
-            url = "*"
-        logging.info("Creating poller for " + url)
-        exec_class = cls.registry[url]
+        # Look for a specific poller that matches a substring of the URL
+        for key, exec_class in cls.registry.items():
+            if key != "*" and key in url:
+                logging.info(f"Creating poller for {url} matched {key}")
+                return exec_class(*args, **kwargs)
+
+        # Fallback to catch-all
+        logging.info("Creating poller for " + url + " using catch-all")
+        exec_class = cls.registry["*"]
         poller = exec_class(*args, **kwargs)
         return poller
