@@ -78,8 +78,9 @@ class WolframTest(unittest.TestCase):
         mock_response.content = b"<invalid>xml"
         mock_get.return_value = mock_response
 
-        answer = wolfram.get_answer("any query", "dummy_key")
-        self.assertIsNone(answer)
+        with self.assertLogs("root"):
+            answer = wolfram.get_answer("any query", "dummy_key")
+            self.assertIsNone(answer)
 
 
 if __name__ == "__main__":
