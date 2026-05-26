@@ -22,10 +22,13 @@ try:
     from textual import on, work
     from textual.reactive import reactive
 except ImportError:
-    print("Error: 'textual' library not found. Please install it with 'pip install textual' or 'poetry add textual'.")
+    print(
+        "Error: 'textual' library not found. Please install it with 'pip install textual' or 'poetry add textual'."
+    )
     sys.exit(1)
 
 DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), "log.db")
+
 
 class LogViewerApp(App):
     """A TUI application to view IRC logs from an SQLite database."""
@@ -111,9 +114,14 @@ class LogViewerApp(App):
             yield Select([], id="select-channel", prompt="All Channels")
 
             yield Label("Event Type")
-            yield Select([
-                (t, t) for t in ["pubmsg", "privmsg", "action", "join", "part", "quit", "nick", "kick"]
-            ], id="select-event-type", prompt="All Events")
+            yield Select(
+                [
+                    (t, t)
+                    for t in ["pubmsg", "privmsg", "action", "join", "part", "quit", "nick", "kick"]
+                ],
+                id="select-event-type",
+                prompt="All Events",
+            )
 
             yield Label("Nickname")
             yield Input(placeholder="Search nick...", id="input-nickname")
@@ -155,7 +163,10 @@ class LogViewerApp(App):
             self.query_one("#select-channel", Select).set_options([])
         else:
             try:
-                cursor.execute("SELECT DISTINCT channel FROM logs WHERE server = ? AND channel != '' ORDER BY channel ASC", (server,))
+                cursor.execute(
+                    "SELECT DISTINCT channel FROM logs WHERE server = ? AND channel != '' ORDER BY channel ASC",
+                    (server,),
+                )
                 channels = [(row["channel"], row["channel"]) for row in cursor.fetchall()]
                 self.query_one("#select-channel", Select).set_options(channels)
             except sqlite3.Error:
@@ -272,7 +283,7 @@ class LogViewerApp(App):
                     ev_display,
                     nick_display,
                     msg_display,
-                    key=str(row["id"])
+                    key=str(row["id"]),
                 )
 
             self.query_one("#status-bar", Label).update(
@@ -365,12 +376,7 @@ class LogViewerApp(App):
                 nick_display = row["nickname"]
 
             table.add_row(
-                ts,
-                row["channel"] or "-",
-                ev_display,
-                nick_display,
-                msg_display,
-                key=str(row["id"])
+                ts, row["channel"] or "-", ev_display, nick_display, msg_display, key=str(row["id"])
             )
             if str(row["id"]) == str(highlight_id):
                 target_index = i
