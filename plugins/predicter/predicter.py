@@ -1,12 +1,12 @@
 import json
-import sys
 import logging
-import re
-from datetime import datetime, timedelta
+import sys
+from datetime import datetime
 
 import plugin
+from utils.schedule_parser import parse_schedule
 
-HELP_MESSAGE = "Usage: !predict #channel [YYYY-MM-DD] [HH:MM] message"
+HELP_MESSAGE = "Usage: !predict #channel [YYYY-MM-DD] [HH:MM] | [duration] message"
 
 
 class Predicter(plugin.Plugin):
@@ -21,6 +21,8 @@ class Predicter(plugin.Plugin):
             self.settings["scheduled_messages"] = []
             self._save_settings(json.dumps(self.settings))
 
+    parse_schedule = staticmethod(parse_schedule)
+
     def process_predict(self, server, user_name, channel, full_message):
         logging.info(f"Predicter.process_predict {user_name}: {full_message}")
         target_channel, message = "", ""
@@ -31,35 +33,14 @@ class Predicter(plugin.Plugin):
             self.safe_privmsg(server, user_name, HELP_MESSAGE)
             return
 
-        # Regex to extract optional date and time
-        datetime_match = re.match(r"(?:(\d{4}-\d{2}-\d{2}))?\s*(?:(\d{2}:\d{2}))?\s*(.*)", message)
-        date_str, time_str, msg = datetime_match.groups()  # I don't think this can fail?
-
         now = datetime.now()
-        if date_str:
-            # If we got a date, we use it
-            year, month, day = map(int, date_str.split("-"))
-            date = datetime(year, month, day)
-        else:
-            # Otherwise, we use todays date
-            date = now
+        target_dt, msg, is_specified = self.parse_schedule(message, now)
 
-        if time_str:
-            # If we got a time, we use that together with the date
-            hour, minute = map(int, time_str.split(":"))
-            target_dt = datetime.combine(date.date(), datetime.min.time()) + timedelta(
-                hours=hour, minutes=minute
-            )
-        elif date_str:
-            # If we don't have a time, we send the message at noon
-            target_dt = datetime.combine(date.date(), datetime.min.time()) + timedelta(hours=12)
-        else:
+        if not is_specified:
             # Neither time nor date, send message at the next minute and send a warning to the user
-            target_dt = now.replace(second=0, microsecond=0) + timedelta(minutes=1)
             self.safe_privmsg(server, user_name, "No time or date specified, scheduling now!")
-
-        # If the time has already lapsed, give a warning to the user (but still schedule the msg):
-        if target_dt <= now:
+        elif target_dt <= now:
+            # If the time has already lapsed, give a warning to the user (but still schedule the msg):
             self.safe_privmsg(server, user_name, "Time and date is before now, scheduling now!")
 
         if "scheduled_messages" not in self.settings:
@@ -84,6 +65,11 @@ class Predicter(plugin.Plugin):
             self._thread(self.process_predict, server, user_name, channel, message[9:])
         elif message.startswith("!help"):
             self.safe_privmsg(server, user_name, HELP_MESSAGE)
+
+    def on_pubmsg(self, server, user, channel, message):
+        user_name = user.split("!", 1)[0]
+        if message.startswith("!predict "):
+            self._thread(self.process_predict, server, user_name, channel, message[9:])
 
     def update(self):
         if "scheduled_messages" not in self.settings:
