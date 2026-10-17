@@ -66,6 +66,11 @@ class Predicter(plugin.Plugin):
         elif message.startswith("!help"):
             self.safe_privmsg(server, user_name, HELP_MESSAGE)
 
+    def on_pubmsg(self, server, user, channel, message):
+        user_name = user.split("!", 1)[0]
+        if message.startswith("!predict "):
+            self._thread(self.process_predict, server, user_name, channel, message[9:])
+
     def update(self):
         if "scheduled_messages" not in self.settings:
             return
