@@ -1,14 +1,17 @@
 import json
 import logging
+import math
 from os import path
 
 DEFAULT_SETTINGS_FILE = "settings.json"
+DEFAULT_PLUGIN_WATCHDOG = {"timeout_seconds": 30, "max_restarts": 3}
 DEFAULT_SETTINGS = {
     "nickname": "platinumshrimp",
     "realname": "Platinumshrimp",
     "username": "banned",
     "servers": {"chalmersit": {"host": "irc.chalmers.it", "port": 9999, "ssl": True}},
     "plugins": {"titlegiver": {}, "autojoiner": {"chalmersit": ["#platinumshrimp"]}},
+    "plugin_watchdog": DEFAULT_PLUGIN_WATCHDOG.copy(),
 }
 
 
@@ -51,6 +54,23 @@ def validate_settings(settings):
         if not isinstance(plugin, str):
             logging.error("Settings got plugin with no name")
             return False
+    watchdog_settings = settings.get("plugin_watchdog", {})
+    if not isinstance(watchdog_settings, dict):
+        logging.error("Plugin watchdog settings must be an object")
+        return False
+    timeout = watchdog_settings.get("timeout_seconds", DEFAULT_PLUGIN_WATCHDOG["timeout_seconds"])
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or (isinstance(timeout, float) and not math.isfinite(timeout))
+        or timeout <= 1
+    ):
+        logging.error("Plugin watchdog timeout_seconds must be a number greater than 1")
+        return False
+    max_restarts = watchdog_settings.get("max_restarts", DEFAULT_PLUGIN_WATCHDOG["max_restarts"])
+    if isinstance(max_restarts, bool) or not isinstance(max_restarts, int) or max_restarts < 0:
+        logging.error("Plugin watchdog max_restarts must be a non-negative integer")
+        return False
     return True
 
 

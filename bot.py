@@ -29,6 +29,15 @@ class PluginInterface:
         self.name = name
         self.bot = bot
         self.pid = pid
+        self.started_at = time.monotonic()
+        self.last_heartbeat = self.started_at
+        self.state = "starting"
+        self.failure_reason = None
+        self.process_exited = False
+        self.exit_status = None
+        self.run_task = None
+        self.update_task = None
+        self._shutdown_requested = False
         socket_path = os.path.join(self.bot.temp_folder, "ipc_plugin_" + name)
 
         self._context = zmq.asyncio.Context.instance()
@@ -47,9 +56,15 @@ class PluginInterface:
 
     def _recieve(self, data):
         logging.info("PluginInterface._recieve %s", data)
+        if data["function"] == "_heartbeat":
+            self.last_heartbeat = time.monotonic()
+            self.state = "running"
+            return
+
         if data["function"] == "_save_settings":
             new_plugin_settings = json.loads(data["params"][0])
             self.bot.settings["plugins"][self.name] = new_plugin_settings
+            self.bot.plugin_configs[self.name] = new_plugin_settings
             settings.save_settings(self.bot.settings)
             return
 
@@ -118,7 +133,7 @@ class PluginInterface:
                 self._recieve(await self._socket_plugin.recv_json())
 
     def __getattr__(self, name):
-        if name in ["started", "update", "shutdown"]:
+        if name in ["started", "update", "shutdown", "_heartbeat"]:
 
             def call(*args, **kwarg):
                 self._call(name, *args)
@@ -127,22 +142,66 @@ class PluginInterface:
         else:
             raise AttributeError(self, name)
 
-    async def shutdown_plugin(self):
-        self.shutdown()
+    def poll_process(self):
+        if self.process_exited:
+            return self.exit_status
+
+        try:
+            pid, status = os.waitpid(self.pid, os.WNOHANG)
+        except ChildProcessError:
+            self.process_exited = True
+            return self.exit_status
+
+        if pid:
+            self.process_exited = True
+            self.exit_status = status
+            return status
+        return None
+
+    async def _wait_for_exit(self):
         for _ in range(5):
             await asyncio.sleep(0.1)
-            try:
-                pid, status = os.waitpid(self.pid, os.WNOHANG)
-                if pid != 0:
-                    return
-            except ChildProcessError:
-                return
+            self.poll_process()
+            if self.process_exited:
+                return True
+        return False
 
-        logging.error("Plugin %s did not shut down cleanly, sending SIGTERM", self.name)
-        print(
-            f"Error: Plugin {self.name} did not shut down cleanly, sending SIGTERM", file=sys.stderr
-        )
-        os.kill(self.pid, signal.SIGTERM)
+    async def shutdown_plugin(self):
+        self._shutdown_requested = True
+        if not self.process_exited:
+            self.poll_process()
+        if not self.process_exited:
+            try:
+                self.shutdown()
+            except zmq.ZMQError:
+                logging.exception("Unable to request shutdown from plugin %s", self.name)
+            if not await self._wait_for_exit():
+                logging.error("Plugin %s did not shut down cleanly, sending SIGTERM", self.name)
+                print(
+                    f"Error: Plugin {self.name} did not shut down cleanly, sending SIGTERM",
+                    file=sys.stderr,
+                )
+                try:
+                    os.kill(self.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    self.process_exited = True
+
+                if not self.process_exited and not await self._wait_for_exit():
+                    logging.error("Plugin %s ignored SIGTERM, sending SIGKILL", self.name)
+                    try:
+                        os.kill(self.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        self.process_exited = True
+                    if not self.process_exited:
+                        await self._wait_for_exit()
+
+        tasks = [task for task in (self.run_task, self.update_task) if task is not None]
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        self._socket_plugin.close(linger=0)
 
 
 class Bot:
@@ -160,6 +219,18 @@ class Bot:
         self.plugins = list()
         self.servers = dict()
         self.temp_folder = temp_folder
+        watchdog_settings = self.settings.get("plugin_watchdog", {})
+        self.plugin_heartbeat_timeout = watchdog_settings.get(
+            "timeout_seconds", settings.DEFAULT_PLUGIN_WATCHDOG["timeout_seconds"]
+        )
+        self.plugin_max_restarts = watchdog_settings.get(
+            "max_restarts", settings.DEFAULT_PLUGIN_WATCHDOG["max_restarts"]
+        )
+        self.plugin_restart_counts = {}
+        self.unhealthy_plugins = {}
+        self.plugin_configs = dict(self.settings.get("plugins", {}))
+        self.watchdog_task = None
+        self.shutting_down = False
 
     async def unload_plugin(self, name):
         plugin = next((p for p in self.plugins if p.name == name), None)
@@ -167,7 +238,7 @@ class Bot:
             await plugin.shutdown_plugin()
             self.plugins.remove(plugin)
             return True
-        return False
+        return self.unhealthy_plugins.pop(name, None) is not None
 
     async def reconnect(self, connection):
         while not connection.is_connected():
@@ -216,27 +287,40 @@ class Bot:
             plugin._call("on_me_" + event_type, connection_name, source, target, message)
 
     def load_plugin(self, name, settings):
-        logging.info("Bot.plugin_load %s, %s", name, settings)
+        self.plugin_configs[name] = settings
+        self.plugin_restart_counts.pop(name, None)
+        self.unhealthy_plugins.pop(name, None)
+        if not self._start_plugin(name):
+            self.unhealthy_plugins[name] = "failed to start plugin process"
+
+    def _start_plugin(self, name):
+        logging.info("Bot.plugin_load %s, %s", name, self.plugin_configs.get(name, {}))
         file_name = "plugins/" + name + "/" + name + ".py"
         if not os.path.isfile(file_name):
             logging.error("Unable to load plugin %s", name)
-        else:
-            logging.info(
-                "Bot.plugin_load plugin %s, %s, %s, %s",
-                name,
-                self,
-                sys.executable,
-                [sys.executable, file_name],
-            )
-            environment = os.environ
-            environment.update(PYTHONPATH=os.getcwd())
+            return False
+
+        logging.info(
+            "Bot.plugin_load plugin %s, %s, %s, %s",
+            name,
+            self,
+            sys.executable,
+            [sys.executable, file_name],
+        )
+        environment = os.environ.copy()
+        environment.update(PYTHONPATH=os.getcwd())
+        try:
             pid = os.spawnvpe(
                 os.P_NOWAIT,
                 sys.executable,
                 args=[sys.executable, file_name, "--socket_path", self.temp_folder],
                 env=environment,
             )
-            self.plugins.append(PluginInterface(name, self, pid))
+        except OSError:
+            logging.exception("Unable to start plugin %s", name)
+            return False
+        self.plugins.append(PluginInterface(name, self, pid))
+        return True
 
     def plugin_started(self, plugin):
         logging.info("Bot.plugin_started %s, %s", plugin, self.settings)
@@ -244,8 +328,8 @@ class Bot:
         for plugin_name, plugin_settings in self.settings["plugins"].items():
             if plugin_name == plugin.name:
                 plugin.started(json.dumps(plugin_settings))
-                self.loop.create_task(self.plugin_update(plugin))
-                self.loop.create_task(plugin.run())
+                plugin.update_task = self.loop.create_task(self.plugin_update(plugin))
+                plugin.run_task = self.loop.create_task(plugin.run())
                 # self.reactor.scheduler.execute_every(1.0, plugin.update)
                 logging.debug("Bot.plugin_started, settings %r", plugin_settings)
                 break
@@ -254,6 +338,68 @@ class Bot:
         while True:
             plugin.update()
             await asyncio.sleep(1)
+
+    async def check_plugin_health(self):
+        for plugin in list(self.plugins):
+            if plugin._shutdown_requested:
+                continue
+
+            exit_status = plugin.poll_process()
+            if plugin.process_exited:
+                exit_code = (
+                    os.waitstatus_to_exitcode(exit_status) if exit_status is not None else "unknown"
+                )
+                await self._restart_plugin(plugin, f"process exited with status {exit_code}")
+            elif time.monotonic() - plugin.last_heartbeat > self.plugin_heartbeat_timeout:
+                await self._restart_plugin(plugin, "heartbeat timeout")
+
+    async def plugin_watchdog(self):
+        while not self.shutting_down:
+            await asyncio.sleep(1)
+            await self.check_plugin_health()
+
+    async def _restart_plugin(self, plugin, reason):
+        if plugin not in self.plugins or plugin._shutdown_requested:
+            return
+
+        restart_count = self.plugin_restart_counts.get(plugin.name, 0)
+        if restart_count >= self.plugin_max_restarts:
+            logging.error(
+                "Plugin %s is unhealthy after %s automatic restart attempts: %s",
+                plugin.name,
+                restart_count,
+                reason,
+            )
+            await plugin.shutdown_plugin()
+            self.plugins.remove(plugin)
+            plugin.state = "unhealthy"
+            plugin.failure_reason = reason
+            self.unhealthy_plugins[plugin.name] = reason
+            return
+
+        restart_count += 1
+        self.plugin_restart_counts[plugin.name] = restart_count
+        logging.warning(
+            "Restarting plugin %s (attempt %s/%s): %s",
+            plugin.name,
+            restart_count,
+            self.plugin_max_restarts,
+            reason,
+        )
+        plugin_name = plugin.name
+        plugin.state = "restarting"
+        await plugin.shutdown_plugin()
+        self.plugins.remove(plugin)
+        if not plugin.process_exited:
+            reason = "unable to stop plugin process"
+            logging.error("Plugin %s is unhealthy: %s", plugin_name, reason)
+            plugin.state = "unhealthy"
+            plugin.failure_reason = reason
+            self.unhealthy_plugins[plugin_name] = reason
+            return
+        if not self._start_plugin(plugin_name):
+            reason = "failed to spawn plugin process"
+            self.unhealthy_plugins[plugin_name] = reason
 
     def run(self):
 
@@ -269,6 +415,7 @@ class Bot:
                     self.load_plugin(plugin_name, plugin_settings)
 
         self.loop.run_until_complete(load_plugins())
+        self.watchdog_task = self.loop.create_task(self.plugin_watchdog())
 
         # Connect to servers
         servers = self.settings["servers"]
@@ -320,6 +467,11 @@ class Bot:
             logging.exception("Bot.run aborted")
 
         # Request termination of plugins
+        self.shutting_down = True
+        if self.watchdog_task is not None:
+            self.watchdog_task.cancel()
+            self.loop.run_until_complete(asyncio.gather(self.watchdog_task, return_exceptions=True))
+
         async def unload_all_plugins():
             tasks = [self.unload_plugin(plugin.name) for plugin in list(self.plugins)]
             await asyncio.gather(*tasks, return_exceptions=True)

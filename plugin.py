@@ -29,6 +29,8 @@ class Plugin:
     spawned by the main bot process.
     """
 
+    HEARTBEAT_INTERVAL_SECONDS = 1
+
     def __init__(self, name):
 
         locale.setlocale(locale.LC_ALL, "")
@@ -95,6 +97,11 @@ class Plugin:
         socket = self.threading_data.call_socket
         socket.send_json({"function": function, "params": args})
 
+    async def _heartbeat_loop(self):
+        while True:
+            self._call("_heartbeat")
+            await asyncio.sleep(self.HEARTBEAT_INTERVAL_SECONDS)
+
     def _thread(self, function, *args, **kwargs):
         logging.info("Plugin._thread %r", function)
 
@@ -132,11 +139,16 @@ class Plugin:
         logging.info("Plugin.run %s, %s", cls, instance)
 
         loop.create_task(instance._run())
+        loop.create_task(instance._heartbeat_loop())
         try:
             loop.run_forever()
         except:
             logging.exception("Plugin.run aborted")
         finally:
+            tasks = asyncio.all_tasks(loop)
+            for task in tasks:
+                task.cancel()
+            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
             instance.close()
 
         loop.close()

@@ -95,11 +95,17 @@ class CommandLine(cmd.Cmd):
 
     def do_list_plugins(self, _):
         """List currently loaded plugins."""
-        if not self.bot.plugins:
+        if not self.bot.plugins and not self.bot.unhealthy_plugins:
             print("No plugins loaded.")
             return
         for plugin in self.bot.plugins:
-            print(f"{plugin.name} (PID: {plugin.pid})")
+            restart_count = self.bot.plugin_restart_counts.get(plugin.name, 0)
+            print(
+                f"{plugin.name} (PID: {plugin.pid}, status: {plugin.state}, "
+                f"automatic restarts: {restart_count}/{self.bot.plugin_max_restarts})"
+            )
+        for name, reason in self.bot.unhealthy_plugins.items():
+            print(f"{name} (unhealthy: {reason})")
 
     def do_load_plugin(self, arg):
         """Load a plugin. Usage: load_plugin <plugin_name>"""

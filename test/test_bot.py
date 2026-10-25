@@ -2,10 +2,11 @@ import asyncio
 import irc.client_aio
 import signal
 import os
+import time
 
 import unittest
 import tempfile
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch, AsyncMock, call
 from bot import Bot, PluginInterface
 
 
@@ -18,6 +19,7 @@ class TestBot(unittest.TestCase):
             "username": "testuser",
             "servers": {"test_server": {"host": "irc.test.net", "port": 6667, "ssl": False}},
             "plugins": {"test_plugin": {}},
+            "plugin_watchdog": {"timeout_seconds": 30, "max_restarts": 3},
         }
         mock_settings.validate_settings.return_value = valid
 
@@ -69,6 +71,92 @@ class TestBot(unittest.TestCase):
             bot.load_plugin("test", {})
         mock_plugin_interface.assert_not_called()
         self.assertEqual(len(bot.plugins), 0)
+
+    @patch("bot.settings")
+    def test_check_plugin_health_keeps_healthy_plugin(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        plugin = MagicMock()
+        plugin._shutdown_requested = False
+        plugin.process_exited = False
+        plugin.last_heartbeat = time.monotonic()
+        plugin.poll_process.return_value = None
+        bot.plugins.append(plugin)
+        bot._restart_plugin = AsyncMock()
+
+        self.loop.run_until_complete(bot.check_plugin_health())
+
+        bot._restart_plugin.assert_not_awaited()
+
+    @patch("bot.settings")
+    def test_check_plugin_health_restarts_plugin_after_heartbeat_timeout(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        bot.plugin_heartbeat_timeout = 5
+        plugin = MagicMock()
+        plugin.name = "test_plugin"
+        plugin._shutdown_requested = False
+        plugin.process_exited = False
+        plugin.last_heartbeat = 10
+        plugin.poll_process.return_value = None
+        bot.plugins.append(plugin)
+        bot._restart_plugin = AsyncMock()
+
+        with patch("bot.time.monotonic", return_value=20):
+            self.loop.run_until_complete(bot.check_plugin_health())
+
+        bot._restart_plugin.assert_awaited_once_with(plugin, "heartbeat timeout")
+
+    @patch("bot.settings")
+    def test_check_plugin_health_restarts_exited_process(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        plugin = MagicMock()
+        plugin.name = "test_plugin"
+        plugin._shutdown_requested = False
+        plugin.process_exited = True
+        plugin.poll_process.return_value = 256
+        bot.plugins.append(plugin)
+        bot._restart_plugin = AsyncMock()
+
+        self.loop.run_until_complete(bot.check_plugin_health())
+
+        bot._restart_plugin.assert_awaited_once_with(plugin, "process exited with status 1")
+
+    @patch("bot.settings")
+    def test_restart_plugin_stops_after_configured_restart_limit(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        plugin = MagicMock()
+        plugin.name = "test_plugin"
+        plugin._shutdown_requested = False
+        plugin.process_exited = True
+        plugin.shutdown_plugin = AsyncMock()
+        bot.plugins.append(plugin)
+        bot.plugin_restart_counts[plugin.name] = bot.plugin_max_restarts
+        bot._start_plugin = MagicMock()
+
+        with self.assertLogs("root", level="ERROR"):
+            self.loop.run_until_complete(bot._restart_plugin(plugin, "heartbeat timeout"))
+
+        plugin.shutdown_plugin.assert_awaited_once()
+        bot._start_plugin.assert_not_called()
+        self.assertNotIn(plugin, bot.plugins)
+        self.assertEqual(bot.unhealthy_plugins[plugin.name], "heartbeat timeout")
+
+    @patch("bot.settings")
+    def test_restart_plugin_restarts_and_tracks_attempt(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        plugin = MagicMock()
+        plugin.name = "test_plugin"
+        plugin._shutdown_requested = False
+        plugin.process_exited = True
+        plugin.shutdown_plugin = AsyncMock()
+        bot.plugins.append(plugin)
+        bot._start_plugin = MagicMock(return_value=True)
+
+        with self.assertLogs("root", level="WARNING"):
+            self.loop.run_until_complete(bot._restart_plugin(plugin, "process exited"))
+
+        plugin.shutdown_plugin.assert_awaited_once()
+        self.assertEqual(bot.plugin_restart_counts[plugin.name], 1)
+        bot._start_plugin.assert_called_once_with(plugin.name)
 
     # Test the Bot.reconnect routine to ensure it tries to reconnect a few times and
     # exits cleanly when connected.
@@ -166,7 +254,7 @@ class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
         plugin._call = MagicMock()
 
         # Simulate process exiting cleanly
-        mock_waitpid.return_value = (123, 0)
+        mock_waitpid.side_effect = [(0, 0), (123, 0)]
 
         await plugin.shutdown_plugin()
 
@@ -196,5 +284,33 @@ class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
             await plugin.shutdown_plugin()
 
         plugin._call.assert_called_with("shutdown")
-        self.assertEqual(mock_waitpid.call_count, 5)
-        mock_kill.assert_called_with(123, signal.SIGTERM)
+        self.assertEqual(mock_waitpid.call_count, 16)
+        mock_kill.assert_has_calls([call(123, signal.SIGTERM), call(123, signal.SIGKILL)])
+
+    @patch("bot.zmq.asyncio.Context.instance")
+    @patch("bot.settings")
+    def test_heartbeat_updates_plugin_health(self, mock_settings, mock_instance):
+        bot = MagicMock()
+        bot.plugin_started = MagicMock()
+        mock_instance.return_value.socket.return_value = MagicMock()
+        plugin = PluginInterface("testplugin", bot, 123)
+
+        with patch("bot.time.monotonic", return_value=42):
+            plugin._recieve({"function": "_heartbeat", "params": []})
+
+        self.assertEqual(plugin.last_heartbeat, 42)
+        self.assertEqual(plugin.state, "running")
+
+    @patch("bot.os.waitpid", return_value=(123, 256))
+    @patch("bot.zmq.asyncio.Context.instance")
+    @patch("bot.settings")
+    def test_poll_process_records_child_exit(self, mock_settings, mock_instance, mock_waitpid):
+        bot = MagicMock()
+        bot.plugin_started = MagicMock()
+        mock_instance.return_value.socket.return_value = MagicMock()
+        plugin = PluginInterface("testplugin", bot, 123)
+
+        self.assertEqual(plugin.poll_process(), 256)
+        self.assertTrue(plugin.process_exited)
+        self.assertEqual(plugin.exit_status, 256)
+        mock_waitpid.assert_called_once_with(123, os.WNOHANG)
