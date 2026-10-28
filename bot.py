@@ -55,7 +55,6 @@ class PluginInterface:
             self._socket_plugin.close()
 
     def _recieve(self, data):
-        logging.info("PluginInterface._recieve %s", data)
         if data["function"] == "_heartbeat":
             self.last_heartbeat = time.monotonic()
             self.state = "running"
@@ -129,7 +128,6 @@ class PluginInterface:
             socks = dict(await self._poller.poll())
 
             if self._socket_plugin in socks:
-                logging.info("PluginInterface.update %s", self._socket_plugin)
                 self._recieve(await self._socket_plugin.recv_json())
 
     def __getattr__(self, name):
