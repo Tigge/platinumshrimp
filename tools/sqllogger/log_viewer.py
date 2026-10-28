@@ -185,9 +185,9 @@ class LogViewerApp(App):
 
     @on(Button.Pressed, "#btn-clear")
     def action_clear_filters(self) -> None:
-        self.query_one("#select-server", Select).value = Select.BLANK
-        self.query_one("#select-channel", Select).value = Select.BLANK
-        self.query_one("#select-event-type", Select).value = Select.BLANK
+        self.query_one("#select-server", Select).clear()
+        self.query_one("#select-channel", Select).clear()
+        self.query_one("#select-event-type", Select).clear()
         self.query_one("#input-nickname", Input).value = ""
         self.query_one("#input-message", Input).value = ""
         self.query_logs()
