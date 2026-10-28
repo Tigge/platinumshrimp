@@ -1,7 +1,7 @@
 import unittest
 import threading
 import asyncio
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch, call, AsyncMock
 
 from plugin import Plugin
 
@@ -91,3 +91,13 @@ class TestPlugin(unittest.TestCase):
             self.plugin.shutdown = Plugin.shutdown.__get__(self.plugin, DummyPlugin)
             self.plugin.shutdown()
             mock_loop.stop.assert_called_once()
+
+
+class TestPluginHeartbeat(unittest.IsolatedAsyncioTestCase):
+    async def test_heartbeat_loop_sends_heartbeat(self):
+        plugin = DummyPlugin()
+        with patch("plugin.asyncio.sleep", new=AsyncMock(side_effect=asyncio.CancelledError)):
+            with self.assertRaises(asyncio.CancelledError):
+                await plugin._heartbeat_loop()
+
+        plugin._call.assert_called_once_with("_heartbeat")

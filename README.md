@@ -90,6 +90,10 @@ default one will be created on the first run.
       "key": "your-gemini-api-key",
       "trigger": "shrimp:"
     }
+  },
+  "plugin_watchdog": {
+    "timeout_seconds": 30,
+    "max_restarts": 3
   }
 }
 ```
@@ -100,6 +104,11 @@ default one will be created on the first run.
 - **servers**: A map of server configurations. Each server needs a `host` and
   `port`. Set `ssl: true` for secure connections.
 - **plugins**: A map of plugins to load and their specific settings.
+- **plugin_watchdog.timeout_seconds**: Time without a plugin heartbeat before
+  it is restarted. Must be greater than one second; defaults to `30`.
+- **plugin_watchdog.max_restarts**: Maximum automatic restarts per plugin
+  before it is marked unhealthy and disabled. Defaults to `3`. `list_plugins`
+  shows plugin health and restart counts.
 
 Key Plugins
 -----------
