@@ -94,6 +94,9 @@ default one will be created on the first run.
   "plugin_watchdog": {
     "timeout_seconds": 30,
     "max_restarts": 3
+  },
+  "reconnect": {
+    "max_retries": null
   }
 }
 ```
@@ -109,6 +112,9 @@ default one will be created on the first run.
 - **plugin_watchdog.max_restarts**: Maximum automatic restarts per plugin
   before it is marked unhealthy and disabled. Defaults to `3`. `list_plugins`
   shows plugin health and restart counts.
+- **reconnect.max_retries**: Maximum retries after the initial reconnect attempt.
+  Defaults to `null` (retry indefinitely); set to a non-negative integer to stop
+  after that many retries.
 
 Key Plugins
 -----------

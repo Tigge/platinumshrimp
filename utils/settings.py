@@ -5,6 +5,7 @@ from os import path
 
 DEFAULT_SETTINGS_FILE = "settings.json"
 DEFAULT_PLUGIN_WATCHDOG = {"timeout_seconds": 30, "max_restarts": 3}
+DEFAULT_RECONNECT = {"max_retries": None}
 DEFAULT_SETTINGS = {
     "nickname": "platinumshrimp",
     "realname": "Platinumshrimp",
@@ -12,6 +13,7 @@ DEFAULT_SETTINGS = {
     "servers": {"chalmersit": {"host": "irc.chalmers.it", "port": 9999, "ssl": True}},
     "plugins": {"titlegiver": {}, "autojoiner": {"chalmersit": ["#platinumshrimp"]}},
     "plugin_watchdog": DEFAULT_PLUGIN_WATCHDOG.copy(),
+    "reconnect": DEFAULT_RECONNECT.copy(),
 }
 
 
@@ -70,6 +72,16 @@ def validate_settings(settings):
     max_restarts = watchdog_settings.get("max_restarts", DEFAULT_PLUGIN_WATCHDOG["max_restarts"])
     if isinstance(max_restarts, bool) or not isinstance(max_restarts, int) or max_restarts < 0:
         logging.error("Plugin watchdog max_restarts must be a non-negative integer")
+        return False
+    reconnect_settings = settings.get("reconnect", {})
+    if not isinstance(reconnect_settings, dict):
+        logging.error("Reconnect settings must be an object")
+        return False
+    max_retries = reconnect_settings.get("max_retries", DEFAULT_RECONNECT["max_retries"])
+    if max_retries is not None and (
+        isinstance(max_retries, bool) or not isinstance(max_retries, int) or max_retries < 0
+    ):
+        logging.error("Reconnect max_retries must be a non-negative integer or null")
         return False
     return True
 
