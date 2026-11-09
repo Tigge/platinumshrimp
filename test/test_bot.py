@@ -1,4 +1,5 @@
 import asyncio
+import irc.client
 import irc.client_aio
 import signal
 import os
@@ -158,14 +159,11 @@ class TestBot(unittest.TestCase):
         self.assertEqual(bot.plugin_restart_counts[plugin.name], 1)
         bot._start_plugin.assert_called_once_with(plugin.name)
 
-    # Test the Bot.reconnect routine to ensure it tries to reconnect a few times and
-    # exits cleanly when connected.
     @patch("bot.asyncio.sleep", new_callable=AsyncMock)
     @patch("bot.settings")
-    def test_reconnect_loop(self, mock_settings, mock_sleep):
+    def test_reconnect_retries_with_backoff_and_restores_channels(self, mock_settings, mock_sleep):
         connection = MagicMock()
-        # Fail the first reconnect, but succeed on the second.
-        connection.is_connected.side_effect = [False, False, True]
+        connection.is_connected.return_value = False
         connection.server = "irc.example.com"
         connection.port = 6667
         connection.nickname = "botnick"
@@ -173,13 +171,56 @@ class TestBot(unittest.TestCase):
         connection.username = "botuser"
         connection.ircname = "Bot IRC"
         connection.connect_factory = None
-        connection.connect = AsyncMock()
+        connection.name = "test_server"
+        connection.channels = {"#one", "#two"}
+
+        async def connect(*args, **kwargs):
+            if connection.connect.await_count == 3:
+                connection.is_connected.return_value = True
+            else:
+                raise OSError("network unavailable")
+
+        connection.connect = AsyncMock(side_effect=connect)
 
         bot = self.create_bot(mock_settings)
-        with self.assertLogs("root"):
+        with self.assertLogs("root", level="WARNING"):
             self.loop.run_until_complete(bot.reconnect(connection))
 
-        self.assertEqual(connection.connect.call_count, 2)
+        self.assertEqual(connection.connect.await_count, 3)
+        self.assertEqual(mock_sleep.await_args_list, [call(5), call(10)])
+        self.assertEqual(connection.join.call_args_list, [call("#one"), call("#two")])
+
+    @patch("bot.asyncio.sleep", new_callable=AsyncMock)
+    @patch("bot.settings")
+    def test_reconnect_stops_after_configured_retry_limit(self, mock_settings, mock_sleep):
+        connection = MagicMock()
+        connection.is_connected.return_value = False
+        connection.server = "irc.example.com"
+        connection.name = "test_server"
+        connection.channels = set()
+        connection.connect = AsyncMock(side_effect=OSError("network unavailable"))
+
+        bot = self.create_bot(mock_settings)
+        bot.reconnect_max_retries = 2
+        with self.assertLogs("root", level="ERROR") as logs:
+            self.loop.run_until_complete(bot.reconnect(connection))
+
+        self.assertEqual(connection.connect.await_count, 3)
+        self.assertEqual(mock_sleep.await_args_list, [call(5), call(10)])
+        self.assertIn("after 3 attempts (2 retries)", logs.output[-1])
+
+    @patch("bot.settings")
+    def test_quit_event_does_not_clear_channel_state(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        connection = MagicMock()
+        connection.nickname = "testbot"
+        connection.channels = {"#one"}
+        event = MagicMock()
+        event.type = "quit"
+
+        bot._dispatcher(connection, event)
+
+        self.assertEqual(connection.channels, {"#one"})
 
     @patch("bot.settings")
     @patch("os.path.isfile", return_value=True)  # make sure the mock plugin is loaded
@@ -223,6 +264,23 @@ class TestBot(unittest.TestCase):
 
 
 class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
+    def test_disconnected_server_does_not_stop_plugin_message_handling(self):
+        interface = PluginInterface.__new__(PluginInterface)
+        server = MagicMock()
+        server.privmsg.side_effect = irc.client.ServerNotConnectedError("Not connected.")
+        interface.bot = MagicMock()
+        interface.bot.servers = {"test_server": server}
+
+        with self.assertLogs("root", level="ERROR"):
+            interface._recieve(
+                {
+                    "function": "privmsg",
+                    "params": ("test_server", "#channel", "message"),
+                }
+            )
+
+        server.privmsg.assert_called_once_with("#channel", "message")
+
     # Test PluginInterface initialization and ensure that plugin_started() is called
     @patch("bot.zmq.asyncio.Context.instance")
     @patch("bot.settings")

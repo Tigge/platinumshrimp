@@ -16,6 +16,9 @@ import jaraco.stream
 
 from command_line import CommandLine
 
+RECONNECT_INITIAL_DELAY = 5
+RECONNECT_MAX_DELAY = 300
+
 
 class PluginInterface:
     """
@@ -115,7 +118,11 @@ class PluginInterface:
         ]:
             try:
                 getattr(self.bot.servers[server], data["function"])(*data["params"][1:])
-            except (irc.client.InvalidCharacters, irc.client.MessageTooLong):
+            except (
+                irc.client.InvalidCharacters,
+                irc.client.MessageTooLong,
+                irc.client.ServerNotConnectedError,
+            ):
                 logging.exception("Failed to call function from plugin %r", data)
         else:
             logging.error("Undefined function %s called with %r", data["function"], data["params"])
@@ -229,6 +236,8 @@ class Bot:
         self.plugin_configs = dict(self.settings.get("plugins", {}))
         self.watchdog_task = None
         self.shutting_down = False
+        self.reconnect_tasks = {}
+        self.reconnect_max_retries = self.settings.get("reconnect", {}).get("max_retries")
 
     async def unload_plugin(self, name):
         plugin = next((p for p in self.plugins if p.name == name), None)
@@ -239,25 +248,82 @@ class Bot:
         return self.unhealthy_plugins.pop(name, None) is not None
 
     async def reconnect(self, connection):
+        attempt = 0
+        delay = RECONNECT_INITIAL_DELAY
+        server_name = getattr(connection, "name", connection.server)
         while not connection.is_connected():
-            logging.error("Waiting 30 seconds to reconnect")
-            await asyncio.sleep(30)
-            await connection.connect(
-                connection.server,
-                connection.port,
-                connection.nickname,
-                password=connection.password,
-                username=connection.username,
-                ircname=connection.ircname,
-                connect_factory=connection.connect_factory,
-            )
+            attempt += 1
+            failure = None
+            try:
+                await connection.connect(
+                    connection.server,
+                    connection.port,
+                    connection.nickname,
+                    password=connection.password,
+                    username=connection.username,
+                    ircname=connection.ircname,
+                    connect_factory=connection.connect_factory,
+                )
+            except Exception as error:
+                failure = str(error)
+            if connection.is_connected():
+                break
+
+            if self.reconnect_max_retries is not None and attempt > self.reconnect_max_retries:
+                logging.error(
+                    "Stopping reconnect attempts for %s after %d attempts (%d retries); "
+                    "configured maximum is %d. Last failure: %s",
+                    server_name,
+                    attempt,
+                    attempt - 1,
+                    self.reconnect_max_retries,
+                    failure or "connection was not established",
+                )
+                return
+            if failure is not None:
+                logging.warning(
+                    "Reconnect attempt %d for %s failed: %s; retrying in %d seconds",
+                    attempt,
+                    server_name,
+                    failure,
+                    delay,
+                )
+            else:
+                logging.warning(
+                    "Reconnect attempt %d for %s did not establish a connection; "
+                    "retrying in %d seconds",
+                    attempt,
+                    server_name,
+                    delay,
+                )
+            if attempt % 10 == 0:
+                logging.error(
+                    "Unable to reconnect to %s after %d attempts; retries will continue",
+                    server_name,
+                    attempt,
+                )
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, RECONNECT_MAX_DELAY)
+
+        for channel in sorted(connection.channels):
+            connection.join(channel)
+
+    def _reconnect_finished(self, connection, task):
+        if self.reconnect_tasks.get(connection) is task:
+            del self.reconnect_tasks[connection]
 
     def _dispatcher(self, connection, event):
         if event.type == "all_raw_messages":
             return
 
-        if event.type == "disconnect":
-            asyncio.create_task(self.reconnect(connection))
+        if event.type == "disconnect" and not self.shutting_down:
+            task = self.reconnect_tasks.get(connection)
+            if task is None or task.done():
+                task = asyncio.create_task(self.reconnect(connection))
+                self.reconnect_tasks[connection] = task
+                task.add_done_callback(
+                    lambda completed: self._reconnect_finished(connection, completed)
+                )
 
         # Track currently active channels
         if event.type == "join" and event.source.nick == connection.nickname:
@@ -266,9 +332,6 @@ class Bot:
             connection.channels.discard(event.target)
         elif event.type == "kick" and event.arguments[0] == connection.nickname:
             connection.channels.discard(event.target)
-        elif event.type == "quit":
-            # Technically not needed but on quit, clear all channels
-            connection.channels.clear()
 
         for plugin in self.plugins:
             plugin._call(

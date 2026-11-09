@@ -35,6 +35,14 @@ class TestSettings(unittest.TestCase):
         }
         self.assertTrue(validate_settings(self.settings))
 
+    def test_accepts_infinite_reconnect_retries(self):
+        self.settings["reconnect"] = {"max_retries": None}
+        self.assertTrue(validate_settings(self.settings))
+
+    def test_rejects_negative_reconnect_retry_limit(self):
+        self.settings["reconnect"] = {"max_retries": -1}
+        self.assertFalse(validate_settings(self.settings))
+
 
 if __name__ == "__main__":
     unittest.main()
