@@ -8,8 +8,10 @@ import time
 
 import unittest
 import tempfile
+from threading import Thread
 from unittest.mock import MagicMock, patch, AsyncMock, call
 from bot import Bot, PluginInterface
+from command_line import CommandLine
 
 
 class TestBot(unittest.TestCase):
@@ -48,6 +50,34 @@ class TestBot(unittest.TestCase):
         with self.assertLogs("root"):
             with self.assertRaises(SystemExit):
                 bot = self.create_bot(mock_settings, False)
+
+    @patch("bot.settings")
+    def test_dispatch_sent_from_cli_thread_propagates_channel_message(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        bot.loop = self.loop
+        plugin = MagicMock()
+        bot.plugins.append(plugin)
+
+        thread = Thread(
+            target=bot._dispatch_sent, args=("test_server", "privmsg", "#spam", "Test!")
+        )
+        thread.start()
+        thread.join()
+        self.loop.run_until_complete(asyncio.sleep(0))
+
+        plugin._call.assert_called_once_with(
+            "on_me_pubmsg", "test_server", "testbot", "#spam", "Test!"
+        )
+
+    @patch("bot.settings")
+    def test_command_line_send_message_sends_to_server(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        server = MagicMock()
+        bot.servers["test_server"] = server
+
+        CommandLine(bot).do_send_message("test_server #spam Test!")
+
+        server.privmsg.assert_called_once_with("#spam", "Test!")
 
     # Test that the Bot.load_plugin method adds a plugin if everything is correct
     @patch("bot.settings")

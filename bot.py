@@ -370,6 +370,11 @@ class Bot:
             )
 
     def _dispatch_sent(self, connection_name, type, target, message):
+        self.loop.call_soon_threadsafe(
+            self._dispatch_sent_on_loop, connection_name, type, target, message
+        )
+
+    def _dispatch_sent_on_loop(self, connection_name, type, target, message):
         source = self.settings["nickname"]
         event_type = type
         if type == "privmsg" and target and target[0] in "&#+!":
