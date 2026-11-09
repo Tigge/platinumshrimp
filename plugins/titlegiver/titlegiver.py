@@ -79,7 +79,12 @@ class Titlegiver(plugin.Plugin):
             self._save_settings(json.dumps(self.settings))
 
     def process_url(self, url, server, channel):
-        parts = urllib.parse.urlparse(url)
+        try:
+            parts = urllib.parse.urlparse(url)
+        except ValueError as error:
+            logging.warning("Ignoring invalid URL %r: %s", url, error)
+            return
+
         if parts.netloc in self.settings["blacklist"]:
             logging.info("Blacklisted %s", url)
             return
@@ -93,7 +98,12 @@ class Titlegiver(plugin.Plugin):
     def process_youtube(self, id, server, channel):
         if "yt-key" not in self.settings:
             return
-        yt = youtube.YouTube(self.settings["yt-key"], id)
+        try:
+            yt = youtube.YouTube(self.settings["yt-key"], id)
+        except youtube.VideoNotFoundError as error:
+            logging.warning("Unable to process YouTube video %s: %s", id, error)
+            return
+
         response = "{} [{}] ({} views)".format(yt.title, yt.duration, number_utils.format(yt.views))
         self.privmsg(server, channel, response)
 
