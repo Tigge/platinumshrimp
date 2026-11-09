@@ -6,8 +6,10 @@ import json
 import urllib.parse
 import unittest
 import http.server
+from unittest.mock import MagicMock, patch
 
 from plugins.titlegiver.titlegiver import Titlegiver
+from utils.youtube import VideoNotFoundError
 
 __author__ = "tigge"
 __author__ = "reggna"
@@ -159,3 +161,27 @@ class TitlegiverTestCase(unittest.TestCase):
         title = Titlegiver.get_title_from_url(self.URL + "/pages/linebreaks_with_cr")
         result = Titlegiver.split_strip_and_slice(title, 2)
         self.assertEqual(result, ["Line1", "Line2"])
+
+    def test_process_url_ignores_invalid_ipv6_url(self):
+        titlegiver = Titlegiver.__new__(Titlegiver)
+        titlegiver.settings = {"blacklist": []}
+        titlegiver.safe_privmsg = MagicMock()
+
+        with patch.object(Titlegiver, "get_title_from_url") as get_title:
+            titlegiver.process_url("http://[::1", "server", "#channel")
+
+        get_title.assert_not_called()
+        titlegiver.safe_privmsg.assert_not_called()
+
+    def test_process_youtube_ignores_video_without_api_details(self):
+        titlegiver = Titlegiver.__new__(Titlegiver)
+        titlegiver.settings = {"yt-key": "key"}
+        titlegiver.privmsg = MagicMock()
+
+        with patch(
+            "plugins.titlegiver.titlegiver.youtube.YouTube",
+            side_effect=VideoNotFoundError("No video details"),
+        ):
+            titlegiver.process_youtube("video-id", "server", "#channel")
+
+        titlegiver.privmsg.assert_not_called()

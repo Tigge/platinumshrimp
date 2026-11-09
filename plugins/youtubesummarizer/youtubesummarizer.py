@@ -56,8 +56,11 @@ class youtubesummarizer(plugin.Plugin):
     def process_youtube(self, id, server, channel):
         title = ""
         if self.yt_key:
-            yt = youtube.YouTube(self.yt_key, id)
-            title = yt.title
+            try:
+                yt = youtube.YouTube(self.yt_key, id)
+                title = yt.title
+            except youtube.VideoNotFoundError as error:
+                logging.warning("Unable to retrieve YouTube title for %s: %s", id, error)
         ytt_api = YouTubeTranscriptApi()
         transcript = ytt_api.fetch(id)
         trans_str = f"ID: {id}\nTitle: {title}\n\n"

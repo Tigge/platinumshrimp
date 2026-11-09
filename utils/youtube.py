@@ -7,6 +7,10 @@ import datetime
 from utils import number_utils
 
 
+class VideoNotFoundError(LookupError):
+    pass
+
+
 class YouTube:
     @staticmethod
     def duration_to_time_delta(duration):
@@ -43,7 +47,11 @@ class YouTube:
             },
         )
         json = response.json()
-        data = json["items"][0]
+        items = json.get("items", [])
+        if not items:
+            raise VideoNotFoundError(f"YouTube returned no video details for ID {id}")
+
+        data = items[0]
         logging.info("util youtube get_basic_info json %s", data)
 
         self.title = data["snippet"]["title"]
