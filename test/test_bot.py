@@ -3,6 +3,7 @@ import irc.client
 import irc.client_aio
 import signal
 import os
+import socket
 import time
 
 import unittest
@@ -210,6 +211,23 @@ class TestBot(unittest.TestCase):
         self.assertIn("after 3 attempts (2 retries)", logs.output[-1])
 
     @patch("bot.settings")
+    def test_enable_tcp_keepalive_configures_socket_probes(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        connection = MagicMock()
+        transport_socket = MagicMock()
+        connection.transport.get_extra_info.return_value = transport_socket
+
+        bot._enable_tcp_keepalive(connection)
+
+        expected_options = [
+            call(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+            call(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60),
+            call(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10),
+            call(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3),
+        ]
+        transport_socket.setsockopt.assert_has_calls(expected_options)
+
+    @patch("bot.settings")
     def test_quit_event_does_not_clear_channel_state(self, mock_settings):
         bot = self.create_bot(mock_settings)
         connection = MagicMock()
@@ -243,6 +261,8 @@ class TestBot(unittest.TestCase):
         mock_reactor.return_value = reactor_instance
 
         server_mock = AsyncMock()
+        server_mock.transport = MagicMock()
+        server_mock.transport.get_extra_info.return_value = MagicMock()
         reactor_instance.server.return_value = server_mock
 
         plugin_interface_instance = MagicMock()

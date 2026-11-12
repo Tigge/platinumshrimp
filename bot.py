@@ -7,6 +7,7 @@ import json
 import time
 import logging
 import tempfile
+import socket
 from utils import settings
 
 import zmq
@@ -18,6 +19,9 @@ from command_line import CommandLine
 
 RECONNECT_INITIAL_DELAY = 5
 RECONNECT_MAX_DELAY = 300
+TCP_KEEPALIVE_IDLE = 60
+TCP_KEEPALIVE_INTERVAL = 10
+TCP_KEEPALIVE_COUNT = 3
 
 
 class PluginInterface:
@@ -264,8 +268,12 @@ class Bot:
                     ircname=connection.ircname,
                     connect_factory=connection.connect_factory,
                 )
+                if connection.is_connected():
+                    self._enable_tcp_keepalive(connection)
             except Exception as error:
                 failure = str(error)
+                if connection.is_connected():
+                    connection.disconnect("TCP keepalive setup failed")
             if connection.is_connected():
                 break
 
@@ -307,6 +315,29 @@ class Bot:
 
         for channel in sorted(connection.channels):
             connection.join(channel)
+
+    @staticmethod
+    def _enable_tcp_keepalive(connection):
+        transport_socket = connection.transport.get_extra_info("socket")
+        transport_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
+        idle_option = getattr(socket, "TCP_KEEPIDLE", getattr(socket, "TCP_KEEPALIVE", None))
+        if idle_option is None:
+            logging.warning("TCP keepalive probe interval cannot be configured on this platform")
+        else:
+            transport_socket.setsockopt(socket.IPPROTO_TCP, idle_option, TCP_KEEPALIVE_IDLE)
+
+        for option_name, value in (
+            ("TCP_KEEPINTVL", TCP_KEEPALIVE_INTERVAL),
+            ("TCP_KEEPCNT", TCP_KEEPALIVE_COUNT),
+        ):
+            option = getattr(socket, option_name, None)
+            if option is None:
+                logging.warning(
+                    "TCP keepalive option %s is unavailable on this platform", option_name
+                )
+            else:
+                transport_socket.setsockopt(socket.IPPROTO_TCP, option, value)
 
     def _reconnect_finished(self, connection, task):
         if self.reconnect_tasks.get(connection) is task:
@@ -518,6 +549,7 @@ class Bot:
                     connect_factory=factory,
                 )
             )
+            self._enable_tcp_keepalive(server)
 
         command_line = CommandLine(self)
         command_line.start()
