@@ -105,6 +105,61 @@ class TestBot(unittest.TestCase):
         self.assertEqual(len(bot.plugins), 0)
 
     @patch("bot.settings")
+    def test_status_snapshot_reports_plugin_health_and_memory(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        bot.loop = self.loop
+        plugin = MagicMock()
+        plugin.name = "test_plugin"
+        plugin.pid = 12345
+        plugin.state = "running"
+        plugin.last_heartbeat = time.monotonic() - 2
+        plugin.process_exited = False
+        plugin.exit_status = None
+        plugin.failure_reason = None
+        bot.plugins.append(plugin)
+        bot.plugin_restart_counts[plugin.name] = 2
+
+        snapshot = self.loop.run_until_complete(bot.get_status_snapshot())
+
+        self.assertEqual(snapshot["bot"]["pid"], os.getpid())
+        self.assertEqual(snapshot["plugins"][0]["name"], "test_plugin")
+        self.assertEqual(snapshot["plugins"][0]["restart_count"], 2)
+        self.assertIn("memory_mb", snapshot["plugins"][0])
+
+    @patch("bot.settings")
+    def test_overview_renders_bot_server_and_plugin_summary(self, mock_settings):
+        bot = self.create_bot(mock_settings)
+        bot.loop = self.loop
+        plugin = MagicMock()
+        plugin.name = "test_plugin"
+        plugin.pid = 12345
+        plugin.state = "running"
+        plugin.last_heartbeat = time.monotonic() - 2
+        plugin.process_exited = False
+        plugin.exit_status = None
+        plugin.failure_reason = None
+        bot.plugins.append(plugin)
+        bot.plugin_restart_counts[plugin.name] = 1
+
+        server = MagicMock()
+        server.is_connected.return_value = True
+        server.server = "irc.test.net"
+        server.port = 6667
+        server.channels = {"#bot"}
+        bot.servers["test_server"] = server
+
+        command_line = CommandLine(bot)
+        with patch("builtins.print") as mock_print:
+            command_line.do_overview("")
+
+        printed = "\n".join(call.args[0] for call in mock_print.call_args_list if call.args)
+        self.assertIn("Bot:", printed)
+        self.assertIn("test_plugin", printed)
+        self.assertIn("test_server", printed)
+        self.assertIn("connected", printed)
+        self.assertIn("#bot", printed)
+
+    @patch("bot.settings")
     def test_check_plugin_health_keeps_healthy_plugin(self, mock_settings):
         bot = self.create_bot(mock_settings)
         plugin = MagicMock()
