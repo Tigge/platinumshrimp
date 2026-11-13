@@ -1,7 +1,9 @@
 import asyncio
 import cmd
+import math
 import os
 import signal
+import time
 from threading import Thread
 
 import logging
@@ -106,6 +108,94 @@ class CommandLine(cmd.Cmd):
             )
         for name, reason in self.bot.unhealthy_plugins.items():
             print(f"{name} (unhealthy: {reason})")
+
+    def _snapshot_for_cli(self):
+        loop = getattr(self.bot, "loop", None)
+        if loop is not None and loop.is_running():
+            future = asyncio.run_coroutine_threadsafe(self.bot.get_status_snapshot(), loop)
+            return future.result(timeout=1)
+        return self.bot._build_snapshot()
+
+    @staticmethod
+    def _format_memory(value):
+        if value is None:
+            return "n/a"
+        return f"{value:.1f} MiB"
+
+    @staticmethod
+    def _format_seconds(value):
+        if value is None:
+            return "n/a"
+        if value < 60:
+            return f"{value:.0f}s"
+        if value < 3600:
+            minutes, seconds = divmod(value, 60)
+            return f"{minutes:.0f}m {seconds:.0f}s"
+        hours, remainder = divmod(value, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours:.0f}h {minutes:.0f}m"
+
+    def _render_overview(self, snapshot):
+        bot = snapshot["bot"]
+        plugins = snapshot["plugins"] or []
+        servers = snapshot["servers"] or []
+
+        print(
+            f"Bot: pid={bot['pid']} uptime={self._format_seconds(bot['uptime_seconds'])} "
+            f"mem={self._format_memory(bot['memory_mb'])}"
+        )
+        print(
+            f"{'Plugin':<18} {'State':<11} {'HB Age':>8} {'Restarts':>8} "
+            f"{'Memory':>10} {'Reason':<20}"
+        )
+        if not plugins:
+            print("(no plugins loaded)")
+        for plugin in plugins:
+            reason = plugin.get("failure_reason") or "-"
+            print(
+                f"{plugin['name']:<18} {plugin['state']:<11} "
+                f"{self._format_seconds(plugin['heartbeat_age']):>8} "
+                f"{plugin['restart_count']:>8} {self._format_memory(plugin['memory_mb']):>10} "
+                f"{reason:<20}"
+            )
+
+        print()
+        print(f"{'Server':<18} {'State':<10} {'Host':<20} {'Channels'}")
+        if not servers:
+            print("(no servers configured)")
+        for server in servers:
+            host = server.get("host") or "-"
+            status = "connected" if server.get("connected") else "disconnected"
+            channels = ", ".join(server.get("channels", [])) if server.get("channels") else "-"
+            print(f"{server['name']:<18} {status:<10} {host:<20} {channels}")
+
+    def do_overview(self, arg):
+        """Show a compact health overview for the bot and plugins."""
+        refresh_seconds = arg.strip()
+        if refresh_seconds:
+            try:
+                refresh_seconds = float(refresh_seconds)
+            except ValueError:
+                print("Usage: overview [seconds]")
+                return
+            if not math.isfinite(refresh_seconds) or refresh_seconds < 0:
+                print("Usage: overview [seconds]")
+                return
+        else:
+            refresh_seconds = None
+
+        while True:
+            snapshot = self._snapshot_for_cli()
+            self._render_overview(snapshot)
+            if refresh_seconds is None:
+                return
+            if refresh_seconds == 0:
+                return
+            try:
+                time.sleep(refresh_seconds)
+            except KeyboardInterrupt:
+                print()
+                return
 
     def do_load_plugin(self, arg):
         """Load a plugin. Usage: load_plugin <plugin_name>"""
