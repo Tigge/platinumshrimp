@@ -43,6 +43,22 @@ class TestSettings(unittest.TestCase):
         self.settings["reconnect"] = {"max_retries": -1}
         self.assertFalse(validate_settings(self.settings))
 
+    def test_accepts_configured_outgoing_rate_limit(self):
+        self.settings["outgoing_rate_limit"] = {"messages_per_second": 2, "burst": 3}
+        self.assertTrue(validate_settings(self.settings))
+
+    def test_rejects_invalid_outgoing_rate_limit(self):
+        self.settings["outgoing_rate_limit"] = {"messages_per_second": 0, "burst": 3}
+        self.assertFalse(validate_settings(self.settings))
+
+    def test_rejects_invalid_outgoing_burst(self):
+        self.settings["outgoing_rate_limit"] = {"messages_per_second": 1, "burst": 0}
+        self.assertFalse(validate_settings(self.settings))
+
+    def test_rejects_invalid_outgoing_queue_size(self):
+        self.settings["outgoing_rate_limit"] = {"queue_size": 0}
+        self.assertFalse(validate_settings(self.settings))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,7 @@ from os import path
 DEFAULT_SETTINGS_FILE = "settings.json"
 DEFAULT_PLUGIN_WATCHDOG = {"timeout_seconds": 30, "max_restarts": 3}
 DEFAULT_RECONNECT = {"max_retries": None}
+DEFAULT_OUTGOING_RATE_LIMIT = {"messages_per_second": 1, "burst": 4, "queue_size": 100}
 DEFAULT_SETTINGS = {
     "nickname": "platinumshrimp",
     "realname": "Platinumshrimp",
@@ -14,6 +15,7 @@ DEFAULT_SETTINGS = {
     "plugins": {"titlegiver": {}, "autojoiner": {"chalmersit": ["#platinumshrimp"]}},
     "plugin_watchdog": DEFAULT_PLUGIN_WATCHDOG.copy(),
     "reconnect": DEFAULT_RECONNECT.copy(),
+    "outgoing_rate_limit": DEFAULT_OUTGOING_RATE_LIMIT.copy(),
 }
 
 
@@ -82,6 +84,29 @@ def validate_settings(settings):
         isinstance(max_retries, bool) or not isinstance(max_retries, int) or max_retries < 0
     ):
         logging.error("Reconnect max_retries must be a non-negative integer or null")
+        return False
+    outgoing_rate_limit = settings.get("outgoing_rate_limit", {})
+    if not isinstance(outgoing_rate_limit, dict):
+        logging.error("Outgoing rate limit settings must be an object")
+        return False
+    messages_per_second = outgoing_rate_limit.get(
+        "messages_per_second", DEFAULT_OUTGOING_RATE_LIMIT["messages_per_second"]
+    )
+    if (
+        isinstance(messages_per_second, bool)
+        or not isinstance(messages_per_second, (int, float))
+        or (isinstance(messages_per_second, float) and not math.isfinite(messages_per_second))
+        or messages_per_second <= 0
+    ):
+        logging.error("Outgoing messages_per_second must be a finite number greater than 0")
+        return False
+    burst = outgoing_rate_limit.get("burst", DEFAULT_OUTGOING_RATE_LIMIT["burst"])
+    if isinstance(burst, bool) or not isinstance(burst, int) or burst < 1:
+        logging.error("Outgoing burst must be a positive integer")
+        return False
+    queue_size = outgoing_rate_limit.get("queue_size", DEFAULT_OUTGOING_RATE_LIMIT["queue_size"])
+    if isinstance(queue_size, bool) or not isinstance(queue_size, int) or queue_size < 1:
+        logging.error("Outgoing queue_size must be a positive integer")
         return False
     return True
 

@@ -314,12 +314,79 @@ class TestBot(unittest.TestCase):
 
 
 class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
-    def test_disconnected_server_does_not_stop_plugin_message_handling(self):
+    async def test_plugin_messages_are_queued_and_throttled(self):
+        bot = TestBot.create_bot(MagicMock())
+        bot.outgoing_messages_per_second = 1000
+        bot.outgoing_message_burst = 1
+        server = MagicMock()
+        bot.servers["test_server"] = server
+        interface = PluginInterface.__new__(PluginInterface)
+        interface.name = "test_plugin"
+        interface.bot = bot
+
+        messages = (
+            ("privmsg", "one"),
+            ("notice", "two"),
+            ("action", "three"),
+        )
+        for function, message in messages:
+            interface._recieve(
+                {
+                    "function": function,
+                    "params": ("test_server", "#channel", message),
+                }
+            )
+
+        await bot.outgoing_message_queues["test_server"].join()
+
+        self.assertEqual(
+            server.mock_calls,
+            [
+                call.privmsg("#channel", "one"),
+                call.notice("#channel", "two"),
+                call.action("#channel", "three"),
+            ],
+        )
+        task = bot.outgoing_message_tasks["test_server"]
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+    async def test_plugin_message_queue_drops_overflow_with_warning(self):
+        bot = TestBot.create_bot(MagicMock())
+        bot.outgoing_message_queue_size = 1
+        server = MagicMock()
+        bot.servers["test_server"] = server
+        interface = PluginInterface.__new__(PluginInterface)
+        interface.name = "test_plugin"
+        interface.bot = bot
+
+        with self.assertLogs("root", level="WARNING"):
+            for message in ("one", "two"):
+                interface._recieve(
+                    {
+                        "function": "privmsg",
+                        "params": ("test_server", "#channel", message),
+                    }
+                )
+            await bot.outgoing_message_queues["test_server"].join()
+
+        server.privmsg.assert_called_once_with("#channel", "one")
+        task = bot.outgoing_message_tasks["test_server"]
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+    async def test_disconnected_server_does_not_stop_plugin_message_handling(self):
+        bot = TestBot.create_bot(MagicMock())
         interface = PluginInterface.__new__(PluginInterface)
         server = MagicMock()
-        server.privmsg.side_effect = irc.client.ServerNotConnectedError("Not connected.")
-        interface.bot = MagicMock()
-        interface.bot.servers = {"test_server": server}
+        server.privmsg.side_effect = [
+            irc.client.ServerNotConnectedError("Not connected."),
+            None,
+        ]
+        bot.servers = {"test_server": server}
+        bot.outgoing_message_burst = 2
+        interface.bot = bot
+        interface.name = "test_plugin"
 
         with self.assertLogs("root", level="ERROR"):
             interface._recieve(
@@ -328,8 +395,18 @@ class TestPluginInterface(unittest.IsolatedAsyncioTestCase):
                     "params": ("test_server", "#channel", "message"),
                 }
             )
+            interface._recieve(
+                {
+                    "function": "privmsg",
+                    "params": ("test_server", "#channel", "another message"),
+                }
+            )
+            await bot.outgoing_message_queues["test_server"].join()
 
-        server.privmsg.assert_called_once_with("#channel", "message")
+        self.assertEqual(server.privmsg.call_count, 2)
+        task = bot.outgoing_message_tasks["test_server"]
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
 
     # Test PluginInterface initialization and ensure that plugin_started() is called
     @patch("bot.zmq.asyncio.Context.instance")
