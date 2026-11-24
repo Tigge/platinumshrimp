@@ -24,6 +24,7 @@ dependencies = [
     "youtube-transcript-api>=1.0.3",
     "httpx[http2]>=0.28.1,<1",
     "google-genai>=1.65.0",
+    "textual (>=8.2.7,<9.0.0)",
 ]
 
 [project.urls]
