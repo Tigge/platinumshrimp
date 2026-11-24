@@ -121,7 +121,7 @@ class TestBot(unittest.TestCase):
 
         command_line = CommandLine(bot)
         with patch("builtins.print") as mock_print:
-            command_line.do_overview("")
+            command_line.do_status("")
 
         printed = "\n".join(call.args[0] for call in mock_print.call_args_list if call.args)
         self.assertIn("Bot:", printed)

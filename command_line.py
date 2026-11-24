@@ -169,7 +169,7 @@ class CommandLine(cmd.Cmd):
             channels = ", ".join(server.get("channels", [])) if server.get("channels") else "-"
             print(f"{server['name']:<18} {status:<10} {host:<20} {channels}")
 
-    def do_overview(self, arg):
+    def do_status(self, arg):
         """Show a compact health overview for the bot and plugins."""
         refresh_seconds = arg.strip()
         if refresh_seconds:
