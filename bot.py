@@ -214,6 +214,33 @@ class PluginInterface:
 
 
 class Bot:
+    @staticmethod
+    def _get_process_memory_mb(pid):
+        if pid is None:
+            return None
+
+        try:
+            import psutil
+        except ImportError:
+            psutil = None
+
+        if psutil is not None:
+            try:
+                return psutil.Process(pid).memory_info().rss / (1024 * 1024)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                return None
+
+        status_path = f"/proc/{pid}/status"
+        try:
+            with open(status_path, "r", encoding="utf-8") as status_file:
+                for line in status_file:
+                    if line.startswith("VmRSS:"):
+                        resident_kb = int(line.split()[1])
+                        return resident_kb / 1024.0
+        except (FileNotFoundError, ProcessLookupError, OSError, ValueError):
+            return None
+        return None
+
     def __init__(self, temp_folder):
         logging.basicConfig(
             filename="Bot.log",
@@ -221,6 +248,7 @@ class Bot:
             format="%(asctime)s - %(levelname)s - %(message)s",
         )
 
+        self.started_at = time.monotonic()
         self.settings = settings.load_settings()
         if not settings.validate_settings(self.settings):
             logging.error("Error parsing settings")
@@ -242,6 +270,70 @@ class Bot:
         self.shutting_down = False
         self.reconnect_tasks = {}
         self.reconnect_max_retries = self.settings.get("reconnect", {}).get("max_retries")
+
+    def _build_snapshot(self):
+        plugins = []
+        for plugin in list(self.plugins):
+            plugins.append(
+                {
+                    "name": plugin.name,
+                    "pid": getattr(plugin, "pid", None),
+                    "state": getattr(plugin, "state", "unknown"),
+                    "heartbeat_age": (
+                        round(time.monotonic() - plugin.last_heartbeat, 2)
+                        if getattr(plugin, "last_heartbeat", None) is not None
+                        else None
+                    ),
+                    "restart_count": self.plugin_restart_counts.get(plugin.name, 0),
+                    "failure_reason": getattr(plugin, "failure_reason", None),
+                    "process_exited": bool(getattr(plugin, "process_exited", False)),
+                    "exit_status": getattr(plugin, "exit_status", None),
+                    "memory_mb": self._get_process_memory_mb(getattr(plugin, "pid", None)),
+                }
+            )
+
+        seen_names = {plugin["name"] for plugin in plugins}
+        for name, reason in self.unhealthy_plugins.items():
+            if name in seen_names:
+                continue
+            plugins.append(
+                {
+                    "name": name,
+                    "pid": None,
+                    "state": "unhealthy",
+                    "heartbeat_age": None,
+                    "restart_count": self.plugin_restart_counts.get(name, 0),
+                    "failure_reason": reason,
+                    "process_exited": True,
+                    "exit_status": None,
+                    "memory_mb": None,
+                }
+            )
+
+        servers = []
+        for name, server in self.servers.items():
+            servers.append(
+                {
+                    "name": name,
+                    "connected": bool(getattr(server, "is_connected", lambda: False)()),
+                    "host": getattr(server, "server", None),
+                    "port": getattr(server, "port", None),
+                    "channels": sorted(getattr(server, "channels", set())),
+                }
+            )
+
+        return {
+            "bot": {
+                "pid": os.getpid(),
+                "uptime_seconds": round(time.monotonic() - self.started_at, 2),
+                "memory_mb": self._get_process_memory_mb(os.getpid()),
+            },
+            "plugins": plugins,
+            "servers": servers,
+        }
+
+    async def get_status_snapshot(self):
+        return self._build_snapshot()
 
     async def unload_plugin(self, name):
         plugin = next((p for p in self.plugins if p.name == name), None)
