@@ -79,7 +79,9 @@ class PluginInterface:
             logging.error("PluginInterface._recieve %s not found", server)
             return
 
-        if data["function"] in [
+        if data["function"] in ["privmsg", "notice", "action"]:
+            self.bot.queue_plugin_message(self.name, server, data["function"], data["params"][1:])
+        elif data["function"] in [
             "action",
             "admin",
             "cap",
@@ -242,6 +244,95 @@ class Bot:
         self.shutting_down = False
         self.reconnect_tasks = {}
         self.reconnect_max_retries = self.settings.get("reconnect", {}).get("max_retries")
+        outgoing_rate_limit = self.settings.get("outgoing_rate_limit", {})
+        self.outgoing_messages_per_second = outgoing_rate_limit.get(
+            "messages_per_second", settings.DEFAULT_OUTGOING_RATE_LIMIT["messages_per_second"]
+        )
+        self.outgoing_message_burst = outgoing_rate_limit.get(
+            "burst", settings.DEFAULT_OUTGOING_RATE_LIMIT["burst"]
+        )
+        self.outgoing_message_queue_size = outgoing_rate_limit.get(
+            "queue_size", settings.DEFAULT_OUTGOING_RATE_LIMIT["queue_size"]
+        )
+        self.outgoing_message_queues = {}
+        self.outgoing_message_tasks = {}
+        self.outgoing_message_tokens = {}
+        self.outgoing_message_updated = {}
+        self.outgoing_queue_full_logged = set()
+
+    def queue_plugin_message(self, plugin_name, server_name, function, args):
+        queue = self.outgoing_message_queues.get(server_name)
+        if queue is None:
+            queue = asyncio.Queue(maxsize=self.outgoing_message_queue_size)
+            self.outgoing_message_queues[server_name] = queue
+        try:
+            queue.put_nowait((plugin_name, function, args))
+        except asyncio.QueueFull:
+            if server_name not in self.outgoing_queue_full_logged:
+                logging.warning(
+                    "Dropping outgoing %s from plugin %s on server %s because its queue is full",
+                    function,
+                    plugin_name,
+                    server_name,
+                )
+                self.outgoing_queue_full_logged.add(server_name)
+            return
+        task = self.outgoing_message_tasks.get(server_name)
+        if task is None or task.done():
+            self.outgoing_message_tokens.setdefault(server_name, self.outgoing_message_burst)
+            self.outgoing_message_updated.setdefault(server_name, time.monotonic())
+            self.outgoing_message_tasks[server_name] = asyncio.create_task(
+                self._send_queued_plugin_messages(server_name)
+            )
+
+    async def _send_queued_plugin_messages(self, server_name):
+        queue = self.outgoing_message_queues[server_name]
+        while True:
+            plugin_name, function, args = await queue.get()
+            self.outgoing_queue_full_logged.discard(server_name)
+            try:
+                now = time.monotonic()
+                elapsed = now - self.outgoing_message_updated[server_name]
+                tokens = min(
+                    self.outgoing_message_burst,
+                    self.outgoing_message_tokens[server_name]
+                    + elapsed * self.outgoing_messages_per_second,
+                )
+                if tokens < 1:
+                    delay = (1 - tokens) / self.outgoing_messages_per_second
+                    logging.info(
+                        "Throttling outgoing %s from plugin %s on server %s for %.2f seconds",
+                        function,
+                        plugin_name,
+                        server_name,
+                        delay,
+                    )
+                    await asyncio.sleep(delay)
+                    now = time.monotonic()
+                    elapsed = now - self.outgoing_message_updated[server_name]
+                    tokens = min(
+                        self.outgoing_message_burst,
+                        self.outgoing_message_tokens[server_name]
+                        + elapsed * self.outgoing_messages_per_second,
+                    )
+
+                self.outgoing_message_tokens[server_name] = tokens - 1
+                self.outgoing_message_updated[server_name] = now
+                try:
+                    getattr(self.servers[server_name], function)(*args)
+                except (
+                    irc.client.InvalidCharacters,
+                    irc.client.MessageTooLong,
+                    irc.client.ServerNotConnectedError,
+                ):
+                    logging.exception(
+                        "Failed to send %s from plugin %s to server %s",
+                        function,
+                        plugin_name,
+                        server_name,
+                    )
+            finally:
+                queue.task_done()
 
     async def unload_plugin(self, name):
         plugin = next((p for p in self.plugins if p.name == name), None)
@@ -575,6 +666,13 @@ class Bot:
             await asyncio.gather(*tasks, return_exceptions=True)
 
         self.loop.run_until_complete(unload_all_plugins())
+
+        for task in self.outgoing_message_tasks.values():
+            task.cancel()
+        if self.outgoing_message_tasks:
+            self.loop.run_until_complete(
+                asyncio.gather(*self.outgoing_message_tasks.values(), return_exceptions=True)
+            )
 
         self.loop.close()
         command_line.wait_until_done()
